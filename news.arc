@@ -840,16 +840,6 @@ function vote(node) {
 (newscache newspage user 90
   (listpage user (msec) (topstories user maxend*) nil nil "news"))
 
-
-(defhook respond (op . rest)
-  (prs 'respond (tokens op) rest)
-  (prn))
-
-(newsop l/news () (l-news user))
-
-(newscache l-news user 90
-  (listpage user (msec) (topstories user maxend* '/l/news) "/l/news" nil "/l/news"))
-
 (newsop l/news () (l-news user))
 
 (newscache l-news user 90

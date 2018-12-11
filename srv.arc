@@ -209,7 +209,7 @@ Connection: close"))
 
 (def respond (str op args cooks ip)
   (w/stdout str
-    (hook 'respond op args cooks ip)
+    ;(hook 'respond op args cooks ip)
     (iflet f (srvops* op)
            (let req (inst 'request 'args args 'cooks cooks 'ip ip)
              (if (redirector* op)
