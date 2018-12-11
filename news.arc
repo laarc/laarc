@@ -2229,7 +2229,7 @@ To install, drag this link to your browser toolbar:
 
 (def threads-page (user subject)
   (if (profile subject)
-      (withs (title (+ subject "'s comments")
+      (withs (title (+ subject "'s threads")
               label (if (is user subject) "threads" title)
               here  (threads-url subject))
         (longpage user (msec) nil label title here
