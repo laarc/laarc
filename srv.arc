@@ -157,7 +157,7 @@ Connection: close"))
        (jpg       "image/jpeg")
        (png       "image/png")
        (text/html "text/html; charset=utf-8")
-       (text/css  "text/css; charset=utf-8")))
+       (text/css  "text/css")))
 
 (= rdheader* "HTTP/1.0 302 Moved")
 
