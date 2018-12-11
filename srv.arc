@@ -156,7 +156,8 @@ Connection: close"))
      '((gif       "image/gif")
        (jpg       "image/jpeg")
        (png       "image/png")
-       (text/html "text/html; charset=utf-8")))
+       (text/html "text/html; charset=utf-8")
+       (text/css  "text/css; charset=utf-8")))
 
 (= rdheader* "HTTP/1.0 302 Moved")
 
@@ -240,7 +241,7 @@ Connection: close"))
            "jpg"  'jpg
            "jpeg" 'jpg
            "png"  'png
-           "css"  'text/html
+           "css"  'text/css
            "txt"  'text/html
            "htm"  'text/html
            "html" 'text/html
