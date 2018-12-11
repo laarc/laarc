@@ -346,9 +346,11 @@
   (when ranked-stories*
     (adjust-rank (ranked-stories* (rand (min 50 (len ranked-stories*)))))))
 
-(def topstories (user n (o threshold front-threshold*))
+(def topstories (user n (o sub) (o threshold front-threshold*))
   (retrieve n 
-            [and (>= (realscore _) threshold) (cansee user _)]
+            [and (>= (realscore _) threshold)
+                 (cansee user _)
+                 (or (no sub) (mem sub _!keys))]
             ranked-stories*))
 
 (= max-delay* 10)
@@ -388,14 +390,14 @@
 
 ; Page Layout
 
-(= up-url* "grayarrow.gif" down-url* "graydown.gif" logo-url* "ln.png")
+(= up-url* "/grayarrow.gif" down-url* "/graydown.gif" logo-url* "/ln.png")
 
 (defopr favicon.ico req favicon-url*)
 
 ; redefined later
 
 (def gen-css-url ()
-  (prn "<link rel=\"stylesheet\" type=\"text/css\" href=\"news.css\">"))
+  (prn "<link rel=\"stylesheet\" type=\"text/css\" href=\"/news.css\">"))
 
 (mac npage (title . body)
   `(tag html 
@@ -441,7 +443,7 @@
       (pr (len items*) "/" maxid* " loaded")
       (pr (round (/ (memory) 1000000)) " mb")
       (pr elapsed " msec")
-      (link "settings" "newsadmin")
+      (link "settings" "/newsadmin")
       (hook 'admin-bar user whence))))
 
 (def color-stripe (c)
@@ -594,19 +596,19 @@ function vote(node) {
 
 ; redefined later
 
-(= welcome-url* "welcome")
+(= welcome-url* "/welcome")
 
 (def toprow (user label)
   (w/bars 
     (when (noob user)
       (toplink "welcome" welcome-url* label)) 
-    (toplink "new" "newest" label)
+    (toplink "new" "/newest" label)
     (when user
       (toplink "threads" (threads-url user) label))
-    (toplink "comments" "newcomments" label)
-    (toplink "leaders"  "leaders"     label)
+    (toplink "comments" "/newcomments" label)
+    (toplink "leaders"  "/leaders"     label)
     (hook 'toprow user label)
-    (link "submit")
+    (link "submit" "/submit")
     (unless (mem label toplabels*)
       (fontcolor white (pr label)))))
 
@@ -838,6 +840,26 @@ function vote(node) {
 (newscache newspage user 90
   (listpage user (msec) (topstories user maxend*) nil nil "news"))
 
+
+(defhook respond (op . rest)
+  (prs 'respond (tokens op) rest)
+  (prn))
+
+(newsop l/news () (l-news user))
+
+(newscache l-news user 90
+  (listpage user (msec) (topstories user maxend* '/l/news) "/l/news" nil "/l/news"))
+
+(newsop l/news () (l-news user))
+
+(newscache l-news user 90
+  (listpage user (msec) (topstories user maxend* '/l/news) "/l/news" nil "/l/news"))
+
+(newsop l/pics () (l-pics user))
+
+(newscache l-pics user 90
+  (listpage user (msec) (topstories user maxend* '/l/pics) "/l/pics" nil "/l/pics"))
+
 (def listpage (user t1 items label title (o url label) (o number t))
   (hook 'listpage user)
   (longpage user t1 nil label title url
@@ -893,11 +915,11 @@ function vote(node) {
 (newsop lists () 
   (longpage user (msec) nil "lists" "Lists" "lists"
     (sptab
-      (row (link "best")         "Highest voted recent links.")
-      (row (link "active")       "Most active current discussions.")
-      (row (link "bestcomments") "Highest voted recent comments.")
-      (row (link "noobstories")  "Submissions from new accounts.")
-      (row (link "noobcomments") "Comments from new accounts.")
+      (row (link "/best")         "Highest voted recent links.")
+      (row (link "/active")       "Most active current discussions.")
+      (row (link "/bestcomments") "Highest voted recent comments.")
+      (row (link "/noobstories")  "Submissions from new accounts.")
+      (row (link "/noobcomments") "Comments from new accounts.")
       (when (admin user)
         (map row:link
              '(optimes topips flagged killed badguys badlogins goodlogins)))
@@ -1419,27 +1441,32 @@ function vote(node) {
 
 (newsop submit ()
   (if user 
-      (submit-page user "" "" t) 
-      (submit-login-warning "" "" t)))
+      (submit-page user nil "" "" t) 
+      (submit-login-warning nil "" "" t)))
 
-(def submit-login-warning ((o url) (o title) (o showtext) (o text))
+(def submit-login-warning ((o sub) (o url) (o title) (o showtext) (o text))
   (login-page 'both "You have to be logged in to submit."
               (fn (user ip) 
                 (ensure-news-user user)
                 (newslog ip user 'submit-login)
-                (submit-page user url title showtext text))))
+                (submit-page user sub url title showtext text))))
 
-(def submit-page (user (o url) (o title) (o showtext) (o text "") (o msg))
+(def clean-sub (x)
+  (coerce (+ "/l/" (last (tokens x #\/))) 'sym))
+
+(def submit-page (user (o sub) (o url) (o title) (o showtext) (o text "") (o msg))
   (minipage "Submit"
     (pagemessage msg)
     (urform user req
             (process-story (get-user req)
+                           (clean-sub (arg req "l"))
                            (clean-url (arg req "u"))
                            (striptags (arg req "t"))
                            showtext
                            (and showtext (md-from-form (arg req "x") t))
                            req!ip)
       (tab
+        (row "to" (input "l" (or sub "news") 50))
         (row "title"  (input "t" title 50))
         (if prefer-url*
             (do (row "url" (input "u" url 50))
@@ -1462,10 +1489,10 @@ function vote(node) {
 ; http://news.domain.com/submitlink?u=http://foo.com&t=Foo
 ; Added a confirm step to avoid xss hacks.
 
-(newsop submitlink (u t)
+(newsop submitlink (u t l)
   (if user 
-      (submit-page user u t)
-      (submit-login-warning u t)))
+      (submit-page user u t l)
+      (submit-login-warning u t l)))
 
 (= title-limit* 80
    retry*       "Please try again."
@@ -1481,25 +1508,25 @@ function vote(node) {
 
 (disktable big-spamsites* (+ newsdir* "big-spamsites"))
 
-(def process-story (user url title showtext text ip)
+(def process-story (user sub url title showtext text ip)
   (aif (and (~blank url) (live-story-w/url url))
        (do (vote-for user it)
            (item-url it!id))
        (if (no user)
-            (flink [submit-login-warning url title showtext text])
+            (flink [submit-login-warning sub url title showtext text])
            (no (and (or (blank url) (valid-url url)) 
                     (~blank title)))
-            (flink [submit-page user url title showtext text retry*])
+            (flink [submit-page user sub url title showtext text retry*])
            (len> title title-limit*)
-            (flink [submit-page user url title showtext text toolong*])
+            (flink [submit-page user sub url title showtext text toolong*])
            (and (blank url) (blank text))
-            (flink [submit-page user url title showtext text bothblank*])
+            (flink [submit-page user sub url title showtext text bothblank*])
            (let site (sitename url)
              (or (big-spamsites* site) (recent-spam site)))
             (flink [msgpage user spammage*])
            (oversubmitting user ip 'story url)
             (flink [msgpage user toofast*])
-           (let s (create-story url (process-title title) text user ip)
+           (let s (create-story sub url (process-title title) text user ip)
              (story-ban-test user s ip url)
              (when (ignored user) (kill s 'ignored))
              (submit-item user s)
@@ -1573,10 +1600,12 @@ function vote(node) {
                    ; "sampasite"  "multiply" "wetpaint" ; all spam, just ban
                    "eurekster" "blogsome" "edogo" "blog" "com"))
 
-(def create-story (url title text user ip)
-  (newslog ip user 'create url (list title))
+(def create-story (sub url title text user ip)
+  (newslog ip user 'create sub url (list title))
   (let s (inst 'item 'type 'story 'id (new-item-id) 
                      'url url 'title title 'text text 'by user 'ip ip)
+    (when sub
+      (pushnew sub s!keys))
     (save-item s)
     (= (items* s!id) s)
     (unless (blank url) (register-url s url))
@@ -1775,7 +1804,7 @@ function vote(node) {
 
 ; Individual Item Page (= Comments Page of Stories)
 
-(defmemo item-url (id) (+ "item?id=" id))
+(defmemo item-url (id) (+ "/item?id=" id))
 
 (newsop item (id)
   (let s (safe-item id)
@@ -1864,7 +1893,7 @@ function vote(node) {
 
 ; Edit Item
 
-(def edit-url (i) (+ "edit?id=" i!id))
+(def edit-url (i) (+ "/edit?id=" i!id))
 
 (newsop edit (id)
   (let i (safe-item id)
@@ -2136,7 +2165,7 @@ function vote(node) {
       (> (item-age c) (expt (- indent 1) reply-decay*))))
 
 (def replylink (i whence (o title 'reply))
-  (link title (+ "reply?id=" i!id "&whence=" (urlencode whence))))
+  (link title (+ "/reply?id=" i!id "&whence=" (urlencode whence))))
 
 (newsop reply (id whence)
   (with (i      (safe-item id)
@@ -2160,7 +2189,7 @@ function vote(node) {
 
 ; Threads
 
-(def threads-url (user) (+ "threads?id=" user))
+(def threads-url (user) (+ "/threads?id=" user))
 
 (newsop threads (id) 
   (if id
