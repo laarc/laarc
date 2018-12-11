@@ -117,6 +117,7 @@
 (attribute table      cellpadding    opnum)
 (attribute table      cellspacing    opnum)
 (attribute table      width          opstring)
+(attribute table      id             opsym)
 (attribute textarea   cols           opnum)
 (attribute textarea   name           opstring)
 (attribute textarea   rows           opnum)
