@@ -8,8 +8,8 @@
 (declare 'atstrings t)
 
 (= this-site*    "Lambda News"
-   site-url*     "http://news.yourdomain.com/"
-   parent-url*   "http://www.yourdomain.com"
+   site-url*     "/"
+   parent-url*   "/"
    favicon-url*  ""
    site-desc*    "Lambda News"               ; for rss feed
    site-color*   (color 154 186 170)
