@@ -296,6 +296,11 @@
 (defmemo lightweight-url (url)
   (in (downcase (last (tokens url #\.))) "png" "jpg" "jpeg"))
 
+(def apath (x)
+  (is ((str x) 0) #\/))
+
+(def item-path (i) (find apath i!keys))
+
 (def item-age (i) (minutes-since i!time))
 
 (def user-age (u) (minutes-since (uvar u created)))
@@ -1145,9 +1150,15 @@ function vote(node) {
 ; redefined later
 
 (def byline (i user)
-  (pr " by @(tostring (userlink user i!by)) @(text-age:item-age i) "))
+  (pr " by @(tostring (userlink user i!by))")
+  (awhen (tostring (sublink i))
+    (pr " to @it"))
+  (pr " @(text-age:item-age i) "))
 
-(def user-url (user) (+ "user?id=" user))
+(def sublink (item)
+  (link (item-path item)))
+
+(def user-url (user) (+ "/user?id=" user))
 
 (= show-avg* nil)
 
