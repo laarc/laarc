@@ -439,11 +439,12 @@
                (br)
                (center
                  (hook 'longfoot)
+                 (link "bookmarklet" "/bookmarklet.html")
                  (admin-bar ,gu (- (msec) ,gt) ,whence)))))))
 
 (def admin-bar (user elapsed whence)
+  (br2)
   (when (admin user)
-    (br2)
     (w/bars
       (pr (len items*) "/" maxid* " loaded")
       (pr (round (/ (memory) 1000000)) " mb")
