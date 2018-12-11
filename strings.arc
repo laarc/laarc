@@ -7,6 +7,9 @@
 ;> (get-output-string ss)
 ;"\u0085"
 
+(def seq (s)
+  (coerce (if (isa s 'sym) (str s) s) 'cons))
+
 (def tokens (s (o sep whitec))
   (let test (testify sep)
     (let rec (afn (cs toks tok)
@@ -14,7 +17,7 @@
                    (test (car cs)) (self (cdr cs) (consif tok toks) nil)
                                    (self (cdr cs) toks (cons (car cs) tok))))
       (rev (map str
-                (map rev (rec (coerce s 'cons) nil nil)))))))
+                (map rev (rec (seq s) nil nil)))))))
 
 ; names of cut, split, halve not optimal
 
@@ -25,7 +28,7 @@
                    (test (car cs)) (list cs (rev tok))
                                    (self (cdr cs) (cons (car cs) tok))))
       (rev (map str
-                (rec (coerce s 'cons) nil))))))
+                (rec (seq s) nil))))))
 
 ; maybe promote to arc.arc, but if so include a list clause
 
