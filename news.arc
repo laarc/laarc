@@ -598,11 +598,12 @@ function vote(node) {
       (tag (img src logo-url* width 18 height 18 
                 style "border:1px #@(hexrep border-color*) solid;")))))
 
-(= toplabels* '(nil "welcome" "new" "threads" "comments" "leaders" "*"))
+(= toplabels* '(nil "welcome" "new" "threads" "comments" "discord" "*"))
 
 ; redefined later
 
 (= welcome-url* "/welcome")
+(= discord-url* "https://discord.gg/qaqkc9z")
 
 (def toprow (user label)
   (w/bars 
@@ -612,7 +613,7 @@ function vote(node) {
     (when user
       (toplink "threads" (threads-url user) label))
     (toplink "comments" "/newcomments" label)
-    (toplink "leaders"  "/leaders"     label)
+    (toplink "discord"  discord-url* label)
     (hook 'toprow user label)
     (link "submit" "/submit")
     (unless (mem label toplabels*)
