@@ -80,7 +80,11 @@
 (= initload-users* nil)
 
 (def load-news ((o reload))
-  (if reload (load "news.arc"))
+  (when reload
+    (load "arc.arc")
+    (load "libs.arc")
+    (load "news.arc")
+    (= caching* 0))
   (map ensure-dir (list arcdir* newsdir* storydir* votedir* profdir*))
   (unless stories* (load-items))
   (if (and initload-users* (empty profs*)) (load-users)))
@@ -406,7 +410,7 @@
 ; redefined later
 
 (def gen-css-url ()
-  (prn "<link rel=\"stylesheet\" type=\"text/css\" href=\"/news.css?4\">"))
+  (prn "<link rel=\"stylesheet\" type=\"text/css\" href=\"/news.css?@(random 1000000)\">"))
 
 (mac npage (title . body)
   `(tag html 
