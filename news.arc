@@ -268,7 +268,7 @@
    nourl-factor* .4 lightweight-factor* .3 )
 
 (def frontpage-rank (s (o scorefn realscore) (o gravity gravity*))
-  (* (/ (let base (- (scorefn s) 1)
+  (* (/ (let base (- (scorefn s) 0)
           (if (> base 0) (expt base .8) base))
         (expt (/ (+ (item-age s) timebase*) 60) gravity))
      (if (no (in s!type 'story 'poll))  .5
