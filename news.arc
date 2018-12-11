@@ -837,18 +837,12 @@ function vote(node) {
 
 ;(newsop index.html () (newspage user))
 
-(newsop l/all () (newspage user))
-(newsop l/news () (l-news user))
-(newsop l/pics () (l-pics user))
+(newsop l (path)
+  (let p (+ "/l/" path)
+    (listpage user (msec) (topstories user maxend* (unless (is path "all") (sym p))) path nil p)))
 
 (newscache newspage user 90
   (listpage user (msec) (topstories user maxend*) "all" nil "/l/all"))
-
-(newscache l-news user 90
-  (listpage user (msec) (topstories user maxend* '/l/news) "news" nil "/l/news"))
-
-(newscache l-pics user 90
-  (listpage user (msec) (topstories user maxend* '/l/pics) "pics" nil "/l/pics"))
 
 (def listpage (user t1 items label title (o url label) (o number t))
   (hook 'listpage user)
