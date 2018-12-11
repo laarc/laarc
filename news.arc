@@ -7,13 +7,13 @@
 
 (declare 'atstrings t)
 
-(= this-site*    "My Forum"
+(= this-site*    "Lambda News"
    site-url*     "http://news.yourdomain.com/"
    parent-url*   "http://www.yourdomain.com"
    favicon-url*  ""
-   site-desc*    "What this site is about."               ; for rss feed
-   site-color*   (color 180 180 180)
-   border-color* (color 180 180 180)
+   site-desc*    "Lambda News"               ; for rss feed
+   site-color*   (color 154 186 170)
+   border-color* (color 154 186 170)
    prefer-url*   t)
 
 
@@ -388,7 +388,7 @@
 
 ; Page Layout
 
-(= up-url* "grayarrow.gif" down-url* "graydown.gif" logo-url* "arc.png")
+(= up-url* "grayarrow.gif" down-url* "graydown.gif" logo-url* "ln.png")
 
 (defopr favicon.ico req favicon-url*)
 
