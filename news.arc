@@ -1153,10 +1153,13 @@ function vote(node) {
   (pr " by @(tostring (userlink user i!by))")
   (awhen (and (astory i) (tostring (sublink i)))
     (pr " to @it"))
-  (pr " @(text-age:item-age i) "))
+  (pr " @(tostring (itemlink i (text-age:item-age i))) "))
 
-(def sublink (item)
-  (link (item-path item)))
+(def itemlink (i (o label))
+  (link (or label "link") (item-url i!id)))
+
+(def sublink (i)
+  (link (item-path i)))
 
 (def user-url (user) (+ "/user?id=" user))
 
@@ -2115,7 +2118,6 @@ function vote(node) {
       (tag (div style "margin-top:2px; margin-bottom:-10px; ")
         (spanclass comhead
           (itemline c user)
-          (permalink c user)
           (when parent
             (when (cansee user c) (pr bar*))
             (link "parent" (item-url ((item parent) 'id))))
