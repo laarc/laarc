@@ -575,7 +575,7 @@ function vote(node) {
               (when (is switch 'full)
                 (tag (td style "line-height:12pt; height:10px;")
                   (spanclass pagetop
-                    (tag b (link this-site* "news"))
+                    (tag b (link this-site* "/l/all"))
                     (hspace 10)
                     (toprow user label))))
              (if (is switch 'full)
@@ -837,18 +837,18 @@ function vote(node) {
 
 ;(newsop index.html () (newspage user))
 
-(newscache newspage user 90
-  (listpage user (msec) (topstories user maxend*) nil nil "news"))
-
+(newsop l/all () (newspage user))
 (newsop l/news () (l-news user))
-
-(newscache l-news user 90
-  (listpage user (msec) (topstories user maxend* '/l/news) "/l/news" nil "/l/news"))
-
 (newsop l/pics () (l-pics user))
 
+(newscache newspage user 90
+  (listpage user (msec) (topstories user maxend*) "all" nil "/l/all"))
+
+(newscache l-news user 90
+  (listpage user (msec) (topstories user maxend* '/l/news) "news" nil "/l/news"))
+
 (newscache l-pics user 90
-  (listpage user (msec) (topstories user maxend* '/l/pics) "/l/pics" nil "/l/pics"))
+  (listpage user (msec) (topstories user maxend* '/l/pics) "pics" nil "/l/pics"))
 
 (def listpage (user t1 items label title (o url label) (o number t))
   (hook 'listpage user)
