@@ -482,7 +482,7 @@
                   (pr msg))))
     (br2)))
 
-(= (max-age* 'news.css) 86400)   ; cache css in browser for 1 day
+;(= (max-age* 'news.css) 86400)   ; cache css in browser for 1 day
 
 ; turn off server caching via (= caching* 0) or won't see changes
 
