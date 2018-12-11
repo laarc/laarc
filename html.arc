@@ -271,7 +271,7 @@
 ; For use as nested table.
 
 (mac zerotable body
-  `(tag (table border 0 cellpadding 0 cellspacing 0)
+  `(tag (table border 0 cellpadding 1 cellspacing 0)
      ,@body))
 
 ; was `(tag (table border 0 cellpadding 0 cellspacing 7) ,@body)
