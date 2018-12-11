@@ -1151,7 +1151,7 @@ function vote(node) {
 
 (def byline (i user)
   (pr " by @(tostring (userlink user i!by))")
-  (awhen (tostring (sublink i))
+  (awhen (and (astory i) (tostring (sublink i)))
     (pr " to @it"))
   (pr " @(text-age:item-age i) "))
 
