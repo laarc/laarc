@@ -587,7 +587,7 @@ function vote(node) {
                  (tag (td style "text-align:right;padding-right:4px;")
                    (spanclass pagetop (topright user whence)))
                  (tag (td style "line-height:12pt; height:10px;")
-                   (spanclass pagetop (prbold label))))))))
+                   (spanclass pagetop (tag b (link label "/l/all")))))))))
   (map [_ user] pagefns*)
   (spacerow 10))
 
@@ -843,6 +843,23 @@ function vote(node) {
 (newsop ||   () (newspage user))
 
 ;(newsop index.html () (newspage user))
+
+(= bookmarklet* "
+<p id=\"first\">
+Thanks to Phil Kast for writing the <a href=\"https://news.ycombinator.com/bookmarklet.html\">original bookmarklet</a>.
+<br><br>
+When you click on the bookmarklet, it will submit the page you're on to Lambda News.
+To install, drag this link to your browser toolbar:
+<br><br>
+</p>
+<center>
+<!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\">
+-->
+<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:window.location=%22http://uninitialize.com/submitlink?l=news&u=%22+encodeURIComponent(document.location)+%22&t=%22+encodeURIComponent(document.title)\"><u>post to LN</u></a>
+")
+
+(newsop bookmarklet.html ()
+  (msgpage user bookmarklet* "Bookmarklet"))
 
 (= lncache* (table))
 (= lncache-time* 90)
@@ -1493,13 +1510,13 @@ function vote(node) {
     page. If there is a url, the text will be ignored.")
 
 ; For use by outside code like bookmarklet.
-; http://news.domain.com/submitlink?u=http://foo.com&t=Foo
+; http://news.domain.com/submitlink?l=news&u=http://foo.com&t=Foo
 ; Added a confirm step to avoid xss hacks.
 
-(newsop submitlink (u t l)
+(newsop submitlink (l u t)
   (if user 
-      (submit-page user u t l)
-      (submit-login-warning u t l)))
+      (submit-page user l u t)
+      (submit-login-warning l u t)))
 
 (= title-limit* 80
    retry*       "Please try again."
@@ -2269,7 +2286,7 @@ function vote(node) {
 
 (newsop rss () (rsspage nil))
 
-(newscache rsspage user 90 
+(newscache rsspage user 90
   (rss-stories (retrieve perpage* live ranked-stories*)))
 
 (def rss-stories (stories)
