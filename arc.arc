@@ -514,7 +514,7 @@
                (f (car s))  (self (cdr s))
                             (cons (car s) (self (cdr s)))))
           seq)
-        (coerce (rem test (coerce seq 'cons)) 'string))))
+        (str (rem test (coerce seq 'cons))))))
 
 ; Seems like keep doesn't need to testify-- would be better to
 ; be able to use tables as fns.  But rem does need to, because
@@ -732,7 +732,7 @@
 (def consif (x y) (if x (cons x y) y))
 
 (def string args
-  (apply + "" (map [coerce _ 'string] args)))
+  (apply + "" (map str args)))
 
 (def flat x
   ((afn (x acc)
@@ -846,6 +846,7 @@
   val)
 
 (def sym (x) (coerce x 'sym))
+(def str (x) (coerce x 'string))
 
 (def int (x (o b 10)) (coerce x 'int b))
 
@@ -1426,16 +1427,16 @@
         (w/instring s str
           (whilet c (readc s)
             (case c 
-              #\# (do (a (coerce (rev chars) 'string))
+              #\# (do (a (str (rev chars)))
                       (wipe chars)
                       (a (read s)))
-              #\~ (do (a (coerce (rev chars) 'string))
+              #\~ (do (a (str (rev chars)))
                       (wipe chars)
                       (readc s)
                       (a (list argsym (++ i))))
                   (push c chars))))
          (when chars
-           (a (coerce (rev chars) 'string))))))
+           (a (str (rev chars)))))))
   
   (mac prf (str . args)
     `(let ,argsym (list ,@args)
@@ -1525,7 +1526,7 @@
     (case (type x)
       string (map downc x)
       char   (downc x)
-      sym    (sym (map downc (coerce x 'string)))
+      sym    (sym (map downc (str x)))
              (err "Can't downcase" x))))
 
 (def upcase (x)
@@ -1537,7 +1538,7 @@
     (case (type x)
       string (map upc x)
       char   (upc x)
-      sym    (sym (map upc (coerce x 'string)))
+      sym    (sym (map upc (str x)))
              (err "Can't upcase" x))))
 
 (def inc (x (o n 1))

@@ -232,7 +232,7 @@ Connection: close"))
                   (respond-err str unknown-msg*))))))
 
 (def static-filetype (sym)
-  (let fname (coerce sym 'string)
+  (let fname (str sym)
     (and (~find #\/ fname)
          (case (downcase (last (check (tokens fname #\.) ~single)))
            "gif"  'gif

@@ -13,7 +13,7 @@
                (if (no cs)         (consif tok toks)
                    (test (car cs)) (self (cdr cs) (consif tok toks) nil)
                                    (self (cdr cs) toks (cons (car cs) tok))))
-      (rev (map [coerce _ 'string]
+      (rev (map str
                 (map rev (rec (coerce s 'cons) nil nil)))))))
 
 ; names of cut, split, halve not optimal
@@ -24,7 +24,7 @@
                (if (no cs)         (list (rev tok))
                    (test (car cs)) (list cs (rev tok))
                                    (self (cdr cs) (cons (car cs) tok))))
-      (rev (map [coerce _ 'string]
+      (rev (map str
                 (rec (coerce s 'cons) nil))))))
 
 ; maybe promote to arc.arc, but if so include a list clause
