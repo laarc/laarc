@@ -1012,7 +1012,8 @@ To install, drag this link to your browser toolbar:
           (killlink s user whence)
           (blastlink s user whence)
           (blastlink s user whence t)
-          (deletelink s user whence)))))
+          (deletelink s user whence)
+          (scorelink s user whence)))))
 
 (def display-item-number (i)
   (when i (tag (td align 'right valign 'top class 'title)
@@ -1353,6 +1354,11 @@ To install, drag this link to your browser toolbar:
                  (prn "Do you want this to @(if i!deleted 'stay 'be) deleted?")
                  (br2)
                  (but "Yes" "b") (sp) (but "No" "b")))))))
+
+(def scorelink (i user (o whence))
+  (when (admin user)
+    (pr bar*)
+    (pr (frontpage-rank i))))
 
 (def permalink (story user)
   (when (cansee user story)
