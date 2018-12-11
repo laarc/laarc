@@ -2234,7 +2234,7 @@ To install, drag this link to your browser toolbar:
               here  (threads-url subject))
         (longpage user (msec) nil label title here
           (awhen (keep [and (cansee user _) (~subcomment _)]
-                       (comments subject maxend*))
+                       (submissions subject maxend*))
             (display-threads user it label title here))))
       (prn "No such user.")))
 
@@ -2242,7 +2242,11 @@ To install, drag this link to your browser toolbar:
                       (o start 0) (o end threads-perpage*))
   (tab 
     (each c (cut comments start end)
-      (display-comment-tree c user whence 0 t))
+      (row
+        (if (acomment c)
+            (display-comment-tree c user whence 0 t)
+            (tab (display-item nil c user whence t))))
+      (spacerow (if (acomment c) 15 5)))
     (when end
       (let newend (+ end threads-perpage*)
         (when (and (<= newend maxend*) (< end (len comments)))
