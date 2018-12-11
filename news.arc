@@ -602,12 +602,12 @@ function vote(node) {
 
 ; redefined later
 
-(= welcome-url* "/welcome")
-(= discord-url* "https://discord.gg/qaqkc9z")
+(= welcome-url* nil ;"/welcome"
+   discord-url* "https://discord.gg/qaqkc9z")
 
 (def toprow (user label)
   (w/bars 
-    (when (noob user)
+    (when (and welcome-url* (noob user))
       (toplink "welcome" welcome-url* label)) 
     (toplink "new" "/newest" label)
     (when user
