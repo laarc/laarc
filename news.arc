@@ -826,15 +826,17 @@ function vote(node) {
 ; To allow other arguments, would have to turn the cache from a single 
 ; stored value to a hash table whose keys were lists of arguments.
 
-(mac newscache (name user time . body)
+(mac newsfn (user time . body)
   (w/uniq gc
     `(let ,gc (cache (fn () (* caching* ,time))
                      (fn () (tostring (let ,user nil ,@body))))
-       (def ,name (,user) 
+       (fn (,user)
          (if ,user 
              (do ,@body) 
              (pr (,gc)))))))
 
+(mac newscache (name user time . body)
+  `(safeset ,name (newsfn ,user ,time ,@body)))
 
 (newsop news () (newspage user))
 
@@ -842,9 +844,16 @@ function vote(node) {
 
 ;(newsop index.html () (newspage user))
 
+(= lncache* (table))
+(= lncache-time* 90)
+
 (newsop l (path)
-  (let p (+ "/l/" path)
-    (listpage user (msec) (topstories user maxend* (unless (is path "all") (sym p))) path nil p)))
+  ((or (lncache* path)
+       (= (lncache* path)
+          (newsfn user lncache-time* ()
+            (let p (+ "/l/" path)
+              (listpage user (msec) (topstories user maxend* (unless (is path "all") (sym p))) path nil p)))))
+   user))
 
 (newscache newspage user 90
   (listpage user (msec) (topstories user maxend*) "all" nil "/l/all"))
