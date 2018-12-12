@@ -307,7 +307,7 @@
 (def apath (x)
   (is ((str x) 0) #\/))
 
-(def item-path (i) (find apath i!keys))
+(def item-paths (i) (keep apath i!keys))
 
 (def item-age (i) (minutes-since i!time))
 
@@ -1158,15 +1158,17 @@ It should look like this:
 
 (def byline (i user)
   (pr " by @(tostring (userlink user i!by))")
-  (awhen (and (astory i) (tostring (sublink i)))
+  (awhen (and (astory i) (tostring (sublinks i)))
     (pr " to @it"))
   (pr " @(tostring (itemlink i (text-age:item-age i))) "))
 
 (def itemlink (i (o label))
   (link (or label "link") (item-url i!id)))
 
-(def sublink (i)
-  (link (item-path i)))
+(def sublinks (i)
+  (each p (item-paths i)
+    (link p)
+    (sp)))
 
 (def user-url (user) (+ "/user?id=" user))
 
