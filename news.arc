@@ -410,7 +410,7 @@
 ; redefined later
 
 (def gen-css-url ()
-  (prn "<link rel=\"stylesheet\" type=\"text/css\" href=\"/news.css?@(rand 1000000)\">"))
+  (prn "<link rel=\"stylesheet\" type=\"text/css\" href=\"/news.css\">"))
 
 (mac npage (title . body)
   `(tag html 
