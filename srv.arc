@@ -73,10 +73,11 @@
 ; To adjust this while running, adjust the req-window* time, not 
 ; req-limit*, because algorithm doesn't enforce decreases in the latter.
 
-(= req-times* (table) req-limit* 30 req-window* 10 dos-window* 2)
+(= req-times* (table) req-limit* 30 req-window* 10 dos-window* 2 dos-protection* nil)
 
 (def abusive-ip (ip)
-  (and (only.> (requests/ip* ip) 250)
+  (and dos-protection*
+       (only.> (requests/ip* ip) 250)
        (let now (seconds)
          (do1 (if (req-times* ip)
                   (and (>= (qlen (req-times* ip)) 
