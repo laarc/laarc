@@ -1615,7 +1615,8 @@ It should look like this:
   (let s (inst 'item 'type 'story 'id (new-item-id) 
                      'url url 'title title 'text text 'by user 'ip ip)
     (when sub
-      (pushnew sub s!keys))
+      (each x (rev (tokens sub))
+        (pushnew (clean-sub x) s!keys)))
     (save-item s)
     (= (items* s!id) s)
     (unless (blank url) (register-url s url))
