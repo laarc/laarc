@@ -479,7 +479,7 @@
   (minipage (or title "Message")
     (spanclass admin
       (center (if (len> msg 80) 
-                  (widtable 500 msg)
+                  (widtable 300 msg)
                   (pr msg))))
     (br2)))
 
@@ -821,9 +821,17 @@ To install, drag this link to your browser toolbar:
 <br><br>
 </p>
 <center>
-<!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\">
--->
+<!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\"> -->
 <a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:window.location=%22http://uninitialize.com/submitlink?l=news&u=%22+encodeURIComponent(document.location)+%22&t=%22+encodeURIComponent(document.title)\"><u>post to LN</u></a>
+<br><br>
+<br><br>
+On mobile devices, create a new bookmark, edit it, and replace its url with the following text:
+<br><br>
+<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:window.location=%22http://uninitialize.com/submitlink?l=news&amp;u=%22+encodeURIComponent(document.location)+%22&amp;t=%22+encodeURIComponent(document.title)</textarea>
+<br><br>
+It should look like this:
+<br><br>
+<img src=\"https://i.imgur.com/J1kFydT.png\" width=\"300px\" />
 ")
 
 (newsop bookmarklet.html ()
