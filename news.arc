@@ -461,7 +461,10 @@
       (pr (round (/ (memory) 1000000)) " mb")
       (pr elapsed " msec")
       (link "settings" "/newsadmin")
-      (hook 'admin-bar user whence))))
+      (hook 'admin-bar user whence))
+    (br2))
+  (when (in whence "/l/dev" "/l/programming" "/l/react" "/l/reactnative")
+    (prn "<iframe src=\"https://open.spotify.com/embed/user/johanbrook/playlist/2mtlhuFVOFMn6Ho3JmrLc2\" width=\"300\" height=\"380\" frameborder=\"0\" allowtransparency=\"true\" allow=\"encrypted-media\"></iframe>")))
 
 (def color-stripe (c)
   (tag (table width "100%" cellspacing 0 cellpadding 1)
