@@ -456,6 +456,7 @@
   (br2)
   (when (admin user)
     (w/bars
+      (pr whence)
       (pr (len items*) "/" maxid* " loaded")
       (pr (round (/ (memory) 1000000)) " mb")
       (pr elapsed " msec")
