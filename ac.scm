@@ -1412,6 +1412,9 @@
                     ((explicit-flush) (set! explicit-flush flag)))
                   val)))
 
+(xdef get-environment-variable getenv)
+(xdef set-environment-variable putenv)
+
 (putenv "TZ" ":GMT")
 
 (define (gmt-date sec) (seconds->date sec))
