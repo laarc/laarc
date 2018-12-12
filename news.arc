@@ -415,6 +415,7 @@
 (mac npage (title . body)
   `(tag html 
      (tag head 
+       (prn "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">")
        (gen-css-url)
        (prn "<link rel=\"shortcut icon\" href=\"" favicon-url* "\">")
        (tag script (pr votejs*))
