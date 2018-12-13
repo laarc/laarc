@@ -839,11 +839,14 @@
 (def filechars (name)
   (w/infile s name (allchars s)))
 
-(def writefile (val file)
+(def savefile (val file (o writer disp))
   (let tmpfile (+ file ".tmp")
-    (w/outfile o tmpfile (write val o))
+    (w/outfile o tmpfile (writer val o))
     (mvfile tmpfile file))
   val)
+
+(def writefile (val file (o writer write))
+  (savefile val file write))
 
 (def sym (x) (coerce x 'sym))
 (def str (x) (coerce x 'string))
@@ -1617,11 +1620,14 @@
                                ,init))
             (= (savers* ',var) (fn (,gv) (,save ,gv ,file)))))))
 
-(mac diskvar (var file)
-  `(fromdisk ,var ,file nil readfile1 writefile))
+(mac diskfile (var file (o init nil))
+  `(fromdisk ,var ,file ,init filechars savefile))
 
-(mac disktable (var file)
-  `(fromdisk ,var ,file (table) load-table save-table))
+(mac diskvar (var file (o init nil))
+  `(fromdisk ,var ,file ,init readfile1 writefile))
+
+(mac disktable (var file (o init '(table)))
+  `(fromdisk ,var ,file ,init load-table save-table))
 
 (mac todisk (var (o expr var))
   `((savers* ',var) 
