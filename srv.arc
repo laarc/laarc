@@ -237,15 +237,17 @@ Connection: close"))
   (let fname (str sym)
     (and (~find #\/ fname)
          (case (downcase (last (check (tokens fname #\.) ~single)))
-           "gif"  'gif
-           "jpg"  'jpg
-           "jpeg" 'jpg
-           "png"  'png
+           "gif"  'image/gif
+           "jpg"  'image/jpg
+           "jpeg" 'image/jpg
+           "png"  'image/png
            "css"  'text/css
            "txt"  'text/plain
            "htm"  'text/html
            "html" 'text/html
-           "arc"  'text/html
+           "arc"  'text/plain
+           "js"   'application/javascript
+           "json" 'application/json
            ))))
 
 (def respond-err (str msg . args)
