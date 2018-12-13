@@ -2510,7 +2510,7 @@ first asterisk isn't whitespace.
       (idtab "guidelines"
         (row (underlink "/guidelines.html"))
         (row (textarea "guidelines" 80 60
-               (only.pr:esc-tags:unmarkdown guidelines-page* t)))
+               (pr:esc-tags:unmarkdown guidelines-page* t)))
         (row (submit "update /guidelines.html"))))
 
     (urform user req
@@ -2519,7 +2519,7 @@ first asterisk isn't whitespace.
       (idtab "welcome"
         (row (underlink "/welcome.html"))
         (row (textarea "welcome" 80 60
-               (only.pr:esc-tags:unmarkdown welcome-page* t)))
+               (pr:esc-tags:unmarkdown welcome-page* t)))
         (row (submit "update /welcome.html"))))
 
     (urform user req
@@ -2528,7 +2528,7 @@ first asterisk isn't whitespace.
       (idtab "bookmarklet"
         (row (underlink "/bookmarklet.html"))
         (row (textarea "bookmarklet" 80 60
-               (only.pr:esc-tags bookmarklet-page*)))
+               (pr:esc-tags bookmarklet-page*)))
         (row (submit "update /bookmarklet.html"))))))
 
 
