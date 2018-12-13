@@ -2508,7 +2508,7 @@ first asterisk isn't whitespace.
            (do (todisk guidelines-page* (md-from-form (arg req "guidelines") nil t))
                "/guidelines.html")
       (idtab "guidelines"
-        (row (underlink "guidelines" "/guidelines.html"))
+        (row (underlink "/guidelines.html"))
         (row (textarea "guidelines" 80 60
                (only.pr:esc-tags:unmarkdown guidelines-page* t)))
         (row (submit "update /guidelines.html"))))
@@ -2517,7 +2517,7 @@ first asterisk isn't whitespace.
            (do (todisk welcome-page* (md-from-form (arg req "welcome") nil t))
                "/welcome.html")
       (idtab "welcome"
-        (row (underlink "welcome" "/welcome.html"))
+        (row (underlink "/welcome.html"))
         (row (textarea "welcome" 80 60
                (only.pr:esc-tags:unmarkdown welcome-page* t)))
         (row (submit "update /welcome.html"))))
@@ -2526,7 +2526,7 @@ first asterisk isn't whitespace.
            (do (todisk bookmarklet-page* (arg req "bookmarklet"))
                "/bookmarklet.html")
       (idtab "bookmarklet"
-        (row (underlink "bookmarklet" "/bookmarklet.html"))
+        (row (underlink "/bookmarklet.html"))
         (row (textarea "bookmarklet" 80 60
                (only.pr:esc-tags bookmarklet-page*)))
         (row (submit "update /bookmarklet.html"))))))
