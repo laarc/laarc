@@ -752,7 +752,7 @@ function vote(node) {
     `((string  user       ,subject                                  t   nil)
       (string  name       ,(p 'name)                               ,m  ,m)
       (string  created    ,(text-age:user-age subject)              t   nil)
-      (string  password   ,(resetpw-link)                          ,w   nil)
+      (string  password   ,(resetpw-link subject)                  ,u   nil)
       (string  saved      ,(saved-link user subject)               ,u   nil)
       (int     auth       ,(p 'auth)                               ,e  ,a)
       (yesno   member     ,(p 'member)                             ,a  ,a)
@@ -781,8 +781,8 @@ function vote(node) {
           ""
           (tostring (underlink n (saved-url subject)))))))
 
-(def resetpw-link ()
-  (tostring (underlink "reset password" "resetpw")))
+(def resetpw-link (u)
+  (tostring (underlink "reset password" "resetpw?u=@u")))
 
 (newsop welcome ()
   (pr "Welcome to " this-site* ", " user "!"))
@@ -2442,26 +2442,34 @@ first asterisk isn't whitespace.
 
 ; Reset PW
 
-(defopg resetpw req (resetpw-page (get-user req)))
+(defopg resetpw req
+  (with (user (get-user req)
+         subject (arg req "u"))
+    (resetpw-page user subject)))
 
-(def resetpw-page (user (o msg))
-  (minipage "Reset Password"
-    (if msg
-         (pr msg)
-        (blank (uvar user email))
-         (do (pr "Before you do this, please add your email address to your ")
-             (underlink "profile" (user-url user))
-             (pr ". Otherwise you could lose your account if you mistype 
-                  your new password.")))
-    (br2)
-    (uform user req (try-resetpw user (arg req "p"))
-      (single-input "New password: " 'p 20 "reset" t))))
+(def resetpw-page (user subject (o msg))
+  (let subject (or subject user)
+    (if (~or (admin user) (is user subject))
+        (pr "Sorry.")
+      (minipage "Reset Password"
+        (pr "Resetting password for @subject")
+        (br2)
+        (if msg
+             (pr msg)
+            (blank (uvar user email))
+             (do (pr "Before you do this, please add your email address to your ")
+                 (underlink "profile" (user-url user))
+                 (pr ". Otherwise you could lose your account if you mistype 
+                      your new password.")))
+        (br2)
+        (uform user req (try-resetpw user subject (arg req "p"))
+          (single-input "New password: " 'p 20 "reset" t))))))
 
-(def try-resetpw (user newpw)
+(def try-resetpw (user subject newpw)
   (if (len< newpw 4)
-      (resetpw-page user "Passwords should be a least 4 characters long.  
+      (resetpw-page user subject "Passwords should be a least 4 characters long.  
                           Please choose another.")
-      (do (set-pw user newpw)
+      (do (set-pw subject newpw)
           (newspage user))))
 
 
