@@ -7,7 +7,8 @@
 
 (declare 'atstrings t)
 
-(= this-site*    "laarc"
+(= site-name*    "laarc"
+   site-abbrev*  "LN"
    site-url*     "/"
    parent-url*   "/"
    favicon-url*  ""
@@ -431,7 +432,7 @@
 (mac fulltop (user lid label title whence . body)
   (w/uniq (gu gi gl gt gw)
     `(with (,gu ,user ,gi ,lid ,gl ,label ,gt ,title ,gw ,whence)
-       (npage (+ (if ,gt (+ ,gt bar*) "") this-site*)
+       (npage (+ (if ,gt (+ ,gt bar*) "") site-name*)
          (if (check-procrast ,gu)
              (do (pagetop 'full ,gi ,gl ,gt ,gu ,gw)
                  (hook 'page ,gu ,gl)
@@ -479,7 +480,7 @@
      (trtd ,@body)))
 
 (mac minipage (label . body)
-  `(npage (+ this-site* bar* ,label)
+  `(npage (+ site-name* bar* ,label)
      (pagetop nil nil ,label)
      (trtd ,@body)))
 
@@ -493,7 +494,7 @@
             (underlink "edit" it)
             (br2)))
         (if (len> msg 80) 
-            (widtable 300 msg)
+            (widtable 320 msg)
             (pr msg))))
     (br2)))
 
@@ -561,7 +562,7 @@ function vote(node) {
               (when (is switch 'full)
                 (tag (td style "line-height:12pt; height:10px;")
                   (spanclass pagetop
-                    (tag b (link this-site* "/l/all"))
+                    (tag b (link site-name* "/l/all"))
                     (hspace 10)
                     (toprow user label))))
              (if (is switch 'full)
@@ -582,7 +583,7 @@ function vote(node) {
 
 ; redefined later
 
-(= welcome-url* "/guidelines.html"
+(= welcome-url* "/welcome.html"
    discord-url* "https://discord.gg/qaqkc9z")
 
 (def toprow (user label)
@@ -795,7 +796,7 @@ function vote(node) {
   (tostring (underlink "reset password" "resetpw?u=@u")))
 
 (newsop welcome ()
-  (pr "Welcome to " this-site* ", " user "!"))
+  (pr "Welcome to " site-name* ", " user "!"))
 
 
 ; Main Operators
@@ -2270,7 +2271,7 @@ function vote(node) {
 (def rss-stories (stories)
   (tag (rss version "2.0")
     (tag channel
-      (tag title (pr this-site*))
+      (tag title (pr site-name*))
       (tag link (pr site-url*))
       (tag description (pr site-desc*))
       (each s stories
@@ -2495,32 +2496,43 @@ first asterisk isn't whitespace.
 (def pages-url ((o anchor nil)) (+ "/pages" (aand anchor "#@it")))
 
 (defopa pages req
-  (pages-page (get-user req) (arg req "msg")))
+  (edit-pages-page (get-user req) (arg req "msg")))
 
-(def pages-page (user (o msg nil))
-  (minipage "Site Pages"
+(def edit-pages-page (user (o msg nil))
+  (minipage "Edit Pages"
     (when msg (pr msg) (br2))
-    (uform user req
-           (do (todisk guidelines* (md-from-form (arg req "guidelines") nil t))
-               (pages-page user "Changes saved."))
+
+    (urform user req
+           (do (todisk guidelines-page* (md-from-form (arg req "guidelines") nil t))
+               "/guidelines.html")
       (idtab "guidelines"
         (row (underlink "guidelines" "/guidelines.html"))
-        (row (textarea "guidelines" 60 60
-               (only.pr:esc-tags:unmarkdown guidelines*)))
-        (row (submit "update guidelines"))))
-    (uform user req
-           (do (todisk bookmarklet* (arg req "bookmarklet"))
-               (pages-page user "Changes saved."))
+        (row (textarea "guidelines" 80 60
+               (only.pr:esc-tags:unmarkdown guidelines-page* t)))
+        (row (submit "update /guidelines.html"))))
+
+    (urform user req
+           (do (todisk welcome-page* (md-from-form (arg req "welcome") nil t))
+               "/welcome.html")
+      (idtab "welcome"
+        (row (underlink "welcome" "/welcome.html"))
+        (row (textarea "welcome" 80 60
+               (only.pr:esc-tags:unmarkdown welcome-page* t)))
+        (row (submit "update /welcome.html"))))
+
+    (urform user req
+           (do (todisk bookmarklet-page* (arg req "bookmarklet"))
+               "/bookmarklet.html")
       (idtab "bookmarklet"
         (row (underlink "bookmarklet" "/bookmarklet.html"))
-        (row (textarea "bookmarklet" 60 60
-               (only.pr:esc-tags bookmarklet*)))
-        (row (submit "update bookmarklet"))))))
+        (row (textarea "bookmarklet" 80 60
+               (only.pr:esc-tags bookmarklet-page*)))
+        (row (submit "update /bookmarklet.html"))))))
 
 
 ; Bookmarklet
 
-(diskfile bookmarklet* (+ newsdir* "bookmarklet.html") "
+(diskfile bookmarklet-page* (+ newsdir* "bookmarklet.html") "
 <p id=\"first\">
     Thanks to Phil Kast for writing the <a href=\"https://news.ycombinator.com/bookmarklet.html\"><u>original bookmarklet</u></a>.
     <br><br> When you click on the bookmarklet, it will submit the page you're on to Lambda News. To install, drag this link to your browser toolbar:
@@ -2532,7 +2544,7 @@ first asterisk isn't whitespace.
 <!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\"> -->
 
 <a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.laarc.io/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));\">
-  <u>post to LN</u>
+  <u>post to @(do site-abbrev*)</u>
 </a>
 
 <br><br>
@@ -2547,44 +2559,68 @@ first asterisk isn't whitespace.
 ")
 
 (newsop bookmarklet.html ()
-  (msgpage user bookmarklet* "Bookmarklet" (pages-url "bookmarklet")))
+  (msgpage user bookmarklet-page* "Bookmarklet" (pages-url "bookmarklet")))
 
 
 ; Guidelines
 
-(diskfile guidelines* (+ newsdir* "guidelines.md") (md-from-form "
+(diskfile guidelines-page* (+ newsdir* "guidelines.html") (md-from-form "
 _What to Submit_
 
-On-Topic: STEM. Humanities. Humor. Anything intellectually engaging
-and pro-social.
+On-Topic: STEM. Humanities. Humor. Anything intellectually engaging and pro-social.
 
 Off-Topic: That which is flame bait or vacuous.
 
 _In Submissions_
 
-If you submit a link to a video or pdf, please warn readers by
-appending [video] or [pdf] to the title.
+If you submit a link to a video or pdf, please warn readers by appending [video] or [pdf] to the title.
 
 Please submit the original source.
 
 _In Comments_
 
-Be civil. On difficult subjects in particular, you should work hard at
-being diplomatic. (It helps to picture yourself speaking to a friend.)
+Be civil. On difficult subjects in particular, you should work hard at being diplomatic. (It helps to picture yourself speaking to a friend.)
 
-When disagreeing, reply to the argument instead of calling names.
-\"That is idiotic; 1 + 1 is 2, not 3\" can be shortened to \"1 + 1 is
-2, not 3.\"
+When disagreeing, reply to the argument instead of calling names.  \"That is idiotic; 1 + 1 is 2, not 3\" can be shortened to \"1 + 1 is 2, not 3.\"
 
 Assume good faith.
 
 Eschew flamebait.
 
-Please limit your use of uppercase; it looks like shouting and is hard
-to read."))
+Please limit your use of uppercase; it looks like shouting and is hard to read.
+" nil t))
 
 (newsop guidelines.html ()
-  (msgpage user guidelines* "Guidelines" (pages-url "guidelines")))
+  (msgpage user guidelines-page* "Guidelines" (pages-url "guidelines")))
+
+; Welcome
+
+(diskfile welcome-page* (+ newsdir* "welcome.html") (md-from-form 
+"_Welcome to @(do site-name*)_
+
+<a href=\"/\"><u>@(do site-name*)</u></a> is a bit different from other community sites, and we'd appreciate it if you'd take a minute to read the following as well as the <a href=\"/guidelines.html\"><u>official guidelines</u></a>.
+
+@site-abbrev* is an experiment. As a rule, a community site that becomes popular will decline in quality. Our hypothesis is that this is not inevitable—that by making a conscious effort to resist decline, we can keep it from happening.
+
+Essentially there are two rules here: don't post or upvote crap links, and don't be rude or dumb in comment threads.
+
+A crap link is one that's only superficially interesting. Stories on @site-abbrev* don't have to be about hacking, because good hackers aren't only interested in hacking, but they do have to be deeply interesting.
+
+What does \"deeply interesting\" mean? It means stuff that teaches you about the world. A story about a robbery, for example, would probably not be deeply interesting. But if this robbery was a sign of some bigger, underlying trend, perhaps it could be.
+
+The worst thing to post or upvote is something that's intensely but shallowly interesting: gossip about famous people, funny or cute pictures or videos, partisan political articles, etc. If you let that sort of thing onto a news site, it will push aside the deeply interesting stuff, which tends to be quieter.
+
+The most important principle on @(do site-abbrev*), though, is to make thoughtful comments. Thoughtful in both senses: civil and substantial.
+
+The test for substance is a lot like it is for links. Does your comment teach us anything? There are two ways to do that: by pointing out some consideration that hadn't previously been mentioned, and by giving more information about the topic, perhaps from personal experience.  Whereas comments like \"LOL!\" or worse still, \"That's retarded!\" teach us nothing.
+
+Empty comments can be ok if they're positive.  There's nothing wrong with submitting a comment saying just \"Thanks.\" What we especially discourage are comments that are empty and negative—comments that are mere name-calling.
+
+Which brings us to the most important principle on @(do site-abbrev*): civility. Since long before the web, the anonymity of online conversation has lured people into being much ruder than they'd be in person. So the principle here is: don't say anything you wouldn't say face to face.  This doesn't mean you can't disagree. But disagree without calling names. If you're right, your argument will be more convincing without them.
+" nil t))
+
+(newsop welcome.html ()
+  (msgpage user welcome-page* "Welcome" (pages-url "welcome")))
 
 ; Abuse Analysis
 
