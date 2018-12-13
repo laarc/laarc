@@ -2011,7 +2011,7 @@ Please limit your use of uppercase; it looks like shouting and is hard to read.
                      (when (and (is name 'dead) val (no i!dead))
                        (log-kill i user))
                      (= (i name) val)))
-                 (fn () (if (admin user) (pushnew 'locked i!keys))
+                 (fn () ;(if (admin user) (pushnew 'locked i!keys))
                         (save-item i)
                         (metastory&adjust-rank i)
                         (wipe (comment-cache* i!id))
