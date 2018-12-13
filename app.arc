@@ -548,7 +548,7 @@
                       (nonwhite (s (+ i 2))))))
      (writec (s (++ i))))))
 
-(def unmarkdown (s)
+(def unmarkdown (s (o skiplinks))
   (tostring
     (forlen i s
       (if (litmatch "<p>" s i)
@@ -562,8 +562,9 @@
            (do (++ i 2) (pr #\_))
           (litmatch "</b>" s i)
            (do (++ i 3) (pr #\_))
-          (litmatch "<a href=" s i)
-           (let endurl (posmatch [in _ #\> #\space] s (+ i 9))
+          (unless skiplinks
+            (litmatch "<a href=" s i))
+           (let endurl (posmatch [in _ #\>] s (+ i 9))
              (if endurl
                  (do (pr (cut s (+ i 9) (- endurl 1)))
                      (= i (aif (posmatch "</a>" s endurl)
