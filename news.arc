@@ -483,9 +483,14 @@
      (pagetop nil nil ,label)
      (trtd ,@body)))
 
-(def msgpage (user msg (o title))
+(def msgpage (user msg (o title) (o editurl) (o alert))
   (minipage (or title "Message")
+    (awhen alert (pr it) (br2))
     (spanclass admin
+      (awhen editurl
+        (when (admin user)
+          (underlink "edit" it)
+          (br2)))
       (center (if (len> msg 80) 
                   (widtable 300 msg)
                   (pr msg))))
@@ -819,31 +824,6 @@ function vote(node) {
 (newsop ||   () (newspage user))
 
 ;(newsop index.html () (newspage user))
-
-(= bookmarklet* "
-<p id=\"first\">
-Thanks to Phil Kast for writing the <a href=\"https://news.ycombinator.com/bookmarklet.html\">original bookmarklet</a>.
-<br><br>
-When you click on the bookmarklet, it will submit the page you're on to Lambda News.
-To install, drag this link to your browser toolbar:
-<br><br>
-</p>
-<center>
-<!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\"> -->
-<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:window.location=%22https://www.laarc.io/submitlink?l=news&u=%22+encodeURIComponent(document.location)+%22&t=%22+encodeURIComponent(document.title)\"><u>post to LN</u></a>
-<br><br>
-<br><br>
-On mobile devices, create a new bookmark, edit it, and replace its url with the following text:
-<br><br>
-<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:window.location=%22https://www.laarc.io/submitlink?l=news&amp;u=%22+encodeURIComponent(document.location)+%22&amp;t=%22+encodeURIComponent(document.title)</textarea>
-<br><br>
-It should look like this:
-<br><br>
-<img src=\"https://i.imgur.com/J1kFydT.png\" width=\"300px\" />
-")
-
-(newsop bookmarklet.html ()
-  (msgpage user bookmarklet* "Bookmarklet"))
 
 (= lncache* (table))
 (= lncache-time* 90)
@@ -2508,28 +2488,102 @@ first asterisk isn't whitespace.
       (br2)
       (submit "update"))))
 
-; Site Options
 
-(defopa options req
-  (options-page (get-user req)))
+; Site pages
 
-(diskvar guidelines* (+ newsdir* "guidelines"))
+(def pages-url ((o anchor nil)) (+ "/pages" (aand anchor "#@it")))
 
-(newsop guidelines.html ()
-  (msgpage user guidelines* "Guidelines"))
+(defopa pages req
+  (pages-page (get-user req) (arg req "msg")))
 
-(def options-page (user (o msg nil))
-  (minipage "Site Options"
+(def pages-page (user (o msg nil))
+  (minipage "Site Pages"
     (when msg (pr msg) (br2))
     (uform user req
-           (do (todisk guidelines* (md-from-form (arg req "guidelines") t))
-               (options-page user "Changes saved."))
-      (pr "Guidelines: ")
-      (textarea "guidelines" 60 60  
-        (aif guidelines* (prn (unmarkdown it))))
-      (br2)
-      (submit "update"))))
+           (do (todisk guidelines* (md-from-form (arg req "guidelines") nil t))
+               (pages-page user "Changes saved."))
+      (idtab "guidelines"
+        (row (underlink "guidelines" "/guidelines.html"))
+        (row (textarea "guidelines" 60 60
+               (only.pr:esc-tags:unmarkdown guidelines*)))
+        (row (submit "update guidelines"))))
+    (uform user req
+           (do (todisk bookmarklet* (arg req "bookmarklet"))
+               (pages-page user "Changes saved."))
+      (idtab "bookmarklet"
+        (row (underlink "bookmarklet" "/bookmarklet.html"))
+        (row (textarea "bookmarklet" 60 60
+               (only.pr:esc-tags bookmarklet*)))
+        (row (submit "update bookmarklet"))))))
 
+
+; Bookmarklet
+
+(diskfile bookmarklet* (+ newsdir* "bookmarklet.html") "
+<p id=\"first\">
+    Thanks to Phil Kast for writing the <a href=\"https://news.ycombinator.com/bookmarklet.html\"><u>original bookmarklet</u></a>.
+    <br><br> When you click on the bookmarklet, it will submit the page you're on to Lambda News. To install, drag this link to your browser toolbar:
+    <br><br>
+</p>
+
+<center>
+
+<!-- <div style=\"margin: auto; padding: 16px; width: 30%; background: #f7f7f7;\"> -->
+
+<a style=\"color: #777; font-size: 2em;\" rel=\"nofollow\" href=\"javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.laarc.io/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));\">
+  <u>post to LN</u>
+</a>
+
+<br><br>
+<br><br> On mobile devices, create a new bookmark, edit it, and replace its url with the following text:
+<br><br>
+
+<textarea cols=\"60\" rows=\"7\" wrap=\"virtual\" name=\"about\">javascript:q=location.href;if(document.getSelection){d=document.getSelection();}else{d='';}p=document.title;void(open('https://www.laarc.io/submitlink?l=news&u='+encodeURIComponent(q)+'&t='+encodeURIComponent(p),'LambdaNews','toolbar=no,width=700,height=600'));</textarea>
+
+<br><br> It should look like this:
+<br><br>
+<img src=\"https://i.imgur.com/J1kFydT.png\" width=\"300px\" />
+")
+
+(newsop bookmarklet.html ()
+  (msgpage user bookmarklet* "Bookmarklet" (pages-url "bookmarklet")))
+
+
+; Guidelines
+
+(diskfile guidelines* (+ newsdir* "guidelines.md") (md-from-form "
+_What to Submit_
+
+On-Topic: STEM. Humanities. Humor. Anything intellectually engaging
+and pro-social.
+
+Off-Topic: That which is flame bait or vacuous.
+
+_In Submissions_
+
+If you submit a link to a video or pdf, please warn readers by
+appending [video] or [pdf] to the title.
+
+Please submit the original source.
+
+_In Comments_
+
+Be civil. On difficult subjects in particular, you should work hard at
+being diplomatic. (It helps to picture yourself speaking to a friend.)
+
+When disagreeing, reply to the argument instead of calling names.
+\"That is idiotic; 1 + 1 is 2, not 3\" can be shortened to \"1 + 1 is
+2, not 3.\"
+
+Assume good faith.
+
+Eschew flamebait.
+
+Please limit your use of uppercase; it looks like shouting and is hard
+to read."))
+
+(newsop guidelines.html ()
+  (msgpage user guidelines* "Guidelines" (pages-url "guidelines")))
 
 ; Abuse Analysis
 
