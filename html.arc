@@ -206,6 +206,7 @@
 
 (mac center    body         `(tag center ,@body))
 (mac underline body         `(tag u ,@body))
+(mac idtab     (id . body)  `(tag (table border 0 id ,id) ,@body))
 (mac tab       body         `(tag (table border 0) ,@body))
 (mac tr        body         `(tag tr ,@body))
 
