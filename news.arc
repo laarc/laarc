@@ -845,35 +845,6 @@ It should look like this:
 (newsop bookmarklet.html ()
   (msgpage user bookmarklet* "Bookmarklet"))
 
-(= guidelines* (md-from-form "
-_What to Submit_
-
-On-Topic: STEM. Humanities. Humor. Anything intellectually engaging and pro-social. 
-
-Off-Topic: That which is flame bait or vacuous.
-
-_In Submissions_
-
-If you submit a link to a video or pdf, please warn readers by appending [video] or [pdf] to the title.
-
-Please submit the original source.
-
-_In Comments_
-
-Be civil. On difficult subjects in particular, you should work hard at being diplomatic. (It helps to picture yourself speaking to a friend.)
-
-When disagreeing, reply to the argument instead of calling names. \"That is idiotic; 1 + 1 is 2, not 3\" can be shortened to \"1 + 1 is 2, not 3.\"
-
-Assume good faith.
-
-Eschew flamebait.
-
-Please limit your use of uppercase; it looks like shouting and is hard to read.
-"))
-
-(newsop guidelines.html ()
-  (msgpage user guidelines* "Guidelines"))
-
 (= lncache* (table))
 (= lncache-time* 90)
 
@@ -2534,6 +2505,28 @@ first asterisk isn't whitespace.
                      cols (apply max 20 (map len (map cadr rules)))
                      rows (+ (len rules) 3))
         (apply pr #\newline (intersperse #\newline (map cadr rules))))
+      (br2)
+      (submit "update"))))
+
+; Site Options
+
+(defopa options req
+  (options-page (get-user req)))
+
+(diskvar guidelines* (+ newsdir* "guidelines"))
+
+(newsop guidelines.html ()
+  (msgpage user guidelines* "Guidelines"))
+
+(def options-page (user (o msg nil))
+  (minipage "Site Options"
+    (when msg (pr msg) (br2))
+    (uform user req
+           (do (todisk guidelines* (md-from-form (arg req "guidelines") t))
+               (options-page user "Changes saved."))
+      (pr "Guidelines: ")
+      (textarea "guidelines" 60 60  
+        (aif guidelines* (prn (unmarkdown it))))
       (br2)
       (submit "update"))))
 
