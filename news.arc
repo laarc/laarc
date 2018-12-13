@@ -583,12 +583,14 @@ function vote(node) {
 
 ; redefined later
 
-(= welcome-url* "/welcome.html"
+(= welcome-always* t
+   welcome-url* "/welcome.html"
    discord-url* "https://discord.gg/qaqkc9z")
 
 (def toprow (user label)
   (w/bars 
-    (when (and welcome-url* (noob user))
+    (when (or welcome-always*
+              (and welcome-url* (noob user)))
       (toplink "welcome" welcome-url* label)) 
     (toplink "new" "/newest" label)
     (when user
