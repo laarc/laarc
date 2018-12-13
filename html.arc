@@ -352,6 +352,15 @@
                   #\&  "&#38;"
                         c)))))
 
+(def uneschtml (str)
+  (multisubst
+    '(("&#60;" "<")
+      ("&#62;" ">")
+      ("&#34;" "\"")
+      ("&#39;" "'")
+      ("&#38;" "&"))
+    str))
+
 (def esc-tags (str)
   (tostring 
     (each c str
@@ -359,6 +368,13 @@
                   #\>  "&#62;"
                   #\&  "&#38;"
                         c)))))
+
+(def unesc-tags (str)
+  (multisubst
+    '(("&#60;" "<")
+      ("&#62;" ">")
+      ("&#38;" "&"))
+    str))
 
 (def nbsp () (pr "&nbsp;"))
 
