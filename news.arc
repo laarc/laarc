@@ -1339,7 +1339,7 @@ It should look like this:
 (def scorelink (i user (o whence))
   (when (admin user)
     (pr bar*)
-    (pr (frontpage-rank i))))
+    (pr (aand (frontpage-rank i) (num it 6 t t)))))
 
 (def permalink (story user)
   (when (cansee user story)
