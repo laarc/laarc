@@ -152,11 +152,13 @@ Connection: close"))
 (= header* (gen-type-header "text/html; charset=utf-8"))
 
 (map (fn ((k v)) (= (type-header* k) (gen-type-header v)))
-     '((gif       "image/gif")
-       (jpg       "image/jpeg")
-       (png       "image/png")
+     '((image/gif "image/gif")
+       (image/jpg "image/jpeg")
+       (image/png "image/png")
        (text/html "text/html; charset=utf-8")
-       (text/css  "text/css")))
+       (text/css  "text/css")
+       (application/json        "application/json")
+       (application/javascript  "application/javascript")))
 
 (= rdheader* "HTTP/1.0 302 Moved")
 
