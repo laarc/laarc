@@ -466,6 +466,7 @@
       (pr (round (/ (memory) 1000000)) " mb")
       (pr elapsed " msec")
       (link "settings" "/newsadmin")
+      (link "pages" "/pages")
       (hook 'admin-bar user whence))
     (br2))
   (when (in whence "/l/dev" "/l/programming" "/l/react" "/l/reactnative")
