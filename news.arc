@@ -1090,9 +1090,10 @@ It should look like this:
   (tag (a id      (if user (string dir '_ i!id))
           onclick (if user "return vote(this)")
           href    (vote-url user i dir whence))
-    (if (is dir 'up)
-        (out (gentag img src up-url*   border 0 vspace 3 hspace 2))
-        (out (gentag img src down-url* border 0 vspace 3 hspace 2)))))
+    (tag (div class "votearrow")
+      (if (is dir 'up)
+          (out (gentag img src up-url*   border 0 vspace 3 hspace 2))
+          (out (gentag img src down-url* border 0 vspace 3 hspace 2))))))
 
 (def vote-url (user i dir whence)
   (+ "vote?" "for=" i!id
