@@ -81,10 +81,9 @@
 
 (def load-news ((o reload))
   (when reload
-    (load "arc.arc")
-    (load "libs.arc")
     (load "news.arc")
-    (= caching* 0))
+    ;(= caching* 0)
+    )
   (map ensure-dir (list arcdir* newsdir* storydir* votedir* profdir*))
   (unless stories* (load-items))
   (if (and initload-users* (empty profs*)) (load-users)))
