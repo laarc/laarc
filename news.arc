@@ -1952,7 +1952,7 @@ It should look like this:
          ,@(standard-item-fields p a e x)))))
 
 (def standard-item-fields (i a e x)
-       `((int     votes     ,(len i!votes) ,a  nil)
+       `((sexpr   votes     ,i!votes       ,a  nil)
          (int     score     ,i!score        t ,a)
          (int     sockvotes ,i!sockvotes   ,a ,a)
          (yesno   dead      ,i!dead        ,e ,e)
