@@ -140,10 +140,6 @@
         (if srv-noisy* (pr "\n\n"))
         (respond o op (+ (parseargs (string (rev line))) args) cooks ip))))
 
-(= header* "HTTP/1.1 200 OK
-Content-Type: text/html; charset=utf-8
-Connection: close")
-
 (= type-header* (table))
 
 (def gen-type-header (ctype)
@@ -152,6 +148,8 @@ Content-Type: "
      ctype
      "
 Connection: close"))
+
+(= header* (gen-type-header "text/html; charset=utf-8"))
 
 (map (fn ((k v)) (= (type-header* k) (gen-type-header v)))
      '((gif       "image/gif")
@@ -207,7 +205,7 @@ Connection: close"))
   cooks nil
   ip    nil)
 
-(= unknown-msg* "Unknown." max-age* (table) static-max-age* nil)
+(= unknown-msg* "Unknown." max-age* (table) static-header* (table) static-max-age* nil)
 
 (def respond (str op args cooks ip)
   (w/stdout str
@@ -223,9 +221,10 @@ Connection: close"))
                        (awhen (max-age* op)
                          (prn "Cache-Control: max-age=" it))
                        (f str req))))
-             (let filetype (static-filetype op)
+             (withs (op (car (tokens op #\?))
+                     filetype (static-filetype op))
                (aif (and filetype (file-exists (string staticdir* op)))
-                    (do (prn (type-header* filetype))
+                    (do (prn (or (static-header* op) (type-header* filetype)))
                         (awhen static-max-age*
                           (prn "Cache-Control: max-age=" it))
                         (prn)
@@ -243,7 +242,7 @@ Connection: close"))
            "jpeg" 'jpg
            "png"  'png
            "css"  'text/css
-           "txt"  'text/html
+           "txt"  'text/plain
            "htm"  'text/html
            "html" 'text/html
            "arc"  'text/html
