@@ -1038,7 +1038,6 @@ Please limit your use of uppercase; it looks like shouting and is hard to read.
     (if (cansee user s)
         (do (deadmark s user)
             (titlelink s url user)
-            (pdflink url)
             (awhen (sitename url)
               (spanclass comhead
                 (pr " (" )
