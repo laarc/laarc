@@ -443,13 +443,18 @@
     `(with (,gu ,user ,gt ,t1 ,gi ,lid)
        (fulltop ,gu ,gi ,label ,title ,whence
          (trtd ,@body)
-         (trtd (vspace 10)
-               (color-stripe (main-color ,gu))
-               (br)
-               (center
-                 (hook 'longfoot)
-                 (link "bookmarklet" "/bookmarklet.html")
-                 (admin-bar ,gu (- (msec) ,gt) ,whence)))))))
+         (trtd (longfoot ,gu (- (msec) ,gt) ,whence))))))
+
+(def longfoot (user elapsed whence)
+  (vspace 10)
+  (color-stripe (main-color user))
+  (br)
+  (center
+    (hook 'longfoot)
+    (w/bars
+      (link "guidelines" "/guidelines.html")
+      (link "bookmarklet" "/bookmarklet.html"))
+    (admin-bar user elapsed whence)))
 
 (def admin-bar (user elapsed whence)
   (br2)
@@ -571,7 +576,7 @@ function vote(node) {
 
 ; redefined later
 
-(= welcome-url* nil ;"/welcome"
+(= welcome-url* "/guidelines.html"
    discord-url* "https://discord.gg/qaqkc9z")
 
 (def toprow (user label)
@@ -839,6 +844,35 @@ It should look like this:
 
 (newsop bookmarklet.html ()
   (msgpage user bookmarklet* "Bookmarklet"))
+
+(= guidelines* (md-from-form "
+_What to Submit_
+
+On-Topic: STEM. Humanities. Humor. Anything intellectually engaging and pro-social. 
+
+Off-Topic: That which is flame bait or vacuous.
+
+_In Submissions_
+
+If you submit a link to a video or pdf, please warn readers by appending [video] or [pdf] to the title.
+
+Please submit the original source.
+
+_In Comments_
+
+Be civil. On difficult subjects in particular, you should work hard at being diplomatic. (It helps to picture yourself speaking to a friend.)
+
+When disagreeing, reply to the argument instead of calling names. \"That is idiotic; 1 + 1 is 2, not 3\" can be shortened to \"1 + 1 is 2, not 3.\"
+
+Assume good faith.
+
+Eschew flamebait.
+
+Please limit your use of uppercase; it looks like shouting and is hard to read.
+"))
+
+(newsop guidelines.html ()
+  (msgpage user guidelines* "Guidelines"))
 
 (= lncache* (table))
 (= lncache-time* 90)
