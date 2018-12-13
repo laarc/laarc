@@ -487,13 +487,14 @@
   (minipage (or title "Message")
     (awhen alert (pr it) (br2))
     (spanclass admin
-      (awhen editurl
-        (when (admin user)
-          (underlink "edit" it)
-          (br2)))
-      (center (if (len> msg 80) 
-                  (widtable 300 msg)
-                  (pr msg))))
+      (center
+        (awhen editurl
+          (when (admin user)
+            (underlink "edit" it)
+            (br2)))
+        (if (len> msg 80) 
+            (widtable 300 msg)
+            (pr msg))))
     (br2)))
 
 ;(= (max-age* 'news.css) 86400)   ; cache css in browser for 1 day
