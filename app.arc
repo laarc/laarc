@@ -432,7 +432,7 @@
   (markdown (trim (rem #\return (esc-tags str)) 'end) 60 nolinks))
 
 (def markdown (s (o maxurl) (o nolinks))
-  (let ital nil
+  (with (ital nil bold nil)
     (tostring
       (forlen i s
         (iflet (newi spaces) (indented-code s i (if (is i 0) 2 0))
@@ -451,6 +451,13 @@
                                     (pos #\* s (+ i 1)))))
                        (do (pr (if ital "</i>" "<i>"))
                            (= ital (no ital)))
+                      (and (is (s i) #\_)
+                           (or bold 
+                               (atend i s) 
+                               (and (~whitec (s (+ i 1)))
+                                    (pos #\_ s (+ i 1)))))
+                       (do (pr (if bold "</b>" "<b>"))
+                           (= bold (no bold)))
                       (and (no nolinks)
                            (or (litmatch "http://" s i) 
                                (litmatch "https://" s i)))
@@ -551,6 +558,10 @@
            (do (++ i 2) (pr #\*))
           (litmatch "</i>" s i)
            (do (++ i 3) (pr #\*))
+          (litmatch "<b>" s i)
+           (do (++ i 2) (pr #\_))
+          (litmatch "</b>" s i)
+           (do (++ i 3) (pr #\_))
           (litmatch "<a href=" s i)
            (let endurl (posmatch [in _ #\> #\space] s (+ i 9))
              (if endurl
