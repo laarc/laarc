@@ -428,8 +428,8 @@
 
 ; http://daringfireball.net/projects/markdown/syntax
 
-(def md-from-form (str (o nolinks))
-  (markdown (trim (rem #\return (esc-tags str)) 'end) 60 nolinks))
+(def md-from-form (str (o nolinks) (o esc))
+  (markdown (trim (rem #\return (if esc str (esc-tags str))) 'end) 60 nolinks))
 
 (def markdown (s (o maxurl) (o nolinks))
   (with (ital nil bold nil)
