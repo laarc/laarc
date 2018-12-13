@@ -7,7 +7,7 @@
 
 (declare 'atstrings t)
 
-(= this-site*    "Lambda News"
+(= this-site*    "laarc"
    site-url*     "/"
    parent-url*   "/"
    favicon-url*  ""
