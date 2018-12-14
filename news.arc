@@ -405,8 +405,6 @@
 
 (= up-url* "/grayarrow.gif" down-url* "/graydown.gif" logo-url* "/ln.png")
 
-(defopr favicon.ico req favicon-url*)
-
 ; redefined later
 
 (def gen-css-url ()
