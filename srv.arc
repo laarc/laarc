@@ -152,7 +152,8 @@ Connection: close"))
 (= header* (gen-type-header "text/html; charset=utf-8"))
 
 (map (fn ((k v)) (= (type-header* k) (gen-type-header v)))
-     '((image/gif "image/gif")
+     '((image/x-icon "image/x-icon")
+       (image/gif "image/gif")
        (image/jpg "image/jpeg")
        (image/png "image/png")
        (text/html "text/html; charset=utf-8")
@@ -239,6 +240,7 @@ Connection: close"))
   (let fname (str sym)
     (and (~find #\/ fname)
          (case (downcase (last (check (tokens fname #\.) ~single)))
+           "ico"  'image/x-icon
            "gif"  'image/gif
            "jpg"  'image/jpg
            "jpeg" 'image/jpg
