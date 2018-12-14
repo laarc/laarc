@@ -153,13 +153,17 @@ Connection: close"))
 
 (map (fn ((k v)) (= (type-header* k) (gen-type-header v)))
      '((image/x-icon "image/x-icon")
+       (image/svg "image/svg+xml")
        (image/gif "image/gif")
        (image/jpg "image/jpeg")
        (image/png "image/png")
        (text/html "text/html; charset=utf-8")
        (text/css  "text/css")
+       (text/xml  "text/xml")
        (application/json        "application/json")
-       (application/javascript  "application/javascript")))
+       (application/javascript  "application/javascript")
+       (application/manifest    "application/manifest+json")
+       ))
 
 (= rdheader* "HTTP/1.0 302 Moved")
 
@@ -241,6 +245,7 @@ Connection: close"))
     (and (~find #\/ fname)
          (case (downcase (last (check (tokens fname #\.) ~single)))
            "ico"  'image/x-icon
+           "svg"  'image/svg
            "gif"  'image/gif
            "jpg"  'image/jpg
            "jpeg" 'image/jpg
@@ -250,8 +255,10 @@ Connection: close"))
            "htm"  'text/html
            "html" 'text/html
            "arc"  'text/plain
-           "js"   'application/javascript
-           "json" 'application/json
+           "xml"  'text/xml
+           "js"           'application/javascript
+           "json"         'application/json
+           "webmanifest"  'application/manifest
            ))))
 
 (def respond-err (str msg . args)
