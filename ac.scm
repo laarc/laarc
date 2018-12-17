@@ -1328,7 +1328,7 @@
 
 (define ar-sema-cell (make-thread-cell #f))
 
-(xdef atomic-invoke (lambda (f)
+(define atomic-invoke (lambda (f)
                        (if (thread-cell-ref ar-sema-cell)
                            (ar-apply f '())
                            (begin
@@ -1340,6 +1340,7 @@
 				 (lambda () (ar-apply f '()))))
 			      (lambda ()
 				(thread-cell-set! ar-sema-cell #f)))))))
+(xdef atomic-invoke atomic-invoke)
 
 (xdef dead (lambda (x) (tnil (thread-dead? x))))
 
@@ -1474,5 +1475,16 @@
                                     (#t
                                      (cons (car cs) (unesc (cdr cs))))))))
                   (unesc (string->list s)))))
+
+(define bcrypt (get-ffi-obj "bcrypt" (ffi-lib "src/bcrypt/build/libbcrypt")
+                 (_fun _string _string _pointer -> _void)))
+
+(xdef bcrypt ; (passwd salt) see BSD manual crypt(3)
+  (let* ((p (malloc 'atomic 256)))
+    (lambda (pwd salt)
+      (atomic-invoke (lambda ()
+        (memset p 0 256)
+        (bcrypt pwd salt p)
+        (cast p _pointer _string))))))
 
 )
