@@ -459,7 +459,9 @@
   (center
     (hook 'longfoot)
     (w/bars
+      (link "welcome" welcome-url*)
       (link "guidelines" "/guidelines.html")
+      (link "modblog" "https://laarcnotes.blogspot.com/")
       (link "bookmarklet" "/bookmarklet.html"))
     (admin-bar user elapsed whence)))
 
@@ -596,9 +598,6 @@ function vote(node) {
 
 (def toprow (user label)
   (w/bars 
-    (when (or welcome-always*
-              (and welcome-url* (noob user)))
-      (toplink "welcome" welcome-url* label)) 
     (toplink "new" "/newest" label)
     (when user
       (toplink "threads" (threads-url user) label))
