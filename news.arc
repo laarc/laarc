@@ -984,8 +984,8 @@ function vote(node) {
           (when (apoll s) (addoptlink s user))
           (unless i (flaglink s user whence))
           (killlink s user whence)
-          (blastlink s user whence)
-          (blastlink s user whence t)
+          ;(blastlink s user whence)
+          ;(blastlink s user whence t)
           (deletelink s user whence)
           (scorelink s user whence)))))
 
