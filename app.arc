@@ -565,7 +565,7 @@
            (do (++ i 3) (pr #\_))
           (unless skiplinks
             (litmatch "<a href=" s i))
-           (let endurl (posmatch [in _ #\>] s (+ i 9))
+           (let endurl (posmatch [in _ #\> #\space] s (+ i 9))
              (if endurl
                  (do (pr (cut s (+ i 9) (- endurl 1)))
                      (= i (aif (posmatch "</a>" s endurl)
