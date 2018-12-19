@@ -1504,7 +1504,7 @@ function vote(node) {
 
 (newsop submitlink (l u t)
   (if user 
-      (submit-page user l u t)
+      (submit-page user l u t t)
       (submit-login-warning l u t)))
 
 (= title-limit* 80
