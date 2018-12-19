@@ -1847,7 +1847,7 @@ function vote(node) {
              (spacerow 10)
              (tr (td)
                  (td (tab (display-pollopts i user here)))))
-           (when (and (cansee user i) (comments-active i))
+           (when (and (cansee user i) (or (admin user) (comments-active i)))
              (spacerow 10)
              (row "" (comment-form i user here))))
       (br2) 
