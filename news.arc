@@ -1477,7 +1477,7 @@ function vote(node) {
         (if prefer-url*
             (do (row "url" (input "u" url 50))
                 (when showtext
-                  (row "" "<b>or</b>")
+                  ;(row "" "<b>or</b>")
                   (row "text" (textarea "x" 4 50 (only.pr text)))))
             (do (row "text" (textarea "x" 4 50 (only.pr text)))
                 (row "" "<b>or</b>")
@@ -1487,9 +1487,8 @@ function vote(node) {
         (row "" submit-instructions*)))))
 
 (= submit-instructions*
-   "Leave url blank to submit a question for discussion. If there is 
-    no url, the text (if any) will appear at the top of the comments 
-    page. If there is a url, the text will be ignored.")
+   "Leave url blank to submit a question for discussion. The text
+   (if any) will appear at the top of the comments page.")
 
 ; For use by outside code like bookmarklet.
 ; http://news.domain.com/submitlink?l=news&u=http://foo.com&t=Foo
@@ -1892,7 +1891,7 @@ function vote(node) {
 (def display-item-text (s user)
   (when (and (cansee user s) 
              (in s!type 'story 'poll)
-             (blank s!url) 
+             ;(blank s!url)
              (~blank s!text))
     (spacerow 2)
     (row "" (spanclass comment (pr s!text)))))
