@@ -1466,7 +1466,7 @@ function vote(node) {
                 (submit-page user sub url title showtext text))))
 
 (def clean-sub (x)
-  (coerce (+ "/l/" (last (tokens x #\/))) 'sym))
+  (coerce (+ "/l/" (downcase:last (tokens x #\/))) 'sym))
 
 (def submit-page (user (o sub) (o url) (o title) (o showtext) (o text "") (o msg))
   (minipage "Submit"
