@@ -1611,7 +1611,8 @@ function vote(node) {
 (= long-domains* '("blogspot" "wordpress" "livejournal" "blogs" "typepad" 
                    "weebly" "posterous" "blog-city" "supersized" "dreamhosters"
                    ; "sampasite"  "multiply" "wetpaint" ; all spam, just ban
-                   "eurekster" "blogsome" "edogo" "blog" "com"))
+                   "eurekster" "blogsome" "edogo" "blog" "com"
+                   "ycombinator"))
 
 (def create-story (sub url title text user ip)
   (newslog ip user 'create sub url (list title))
