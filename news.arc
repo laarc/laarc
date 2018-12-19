@@ -603,9 +603,10 @@ function vote(node) {
     (toplink "comments" "/newcomments" label)
     (toplink "discord"  discord-url* label)
     (hook 'toprow user label)
-    (link "submit" "/submit")
-    (unless (mem label toplabels*)
-      (fontcolor white (pr label)))))
+    (link "submit" "/submit"))
+  (unless (mem label toplabels*)
+    (hspace 15)
+    (fontcolor white (pr label))))
 
 (def toplink (name dest label)
   (tag-if (is name label) (span class 'topsel)
@@ -841,8 +842,12 @@ function vote(node) {
   ((or (lncache* path)
        (= (lncache* path)
           (newsfn user lncache-time* ()
-            (let p (+ "/l/" path)
-              (listpage user (msec) (topstories user maxend* (unless (is path "all") (sym p))) path nil p)))))
+            (let sub (+ "/l/" path)
+              (listpage user (now)
+                        (topstories user maxend*
+                                    (unless (is path "all")
+                                      (sym sub)))
+                        sub sub sub)))))
    user))
 
 (newscache newspage user 90
