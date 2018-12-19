@@ -2131,7 +2131,7 @@ function vote(node) {
             (link "parent" (item-url ((item parent) 'id))))
           (editlink c user)
           (killlink c user whence)
-          (blastlink c user whence)
+          ;(blastlink c user whence)
           (deletelink c user whence)
           ; a hack to check whence but otherwise need an arg just for this
           (unless (or astree (is whence "newcomments"))
