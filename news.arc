@@ -1172,12 +1172,16 @@ function vote(node) {
   (awhen (and show-avg* (admin user) show-avg (uvar subject avg))
     (pr " (@(num it 1 t t))")))
 
-(= noob-color* (color 60 150 60))
+(= admin-color* darkblue
+   noob-color* (color 60 150 60)
+   noob-time* (* 4 1440)) ; 4 days
 
 (def user-name (user subject)
-  (if (and (editor user) (ignored subject))
+  (if (and (admin user) (admin subject))
+       (tostring (fontcolor admin-color* (pr subject)))
+      (and (editor user) (ignored subject))
        (tostring (fontcolor darkred (pr subject)))
-      (and (editor user) (< (user-age subject) 1440))
+      (< (user-age subject) noob-time*)
        (tostring (fontcolor noob-color* (pr subject)))
       subject))
 
