@@ -851,7 +851,7 @@ function vote(node) {
    user))
 
 (newscache newspage user 90
-  (listpage user (msec) (topstories user maxend*) "all" nil "/l/all"))
+  (listpage user (now) (topstories user maxend*) "all" nil "/l/all"))
 
 (def listpage (user t1 items label title (o url label) (o number t))
   (hook 'listpage user)
@@ -865,7 +865,7 @@ function vote(node) {
 ; cached page.  If this were a prob, could make deletion clear caches.
 
 (newscache newestpage user 40
-  (listpage user (msec) (newstories user maxend*) "new" "New Links" "newest"))
+  (listpage user (now) (newstories user maxend*) "new" "New Links" "newest"))
 
 (def newstories (user n)
   (retrieve n [cansee user _] stories*))
@@ -874,7 +874,7 @@ function vote(node) {
 (newsop best () (bestpage user))
 
 (newscache bestpage user 1000
-  (listpage user (msec) (beststories user maxend*) "best" "Top Links"))
+  (listpage user (now) (beststories user maxend*) "best" "Top Links"))
 
 ; As no of stories gets huge, could test visibility in fn sent to best.
 
@@ -886,7 +886,7 @@ function vote(node) {
 (newsop noobcomments () (noobspage user comments*))
 
 (def noobspage (user source)
-  (listpage user (msec) (noobs user maxend* source) "noobs" "New Accounts"))
+  (listpage user (now) (noobs user maxend* source) "noobs" "New Accounts"))
 
 (def noobs (user n source)
   (retrieve n [and (cansee user _) (bynoob _)] source))
@@ -898,7 +898,7 @@ function vote(node) {
 (newsop bestcomments () (bestcpage user))
 
 (newscache bestcpage user 1000
-  (listpage user (msec) (bestcomments user maxend*) 
+  (listpage user (now) (bestcomments user maxend*) 
             "best comments" "Best Comments" "bestcomments" nil))
 
 (def bestcomments (user n)
@@ -906,7 +906,7 @@ function vote(node) {
 
 
 (newsop lists () 
-  (longpage user (msec) nil "lists" "Lists" "lists"
+  (longpage user (now) nil "lists" "Lists" "lists"
     (sptab
       (row (link "/best")         "Highest voted recent links.")
       (row (link "/active")       "Most active current discussions.")
@@ -928,7 +928,7 @@ function vote(node) {
 
 (def savedpage (user subject)
   (if (or (is user subject) (admin user))
-      (listpage user (msec)
+      (listpage user (now)
                 (sort (compare < item-age) (voted-stories user subject)) 
                "saved" "Saved Links" (saved-url subject))
       (pr "Can't display that.")))
@@ -968,7 +968,7 @@ function vote(node) {
                      (with (url  (url-for it)     ; it bound by afnid
                             user (get-user req))
                        (newslog req!ip user 'more label)
-                       (longpage user (msec) nil label title url
+                       (longpage user (now) nil label title url
                          (apply f user items label title url args))))))
           rel 'nofollow)
     (pr "More")))
@@ -1848,7 +1848,7 @@ function vote(node) {
   (with (title (and (cansee user i)
                     (or i!title (aand i!text (ellipsize (striptags it)))))
          here (item-url i!id))
-    (longpage user (msec) nil nil title here
+    (longpage user (now) nil nil title here
       (tab (display-item nil i user here t)
            (display-item-text i user)
            (when (apoll i)
@@ -2214,7 +2214,7 @@ function vote(node) {
       (withs (title (+ subject "'s threads")
               label (if (is user subject) "threads" title)
               here  (threads-url subject))
-        (longpage user (msec) nil label title here
+        (longpage user (now) nil label title here
           (awhen (keep [and (cansee user _) (~subcomment _)]
                        (submissions subject maxend*))
             (display-threads user it label title here))))
@@ -2266,7 +2266,7 @@ function vote(node) {
   (if (profile subject)
       (with (label (+ subject "'s submissions")
              here  (submitted-url subject))
-        (longpage user (msec) nil label label here
+        (longpage user (now) nil label label here
           (if (or (no (ignored subject))
                   (is user subject)
                   (seesdead user))
@@ -2306,7 +2306,7 @@ function vote(node) {
 (= nleaders* 20)
 
 (newscache leaderspage user 1000
-  (longpage user (msec) nil "leaders" "Leaders" "leaders"
+  (longpage user (now) nil "leaders" "Leaders" "leaders"
     (sptab
       (let i 0
         (each u (firstn nleaders* (leading-users))
@@ -2362,7 +2362,7 @@ function vote(node) {
 (newsop active () (active-page user))
 
 (newscache active-page user 600
-  (listpage user (msec) (actives user) "active" "Active Threads"))
+  (listpage user (now) (actives user) "active" "Active Threads"))
 
 (def actives (user (o n maxend*) (o consider 2000))
   (visible user (rank-stories n consider (memo active-rank))))
@@ -2379,7 +2379,7 @@ function vote(node) {
 (newsop newcomments () (newcomments-page user))
 
 (newscache newcomments-page user 60
-  (listpage user (msec) (visible user (firstn maxend* comments*))
+  (listpage user (now) (visible user (firstn maxend* comments*))
             "comments" "New Comments" "newcomments" nil))
 
 
@@ -2651,7 +2651,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
       (let ban (car (banned-sites* site))
         (tr (tdr (when deads
                    (onlink (len deads)
-                           (listpage user (msec) deads
+                           (listpage user (now) deads
                                      nil (+ "killed at " site) "badsites"))))
             (tdr (when deads (pr (round (days-since ((car deads) 'time))))))
             (td site)
@@ -2704,10 +2704,10 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                                 (max (aif (car (goods ip)) it!time 0) 
                                      (aif (car (bads  ip)) it!time 0)))))))
             (tdr (onlink (len (bads ip))
-                         (listpage user (msec) (bads ip)
+                         (listpage user (now) (bads ip)
                                    nil (+ "dead from " ip) "badips")))
             (tdr (onlink (len (goods ip))
-                         (listpage user (msec) (goods ip)
+                         (listpage user (now) (goods ip)
                                    nil (+ "live from " ip) "badips")))
             (td (each u (subs ip)
                   (userlink user u nil) 
