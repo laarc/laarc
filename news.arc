@@ -1469,7 +1469,7 @@ function vote(node) {
                            (clean-url (arg req "u"))
                            (striptags (arg req "t"))
                            showtext
-                           (and showtext (md-from-form (arg req "x") t))
+                           (and showtext (md-from-form (arg req "x")))
                            req!ip)
       (tab
         (row "to" (input "l" (or sub "news") 50))
@@ -1895,7 +1895,7 @@ function vote(node) {
              (blank s!url) 
              (~blank s!text))
     (spacerow 2)
-    (row "" s!text)))
+    (row "" (spanclass comment (pr s!text)))))
 
 
 ; Edit Item
@@ -1920,7 +1920,7 @@ function vote(node) {
      (with (a (admin user)  e (editor user)  x (canedit user s))
        `((string1 title     ,s!title        t ,x)
          (url     url       ,s!url          t ,e)
-         (mdtext2 text      ,s!text         t ,x)
+         (mdtext  text      ,s!text         t ,x)
          ,@(standard-item-fields s a e x)))))
 
 (= (fieldfn* 'comment)
