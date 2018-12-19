@@ -1841,7 +1841,7 @@ function vote(node) {
                     (or i!title (aand i!text (ellipsize (striptags it)))))
          here (item-url i!id))
     (longpage user (msec) nil nil title here
-      (tab (display-item nil i user here)
+      (tab (display-item nil i user here t)
            (display-item-text i user)
            (when (apoll i)
              (spacerow 10)
@@ -1960,7 +1960,7 @@ function vote(node) {
 (def edit-page (user i)
   (let here (edit-url i)
     (shortpage user nil nil "Edit" here
-      (tab (display-item nil i user here)
+      (tab (display-item nil i user here t)
            (display-item-text i user))
       (br2)
       (vars-form user
@@ -1996,7 +1996,7 @@ function vote(node) {
     (pagemessage msg)
     (tab
       (let here (flink [addcomment-page parent (get-user _) whence text msg])
-        (display-item nil parent user here))
+        (display-item nil parent user here t))
       (spacerow 10)
       (row "" (comment-form parent user whence text)))))
 
@@ -2108,7 +2108,7 @@ function vote(node) {
       (= (comment-cache-timeout* c!id)
           (cc-timeout c!time)
          (comment-cache* c!id)
-          (tostring (gen-comment-body c user whence t indent nil nil)))))
+          (tostring (gen-comment-body c user whence t indent nil t)))))
 
 ; Cache for the remainder of the current minute, hour, or day.
 
