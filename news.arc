@@ -450,7 +450,7 @@
     `(with (,gu ,user ,gt ,t1 ,gi ,lid)
        (fulltop ,gu ,gi ,label ,title ,whence
          (trtd ,@body)
-         (trtd (longfoot ,gu (- (msec) ,gt) ,whence))))))
+         (trtd (longfoot ,gu (- (now) ,gt) ,whence))))))
 
 (def longfoot (user elapsed whence)
   (vspace 10)

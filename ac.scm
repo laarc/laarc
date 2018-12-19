@@ -1308,6 +1308,7 @@
 (xdef exact (lambda (x) (tnil (exint? x))))
 
 (xdef msec                         current-milliseconds)
+(xdef now                          current-inexact-milliseconds)
 (xdef current-process-milliseconds current-process-milliseconds)
 (xdef current-gc-milliseconds      current-gc-milliseconds)
 
