@@ -1146,10 +1146,13 @@ function vote(node) {
     (when (news-type i) (itemscore i user))
     (byline i user)))
 
+(= show-score-threshold* 1)
+
 (def itemscore (i (o user))
   (tag (span id (+ "score_" i!id))
-    (pr (plural (if (is i!type 'pollopt) (realscore i) i!score)
-                "point")))
+    (let score (if (is i!type 'pollopt) (realscore i) i!score)
+      (when (> score show-score-threshold*)
+        (pr (plural score "point")))))
   (hook 'itemscore i user))
 
 ; redefined later
