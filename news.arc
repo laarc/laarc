@@ -1093,10 +1093,10 @@ function vote(node) {
           (out (gentag img src down-url* border 0 vspace 3 hspace 2))))))
 
 (def vote-url (user i dir whence)
-  (+ "vote?" "for=" i!id
-             "&dir=" dir
-             (if user (+ "&by=" user "&auth=" (user->cookie* user)))
-             "&whence=" (urlencode whence)))
+  (+ "/vote?" "for=" i!id
+              "&dir=" dir
+              (if user (+ "&by=" user "&auth=" (user->cookie* user)))
+              "&whence=" (urlencode whence)))
 
 (= lowest-score* -4)
 
