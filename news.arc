@@ -839,16 +839,18 @@ function vote(node) {
 (= lncache-time* 90)
 
 (newsop l (path)
-  ((or (lncache* path)
-       (= (lncache* path)
-          (newsfn user lncache-time* ()
-            (let sub (+ "/l/" path)
-              (listpage user (now)
-                        (topstories user maxend*
-                                    (unless (is path "all")
-                                      (sym sub)))
-                        sub sub sub)))))
-   user))
+  (if (empty path)
+      (tags-page)
+    ((or (lncache* path)
+         (= (lncache* path)
+            (newsfn user lncache-time* ()
+              (let sub (+ "/l/" path)
+                (listpage user (now)
+                          (topstories user maxend*
+                                      (unless (is path "all")
+                                        (sym sub)))
+                          sub sub sub)))))
+     user)))
 
 (newscache newspage user 90
   (listpage user (now) (topstories user maxend*) "all" nil "/l/all"))
@@ -2640,6 +2642,26 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
 
 (newsop welcome.html ()
   (msgpage user welcome-page* "Welcome" (pages-url "welcome")))
+
+(defcache lambdas 300
+  (with (acc nil cs (table))
+    (each-loaded-item i
+      (each k i!keys
+        (when (headmatch "/l/" (string k))
+          (pushnew k acc)
+          (= (cs k) (or (cs k) 0))
+          (++ (cs k)))))
+    (let r nil
+      (each k acc
+        (push (list k (cs k)) r))
+      (sort (fn (a b) (> a.1 b.1)) r))))
+
+(def tags-page ()
+  (minipage "Tags"
+    (sptab 
+      (row "tag" "count")
+      (each (site count) (lambdas)
+        (tr (td (pr (link site))) (td count))))))
 
 ; Abuse Analysis
 
