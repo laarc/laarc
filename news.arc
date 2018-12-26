@@ -538,7 +538,7 @@ function vote(node) {
 
   // adjust score
   var score = byId('score_' + item);
-  var newscore = parseInt(score.innerHTML) + (v[0] == 'up' ? 1 : -1);
+  var newscore = parseInt(score.innerHTML || '1') + (v[0] == 'up' ? 1 : -1);
   score.innerHTML = newscore + (newscore == 1 ? ' point' : ' points');
 
   // hide arrows
