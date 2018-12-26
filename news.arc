@@ -603,6 +603,7 @@ function vote(node) {
     (toplink "comments" "/newcomments" label)
     (toplink "discord"  discord-url* label)
     (hook 'toprow user label)
+    (link "tags" "/l")
     (link "submit" "/submit"))
   (unless (mem label toplabels*)
     (hspace 15)
