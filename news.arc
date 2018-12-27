@@ -403,7 +403,7 @@
 
 ; Page Layout
 
-(= up-url* "/grayarrow.gif" down-url* "/graydown.gif" logo-url* "/ln-xmas.png")
+(= up-url* "/grayarrow.gif" down-url* "/graydown.gif" logo-url* "/ln.png")
 
 ; redefined later
 
@@ -997,7 +997,7 @@ function vote(node) {
 
 (def display-item-number (i)
   (when i (tag (td align 'right valign 'top class 'title)
-            (fontcolor (if (even i) darkred site-color*) (pr i ".")))))
+            (pr i "."))))
 
 (= follow-threshold* 0)
 
