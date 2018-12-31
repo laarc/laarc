@@ -374,6 +374,10 @@
       (delayed i) (author user i)
       t))
 
+(def isfrom (url i)
+  (let u (sitename i!url)
+    (and (~empty u) (is url u))))
+
 (let mature (table)
   (def delayed (i)
     (and (no (mature i!id))
@@ -388,6 +392,9 @@
 
 (def visible (user is)
   (keep [cansee user _] is))
+
+(def fromsite (url (o is stories*))
+  (keep [isfrom url _] is))
 
 (def cansee-descendant (user c)
   (or (cansee user c)
@@ -884,6 +891,12 @@ function vote(node) {
 (def beststories (user n)
   (bestn n (compare > realscore) (visible user stories*)))
 
+(def sitestories (user url (o n maxend*))
+  (retrieve n [cansee user _] (fromsite url)))
+
+(newsop from (site)
+  (let site (clean-url site)
+    (listpage user (now) (sitestories user site maxend*) "from" "Submissions from @site")))
 
 (newsop noobstories () (noobspage user stories*))
 (newsop noobcomments () (noobspage user comments*))
@@ -1022,7 +1035,7 @@ function vote(node) {
                                                   ignore darkred 
                                                   kill   darkblue))
                           (pr it))))
-                    (pr it))
+                    (link it "/from?site=@it"))
                 (pr ") "))))
         (pr (pseudo-text s)))))
 
