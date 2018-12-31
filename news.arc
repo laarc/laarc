@@ -272,7 +272,7 @@
 ; Votes divided by the age in hours to the gravityth power.
 ; Would be interesting to scale gravity in a slider.
 
-(= gravity* 1.8 timebase* 120 front-threshold* 1 
+(= gravity* 1.8 timebase* 120 front-threshold* -10 
    nourl-factor* .4 lightweight-factor* .3 )
 
 (def frontpage-rank (s (o scorefn realscore) (o gravity gravity*))
@@ -1974,7 +1974,7 @@ function vote(node) {
 (def standard-item-fields (i a e x)
        `((sexpr   votes     ,i!votes       ,a  nil)
          (int     score     ,i!score        t ,a)
-         (int     sockvotes ,i!sockvotes   ,a ,a)
+         (num     sockvotes ,i!sockvotes   ,a ,a)
          (yesno   dead      ,i!dead        ,e ,e)
          (yesno   deleted   ,i!deleted     ,a ,a)
          (sexpr   flags     ,i!flags       ,a nil)
