@@ -89,14 +89,22 @@
                       nil))
               (enq now (req-times* ip))))))
 
+(def noisy-header (lines (o label) (o footer "\n"))
+  (when srv-noisy*
+    (atomic
+      (if label (pr label))
+      (each line lines
+        (prn line))
+      (if footer (pr footer))))
+  lines)
+
 (def handle-request-thread (i o ip)
   (with (nls 0 lines nil line nil responded nil t0 (msec))
     (after
       (whilet c (unless responded (readc i))
-        (if srv-noisy* (pr c))
         (if (is c #\newline)
             (if (is (++ nls) 2) 
-                (let (type op args n cooks ip2) (parseheader (rev lines))
+                (let (type op args n cooks ip2) (parseheader (noisy-header (rev lines)))
                   (if ip2 (= ip ip2))
                   (let t1 (msec)
                     (case type
@@ -129,16 +137,15 @@
 ; (unless (is c #\return) (push c line))
 
 (def handle-post (i o op args n cooks ip)
-  (if srv-noisy* (pr "Post Contents: "))
   (if (no n)
       (respond-err o "Post request without Content-Length.")
       (let line nil
         (whilet c (and (> n 0) (readc i))
-          (if srv-noisy* (pr c))
           (-- n)
           (push c line)) 
-        (if srv-noisy* (pr "\n\n"))
-        (respond o op (+ (parseargs (string (rev line))) args) cooks ip))))
+        (let line (string (rev line))
+          (noisy-header (list line) "Post Contents: ")
+          (respond o op (+ (parseargs line) args) cooks ip)))))
 
 (= type-header* (table))
 
