@@ -683,8 +683,14 @@
                      (list (fn (u ip))
                            (string ',name (reassemble-args ,parm)))))))
 
+(def shellquote (str)
+  (+ "'" (multisubst (list (list "'" "'\"'\"'")) str) "'"))
+
+(def shell (cmd . args)
+  (tostring:system (+ (string cmd) " " (string:intersperse #\space (map shellquote:string args)))))
+
 (def GET (url)
-  (tostring:system (+ "curl -fsSL '" (clean-url url) "'")))
+  (shell "curl" "-fsSL" (clean-url url)))
 
 (def fetch-title (url)
   (let s (GET url)
