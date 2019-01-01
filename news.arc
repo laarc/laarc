@@ -467,6 +467,7 @@
     (hook 'longfoot)
     (w/bars
       (link "welcome" welcome-url*)
+      (link "feature requests" "/item?id=230")
       (link "guidelines" "/guidelines.html")
       (link "modblog" "https://laarcnotes.blogspot.com/")
       (link "bookmarklet" "/bookmarklet.html"))
