@@ -95,7 +95,8 @@
       (if label (pr label))
       (each line lines
         (prn line))
-      (if footer (pr footer))))
+      (if footer (pr footer))
+      (flushout)))
   lines)
 
 (def handle-request-thread (i o ip)
@@ -104,7 +105,8 @@
       (whilet c (unless responded (readc i))
         (if (is c #\newline)
             (if (is (++ nls) 2) 
-                (let (type op args n cooks ip2) (parseheader (noisy-header (rev lines) (+ "Time: " (moment) "\n")))
+                (withs (h (noisy-header (rev lines) (+ "Time: " (moment) "\nHeader: "))
+                        (type op args n cooks ip2) (parseheader h))
                   (if ip2 (= ip ip2))
                   (let t1 (msec)
                     (case type
