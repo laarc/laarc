@@ -558,7 +558,14 @@ function vote(node) {
   ping.src = node.href;
 
   return false; // cancel browser nav
-} ")
+}
+function suggestTitle() {
+  byId('ln-title-input').value = 'fetching...';
+  fetch('/suggest-title?url=' + encodeURI(byId('ln-url-input').value)).then(x => {x.text().then(x => { byId('ln-title-input').value = x; })})
+
+  return false; // cancel browser nav
+}
+")
 
 
 ; Page top
@@ -735,6 +742,12 @@ function vote(node) {
                (set-ip-ban user (arg req "ip") t)
                (admin&newsadmin-page user)))
       (single-input "" 'ip 20 "ban ip"))))
+
+(defmemo suggested-title (url)
+  (or (fetch-title url) "unknown"))
+
+(newsop suggest-title (url)
+  (pr:suggested-title url))
 
 
 ; Users
@@ -1488,6 +1501,10 @@ function vote(node) {
 (def clean-sub (x)
   (coerce (+ "/l/" (downcase:last (tokens x #\/))) 'sym))
 
+(def url-input (url)
+  (row "url" (input "u" url 50 "ln-url-input"))
+  (row "" (underlink "suggest title" nil "suggestTitle();")))
+
 (def submit-page (user (o sub) (o url) (o title) (o showtext) (o text "") (o msg))
   (minipage "Submit"
     (pagemessage msg)
@@ -1501,15 +1518,16 @@ function vote(node) {
                            req!ip)
       (tab
         (row "to" (input "l" (or sub "news") 50))
-        (row "title"  (input "t" title 50))
+        (row "title"  (input "t" title 50 "ln-title-input"))
         (if prefer-url*
-            (do (row "url" (input "u" url 50))
+            (do (url-input url)
                 (when showtext
+                  (spacerow 20)
                   ;(row "" "<b>or</b>")
                   (row "text" (textarea "x" 4 50 (only.pr text)))))
             (do (row "text" (textarea "x" 4 50 (only.pr text)))
                 (row "" "<b>or</b>")
-                (row "url" (input "u" url 50))))
+                (url-input url)))
         (row "" (submit))
         (spacerow 20)
         (row "" submit-instructions*)))))

@@ -113,6 +113,7 @@
 (attribute input      type           opsym)
 (attribute input      value          opesc)
 (attribute input      checked        opcheck)
+(attribute input      id             opsym)
 (attribute select     name           opstring)
 (attribute option     selected       opsel)
 (attribute table      bgcolor        opcolor)
@@ -311,8 +312,8 @@
 (mac textarea (name rows cols . body)
   `(tag (textarea name ,name rows ,rows cols ,cols) ,@body))
 
-(def input (name (o val "") (o size 10))
-  (gentag input type 'text name name value val size size))
+(def input (name (o val "") (o size 10) (o id))
+  (gentag input type 'text name name value val size size id id))
 
 (mac inputs args
   `(tag (table border 0)
@@ -378,13 +379,13 @@
 
 (def nbsp () (pr "&nbsp;"))
 
-(def link (text (o dest text) (o color))
-  (tag (a href dest) 
+(def link (text (o dest text) (o color) (o onclick))
+  (tag (a href dest onclick onclick)
     (tag-if color (font color color)
       (pr text))))
 
-(def underlink (text (o dest text))
-  (tag (a href dest) (tag u (pr text))))
+(def underlink (text (o dest text) (o onclick))
+  (tag (a href dest onclick onclick) (tag u (pr text))))
 
 (def striptags (s)
   (let intag nil

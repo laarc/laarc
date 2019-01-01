@@ -683,3 +683,13 @@
                      (list (fn (u ip))
                            (string ',name (reassemble-args ,parm)))))))
 
+(def GET (url)
+  (tostring:system (+ "curl -fsSL '" (clean-url url) "'")))
+
+(def fetch-title (url)
+  (let s (GET url)
+    (whenlet p1 (posmatch "<title" s)
+      (whenlet p2 (posmatch "</title>" s)
+        (whenlet p3 (posmatch ">" s p1)
+          (trim (cut s (+ p3 1) p2)))))))
+
