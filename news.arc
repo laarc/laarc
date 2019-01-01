@@ -467,10 +467,11 @@
     (hook 'longfoot)
     (w/bars
       (link "Welcome" welcome-url*)
-      (link "Feature Requests" "/item?id=230")
       (link "Guidelines" "/guidelines.html")
       (link "Bookmarklet" "/bookmarklet.html")
-      (link "Contact" "mailto:shawnpresser@@gmail.com"))
+      (link "Feature Requests" "/item?id=230")
+      (link "Contact" "mailto:shawnpresser@@gmail.com")
+      (link "Twitter" "https://twitter.com/theshawwn"))
     (admin-bar user elapsed whence)))
 
 (def admin-bar (user elapsed whence)
@@ -611,10 +612,9 @@ function vote(node) {
     (toplink "discord"  discord-url* label)
     (hook 'toprow user label)
     (link "tags" "/l")
-    (link "submit" "/submit"))
-  (unless (mem label toplabels*)
-    (hspace 15)
-    (fontcolor white (pr label))))
+    (link "submit" "/submit")
+    (unless (mem label toplabels*)
+      (fontcolor white (pr label)))))
 
 (def toplink (name dest label)
   (tag-if (is name label) (span class 'topsel)
@@ -867,7 +867,7 @@ function vote(node) {
      user)))
 
 (newscache newspage user 90
-  (listpage user (now) (topstories user maxend*) "all" nil "/l/all"))
+  (listpage user (now) (topstories user maxend*) nil nil "/l/all"))
 
 (def listpage (user t1 items label title (o url label) (o number t))
   (hook 'listpage user)
