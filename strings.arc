@@ -212,6 +212,15 @@
         (+ "-" abrep)
         abrep)))
         
+(def leftpad (s (o digits 0) (o c "0"))
+  (if (isa s 'string)
+      (let n (len s)
+        (if (<= digits n) s
+          (tostring
+            (repeat (- digits n) (pr c))
+            (pr s))))
+    (leftpad (string s) digits c)))
+
 
 ; English
 

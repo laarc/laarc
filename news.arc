@@ -9,10 +9,10 @@
 
 (= site-name*    "laarc"
    site-abbrev*  "LN"
-   site-url*     "/"
-   parent-url*   "/"
+   site-url*     "https://www.laarc.io"
+   parent-url*   "https://www.laarc.io"
    favicon-url*  ""
-   site-desc*    "Lambda News"               ; for rss feed
+   site-desc*    "Links you'll like"         ; for rss feed
    site-color*   (color 154 186 170)
    border-color* (color 154 186 170)
    prefer-url*   t)
@@ -414,25 +414,30 @@
 
 ; redefined later
 
-(def gen-css-url ()
-  (prn "<link rel=\"stylesheet\" type=\"text/css\" href=\"/news.css\">"))
+(def rss-url ((o label))
+  (if (is label "comments") "/rsscomments" "/rss"))
 
-(mac npage (title . body)
+(def gen-head (title label)
+  (tag head 
+    (prn "
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\">
+    <link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/favicon-32x32.png\">
+    <link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/favicon-16x16.png\">
+    <link rel=\"manifest\" href=\"/site.webmanifest\">
+    <link rel=\"mask-icon\" href=\"/safari-pinned-tab.svg\" color=\"#5bbad5\">
+    <meta name=\"msapplication-TileColor\" content=\"#da532c\">
+    <meta name=\"theme-color\" content=\"#ffffff\">
+    <link rel=\"stylesheet\" type=\"text/css\" href=\"/news.css\">
+    <link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"@(rss-url label)\">
+    <link rel=\"shortcut icon\" href=\"" favicon-url* "\">
+    ")
+    (tag script (pr votejs*))
+    (tag title (pr title))))
+
+(mac npage (title label . body)
   `(tag html 
-     (tag head 
-       (prn "
-<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-<link rel=\"apple-touch-icon\" sizes=\"180x180\" href=\"/apple-touch-icon.png\">
-<link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"/favicon-32x32.png\">
-<link rel=\"icon\" type=\"image/png\" sizes=\"16x16\" href=\"/favicon-16x16.png\">
-<link rel=\"manifest\" href=\"/site.webmanifest\">
-<link rel=\"mask-icon\" href=\"/safari-pinned-tab.svg\" color=\"#5bbad5\">
-<meta name=\"msapplication-TileColor\" content=\"#da532c\">
-<meta name=\"theme-color\" content=\"#ffffff\">")
-       (gen-css-url)
-       (prn "<link rel=\"shortcut icon\" href=\"" favicon-url* "\">")
-       (tag script (pr votejs*))
-       (tag title (pr ,title)))
+     (gen-head ,title ,label)
      (tag body 
        (center
          (tag (table id 'hnmain
@@ -445,7 +450,7 @@
 (mac fulltop (user lid label title whence . body)
   (w/uniq (gu gi gl gt gw)
     `(with (,gu ,user ,gi ,lid ,gl ,label ,gt ,title ,gw ,whence)
-       (npage (+ (if ,gt (+ ,gt bar*) "") site-name*)
+       (npage (+ (if ,gt (+ ,gt bar*) "") site-name*) ,gl
          (if (check-procrast ,gu)
              (do (pagetop 'full ,gi ,gl ,gt ,gu ,gw)
                  (hook 'page ,gu ,gl)
@@ -472,6 +477,10 @@
       (link "Feature Requests" "/item?id=230")
       (link "Contact" "mailto:shawnpresser@@gmail.com")
       (link "Twitter" "https://twitter.com/theshawwn"))
+    (br2)
+    (w/bars
+      (link "RSS (stories)" "/rss")
+      (link "RSS (comments)" "/rsscomments"))
     (admin-bar user elapsed whence)))
 
 (def admin-bar (user elapsed whence)
@@ -498,7 +507,7 @@
      (trtd ,@body)))
 
 (mac minipage (label . body)
-  `(npage (+ site-name* bar* ,label)
+  `(npage (+ site-name* bar* ,label) ,label
      (pagetop nil nil ,label)
      (trtd ,@body)))
 
@@ -2321,6 +2330,11 @@ function suggestTitle() {
 
 ; RSS
 
+(def rss-date (sec)
+  (moment (* 1000 sec)))
+
+(= static-header*!rss "application/rss+xml; charset=utf-8")
+
 (newsop rss () (rsspage nil))
 
 (newscache rsspage user 90
@@ -2337,10 +2351,46 @@ function suggestTitle() {
           (let comurl (+ site-url* (item-url s!id))
             (tag title    (pr (eschtml s!title)))
             (tag link     (pr (if (blank s!url) comurl (eschtml s!url))))
+            (tag pubDate  (pr (rss-date s!time)))
             (tag comments (pr comurl))
             (tag description
               (cdata (link "Comments" comurl)))))))))
 
+; RSS comments
+
+(= static-header*!rsscomments "application/rss+xml; charset=utf-8")
+
+(newsop rsscomments () (rsscommentspage nil))
+
+(newscache rsscommentspage user 10
+  (rss-comments (retrieve perpage* live comments*)))
+
+(def rss-comment-title (c)
+  (tostring
+    (pr c!by " | ")
+    (let s (superparent c)
+      (pr (ellipsize s!title 50)))))
+
+(def rss-comments (comments)
+  (tag (rss version "2.0")
+    (tag channel
+      (tag title (pr (+ site-name* ": new comments")))
+      (tag link (pr (+ site-url* "/newcomments")))
+      (tag description (pr (+ site-desc* ": the conversation")))
+      (each c comments
+        (tag item
+          (let comurl (+ site-url* (item-url c!id))
+            (tag title    (pr (rss-comment-title c)))
+            (tag link     (pr (if (blank c!url) comurl (eschtml c!url))))
+            (tag pubDate  (pr (rss-date c!time)))
+            (tag comments (pr comurl))
+            (tag description
+              (cdata
+                (pr c!text)
+                (br2)
+                (pr "on: ")
+                (let s (superparent c)
+                  (link (ellipsize s!title 50) (+ site-url* (item-url s!id))))))))))))
 
 ; User Stats
 

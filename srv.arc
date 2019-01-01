@@ -223,8 +223,6 @@ Connection: close"))
 
 (= unknown-msg* "Unknown." max-age* (table) static-header* (table) static-max-age* nil)
 
-(= static-header*!rss "application/rss+xml; charset=utf-8")
-
 (def respond (str op args cooks ip)
   (w/stdout str
     ;(hook 'respond op args cooks ip)

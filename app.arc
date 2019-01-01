@@ -702,5 +702,8 @@
 (def moment ((o ms (msec)))
   (with (secs (trunc (/ ms 1000))
          msecs (mod ms 1000))
-    (trim:shell "date" "-ur" secs (+ "+%Y-%m-%dT%H:%M:%S." msecs "Z"))))
+    (trim:shell "date" "-ur" secs (+ "+%Y-%m-%dT%H:%M:%S." (leftpad msecs 3 "0") "Z"))))
+
+(def moment-secs ((o secs (seconds)))
+  (moment (* 1000 secs)))
 
