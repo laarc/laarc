@@ -223,6 +223,8 @@ Connection: close"))
 
 (= unknown-msg* "Unknown." max-age* (table) static-header* (table) static-max-age* nil)
 
+(= static-header*!rss "application/rss+xml; charset=utf-8")
+
 (def respond (str op args cooks ip)
   (w/stdout str
     ;(hook 'respond op args cooks ip)
@@ -233,7 +235,7 @@ Connection: close"))
                    (do (prn rdheader*)
                        (prn "Location: " (f str req))
                        (prn))
-                   (do (prn header*)
+                   (do (prn (aif (static-header* op) (gen-type-header it) header*))
                        (awhen (max-age* op)
                          (prn "Cache-Control: max-age=" it))
                        (f str req))))
