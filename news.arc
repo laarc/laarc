@@ -1502,7 +1502,7 @@ function tlen(el) { var n = el.value.length - 80; el.nextSibling.innerText = n >
 
 function suggestTitle() {
   byId('ln-title-input').value = 'fetching...';
-  fetch('/suggest-title?url=' + encodeURI(byId('ln-url-input').value)).then(x => {x.text().then(x => { var i = byId('ln-title-input'); i.value = x; tlen(i); i.focus(); })})
+  fetch('/suggest-title?url=' + encodeURIComponent(byId('ln-url-input').value)).then(x => {x.text().then(x => { var i = byId('ln-title-input'); i.value = x; tlen(i); i.focus(); })})
   return false; // cancel browser nav
 }
 ")
