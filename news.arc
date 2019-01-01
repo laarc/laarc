@@ -466,11 +466,11 @@
   (center
     (hook 'longfoot)
     (w/bars
-      (link "welcome" welcome-url*)
-      (link "feature requests" "/item?id=230")
-      (link "guidelines" "/guidelines.html")
-      (link "modblog" "https://laarcnotes.blogspot.com/")
-      (link "bookmarklet" "/bookmarklet.html"))
+      (link "Welcome" welcome-url*)
+      (link "Feature Requests" "/item?id=230")
+      (link "Guidelines" "/guidelines.html")
+      (link "Bookmarklet" "/bookmarklet.html")
+      (link "Contact" "mailto:shawnpresser@@gmail.com"))
     (admin-bar user elapsed whence)))
 
 (def admin-bar (user elapsed whence)
