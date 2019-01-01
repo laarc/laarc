@@ -1,0 +1,8 @@
+User-Agent: * 
+Disallow: /x?
+Disallow: /vote?
+Disallow: /reply?
+Disallow: /submitted?
+Disallow: /submitlink?
+Disallow: /threads?
+Crawl-delay: 30
