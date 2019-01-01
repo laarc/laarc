@@ -1945,8 +1945,12 @@ function suggestTitle() {
 (def display-item (n i user here (o inlist))
   ((displayfn* (i 'type)) n i user here inlist))
 
-(def superparent (i)
-  (aif i!parent (superparent:item it) i))
+(def superparent (i (o n))
+  (aif (is n 0)
+        i
+       i!parent
+        (superparent (item it) (if n (- n 1)))
+       i))
 
 (def display-item-text (s user)
   (when (and (cansee user s) 
@@ -2367,7 +2371,10 @@ function suggestTitle() {
 
 (def rss-comment-title (c)
   (tostring
-    (pr c!by " | ")
+    (let p (superparent c 1)
+      (if (acomment p)
+          (pr c!by " to " p!by bar*)
+        (pr c!by bar*)))
     (let s (superparent c)
       (pr (ellipsize s!title 50)))))
 
