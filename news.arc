@@ -410,7 +410,7 @@
 
 ; Page Layout
 
-(= up-url* "/grayarrow.gif" down-url* "/graydown.gif" logo-url* "/ln.png")
+(= up-url* "/grayarrow.gif" down-url* "/graydown.gif" logo-url* "/ln-newyear.png")
 
 ; redefined later
 
@@ -591,9 +591,9 @@ function vote(node) {
   (spacerow 10))
 
 (def gen-logo ()
-  (tag (td style "width:18px;padding-right:4px")
+  (tag (td style "width:18px;padding-right:2px;padding-left:6px;padding-top:0px;padding-bottom:3px")
     (tag (a href parent-url*)
-      (tag (img src logo-url* width 18 height 18 
+      (tag (img src logo-url* width 18 height 23 
                 style "border:1px #@(hexrep border-color*) solid;")))))
 
 (= toplabels* '(nil "welcome" "new" "threads" "comments" "discord" "*"))
