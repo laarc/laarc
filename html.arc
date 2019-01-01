@@ -114,6 +114,8 @@
 (attribute input      value          opesc)
 (attribute input      checked        opcheck)
 (attribute input      id             opsym)
+(attribute input      oninput        opstring)
+(attribute input      onfocus        opstring)
 (attribute select     name           opstring)
 (attribute option     selected       opsel)
 (attribute table      bgcolor        opcolor)
@@ -138,6 +140,7 @@
 (attribute span       align          opstring)
 (attribute span       id             opsym)
 (attribute rss        version        opstring)
+(attribute script     type           opstring)
 
 
 (mac gentag args (start-tag args))
@@ -312,8 +315,8 @@
 (mac textarea (name rows cols . body)
   `(tag (textarea name ,name rows ,rows cols ,cols) ,@body))
 
-(def input (name (o val "") (o size 10) (o id))
-  (gentag input type 'text name name value val size size id id))
+(def input (name (o val "") (o size 10) (o id) (o oninput) (o onfocus))
+  (gentag input type 'text name name value val size size id id oninput oninput onfocus onfocus))
 
 (mac inputs args
   `(tag (table border 0)
@@ -435,3 +438,6 @@
        (if ,g
            (tag (font color ,g) ,@body)
            (do ,@body)))))
+
+(def script (js (o type "text/javascript"))
+  (tag (script type type) (pr js)))

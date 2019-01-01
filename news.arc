@@ -558,15 +558,7 @@ function vote(node) {
   ping.src = node.href;
 
   return false; // cancel browser nav
-}
-function suggestTitle() {
-  byId('ln-title-input').value = 'fetching...';
-  fetch('/suggest-title?url=' + encodeURI(byId('ln-url-input').value)).then(x => {x.text().then(x => { byId('ln-title-input').value = x; })})
-
-  return false; // cancel browser nav
-}
-")
-
+}")
 
 ; Page top
 
@@ -1505,6 +1497,16 @@ function suggestTitle() {
   (row "url" (input "u" url 50 "ln-url-input"))
   (row "" (underlink "suggest title" nil "suggestTitle();")))
 
+(= submitjs* "
+function tlen(el) { var n = el.value.length - 80; el.nextSibling.innerText = n > 0 ? n + ' too long' : ''; }
+
+function suggestTitle() {
+  byId('ln-title-input').value = 'fetching...';
+  fetch('/suggest-title?url=' + encodeURI(byId('ln-url-input').value)).then(x => {x.text().then(x => { var i = byId('ln-title-input'); i.value = x; tlen(i); i.focus(); })})
+  return false; // cancel browser nav
+}
+")
+
 (def submit-page (user (o sub) (o url) (o title) (o showtext) (o text "") (o msg))
   (minipage "Submit"
     (pagemessage msg)
@@ -1516,9 +1518,11 @@ function suggestTitle() {
                            showtext
                            (and showtext (md-from-form (arg req "x")))
                            req!ip)
+      (script submitjs*)
       (tab
         (row "to" (input "l" (or sub "news") 50))
-        (row "title"  (input "t" title 50 "ln-title-input"))
+        (row "title" (do (input "t" title 50 "ln-title-input" "tlen(this)" "tlen(this)")
+                         (gentag span style "margin-left:10px")))
         (if prefer-url*
             (do (url-input url)
                 (when showtext
