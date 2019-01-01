@@ -2172,7 +2172,7 @@ function suggestTitle() {
       (= (comment-cache-timeout* c!id)
           (cc-timeout c!time)
          (comment-cache* c!id)
-          (tostring (gen-comment-body c user whence t indent nil t)))))
+          (tostring (gen-comment-body c user whence t indent nil nil)))))
 
 ; Cache for the remainder of the current minute, hour, or day.
 
