@@ -12,7 +12,7 @@
    site-url*     "https://www.laarc.io"
    parent-url*   "https://www.laarc.io"
    favicon-url*  ""
-   site-desc*    "Links you'll like"         ; for rss feed
+   site-desc*    "Links for the curious"     ; for rss feed
    site-color*   (color 154 186 170)
    border-color* (color 154 186 170)
    prefer-url*   t)
@@ -431,6 +431,7 @@
     <link rel=\"stylesheet\" type=\"text/css\" href=\"/news.css\">
     <link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"@(rss-url label)\">
     <link rel=\"shortcut icon\" href=\"" favicon-url* "\">
+    <meta name=\"description\" content=\"@site-desc*\" />
     ")
     (tag script (pr votejs*))
     (tag title (pr title))))
