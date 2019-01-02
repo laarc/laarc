@@ -1099,8 +1099,7 @@ function vote(node) {
                       (or (admin user)
                           (< (item-age i) downvote-time*))
                       (canvote user i 'down))
-                 (do (br)
-                     (votelink i user whence 'down))
+                 (votelink i user whence 'down)
                  ; don't understand why needed, but is, or a new
                  ; page is generated on voting
                  (tag (span id (+ "down_" i!id)))))
@@ -1119,10 +1118,7 @@ function vote(node) {
   (tag (a id      (if user (string dir '_ i!id))
           onclick (if user "return vote(this)")
           href    (vote-url user i dir whence))
-    (tag (div class "votearrow")
-      (if (is dir 'up)
-          (out (gentag img src up-url*   border 0 vspace 3 hspace 2))
-          (out (gentag img src down-url* border 0 vspace 3 hspace 2))))))
+    (tag (div class (+ "votearrow" (if (is dir 'down) " rotate180" ""))))))
 
 (def vote-url (user i dir whence)
   (+ "/vote?" "for=" i!id
