@@ -4,5 +4,4 @@ Disallow: /vote?
 Disallow: /reply?
 Disallow: /submitted?
 Disallow: /submitlink?
-Disallow: /threads?
-Crawl-delay: 30
+Crawl-delay: 1
