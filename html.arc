@@ -85,6 +85,7 @@
 (attribute a          class          opstring)
 (attribute a          id             opsym)
 (attribute a          onclick        opstring)
+(attribute a          title          opstring)
 (attribute div        class          opstring)
 (attribute div        id             opsym)
 (attribute div        onclick        opstring)
@@ -383,13 +384,13 @@
 
 (def nbsp () (pr "&nbsp;"))
 
-(def link (text (o dest text) (o color) (o onclick))
-  (tag (a href dest onclick onclick)
+(def link (text (o dest text) (o color) (o onclick) (o title))
+  (tag (a href dest onclick onclick title title)
     (tag-if color (font color color)
       (pr text))))
 
-(def underlink (text (o dest text) (o onclick))
-  (tag (a href dest onclick onclick) (tag u (pr text))))
+(def underlink (text (o dest text) (o onclick) (o title))
+  (tag (a href dest onclick onclick title title) (tag u (pr text))))
 
 (def striptags (s)
   (let intag nil

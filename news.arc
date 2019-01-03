@@ -1183,6 +1183,9 @@ function vote(node) {
         (pr (plural score "point")))))
   (hook 'itemscore i user))
 
+(def item-timestamp (i)
+  "@(moment-secs i!time)")
+
 ; redefined later
 
 (def byline (i user)
@@ -1191,8 +1194,9 @@ function vote(node) {
     (pr " to @it"))
   (pr " @(tostring (itemlink i (text-age:item-age i))) "))
 
-(def itemlink (i (o label))
-  (link (or label "link") (item-url i!id)))
+
+(def itemlink (i (o label) (o title))
+  (link (or label "link") (item-url i!id) nil nil (item-timestamp i)))
 
 (def sublinks (i)
   (each p (item-paths i)

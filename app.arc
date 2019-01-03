@@ -699,7 +699,7 @@
         (whenlet p3 (posmatch ">" s p1)
           (trim (cut s (+ p3 1) p2)))))))
 
-(def moment ((o ms (msec)))
+(defmemo moment ((o ms (msec)))
   (with (secs (trunc (/ ms 1000))
          msecs (mod ms 1000))
     (trim:shell "date" "-ur" secs (+ "+%Y-%m-%dT%H:%M:%S." (leftpad msecs 3 "0") "Z"))))
