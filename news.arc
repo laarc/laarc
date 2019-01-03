@@ -2182,7 +2182,7 @@ function suggestTitle() {
                (* (+ (trunc (/ age 86400)) 1) 86400)))))
 
 (def gen-comment-body (c user whence astree indent showpar showon)
-  (tag (td class 'default)
+  (tag (td id c!id class 'default)
     (let parent (and (or (no astree) showpar) (c 'parent))
       (tag (div style "margin-top:2px; margin-bottom:-10px; ")
         (spanclass comhead
