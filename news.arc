@@ -2102,7 +2102,7 @@ function suggestTitle() {
          (comment-ban-test user c ip text comment-kill* comment-ignore*)
          (if (bad-user user) (kill c 'ignored/karma))
          (submit-item user c)
-         whence)))
+         (+ whence "#" c!id))))
 
 (def bad-user (u)
   (or (ignored u) (< (karma u) comment-threshold*)))
