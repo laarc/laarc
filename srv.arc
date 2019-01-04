@@ -105,7 +105,7 @@
       (whilet c (unless responded (readc i))
         (if (is c #\newline)
             (if (is (++ nls) 2) 
-                (withs (h (noisy-header (rev lines) (+ "Time: " (moment) "\nHeader: "))
+                (withs (h (noisy-header (rev lines) (+ "Time: " (moment-ms) "\nHeader: "))
                         (type op args n cooks ip2) (parseheader h))
                   (if ip2 (= ip ip2))
                   (let t1 (msec)
