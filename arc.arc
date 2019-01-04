@@ -700,6 +700,12 @@
        ,@body
        (rev ,gacc))))
 
+(mac w/accum body
+  (w/uniq ga
+    `(accum ,ga
+       ,@(map [do `(aif ,_ (,ga it))]
+              body))))
+
 ; Repeatedly evaluates its body till it returns nil, then returns vals.
 
 (mac drain (expr (o eof nil))

@@ -9,6 +9,7 @@
 
 (= site-name*    "laarc"
    site-abbrev*  "LN"
+   site-email*   "hi@@laarc.io"
    site-url*     "https://www.laarc.io"
    parent-url*   "https://www.laarc.io"
    favicon-url*  ""
@@ -37,8 +38,10 @@
   weight     .5
   ignore     nil
   email      nil
+  verified   nil ; if (is (uvar u email) (uvar u verified)), then email is valid
   about      nil
   showdead   nil
+  notify     nil
   noprocrast nil
   firstview  nil
   lastview   nil
@@ -476,7 +479,7 @@
       (link "Guidelines" "/guidelines.html")
       (link "Bookmarklet" "/bookmarklet.html")
       (link "Feature Requests" "/item?id=230")
-      (link "Contact" "mailto:shawnpresser@@gmail.com")
+      (link "Contact" "mailto:@site-email*")
       (link "Twitter" "https://twitter.com/theshawwn"))
     (br2)
     (w/bars
@@ -792,28 +795,36 @@ function vote(node) {
           u (or a w)
           m (or a (and (member user) w))
           p (profile subject))
-    `((string  user       ,subject                                  t   nil)
-      (string  name       ,(p 'name)                               ,m  ,m)
-      (string  created    ,(text-age:user-age subject)              t   nil)
-      (string  password   ,(resetpw-link subject)                  ,u   nil)
-      (string  saved      ,(saved-link user subject)               ,u   nil)
-      (int     auth       ,(p 'auth)                               ,e  ,a)
-      (yesno   member     ,(p 'member)                             ,a  ,a)
-      (posint  karma      ,(p 'karma)                               t  ,a)
-      (num     avg        ,(p 'avg)                                ,a  nil)
-      (yesno   ignore     ,(p 'ignore)                             ,e  ,e)
-      (num     weight     ,(p 'weight)                             ,a  ,a)
-      (mdtext2 about      ,(p 'about)                               t  ,u)
-      (string  email      ,(p 'email)                              ,u  ,u)
-      (yesno   showdead   ,(p 'showdead)                           ,u  ,u)
-      (yesno   noprocrast ,(p 'noprocrast)                         ,u  ,u)
-      (string  firstview  ,(p 'firstview)                          ,a   nil)
-      (string  lastview   ,(p 'lastview)                           ,a   nil)
-      (posint  maxvisit   ,(p 'maxvisit)                           ,u  ,u)
-      (posint  minaway    ,(p 'minaway)                            ,u  ,u)
-      (sexpr   keys       ,(p 'keys)                               ,a  ,a)
-      (hexcol  topcolor   ,(or (p 'topcolor) (hexrep site-color*)) ,k  ,k)
-      (int     delay      ,(p 'delay)                              ,u  ,u))))
+  (w/accum
+    `(string  user       ,subject                                  t   nil)
+    `(string  name       ,(p 'name)                               ,m  ,m)
+    `(string  created    ,(text-age:user-age subject)              t   nil)
+    `(string  password   ,(resetpw-link subject)                  ,u   nil)
+    `(string  saved      ,(saved-link user subject)               ,u   nil)
+    `(int     auth       ,(p 'auth)                               ,e  ,a)
+    `(yesno   member     ,(p 'member)                             ,a  ,a)
+    `(posint  karma      ,(p 'karma)                               t  ,a)
+    `(num     avg        ,(p 'avg)                                ,a  nil)
+    `(yesno   ignore     ,(p 'ignore)                             ,e  ,e)
+    `(num     weight     ,(p 'weight)                             ,a  ,a)
+    `(mdtext2 about      ,(p 'about)                               t  ,u)
+    `(string  email      ,(p 'email)                              ,u  ,u)
+    `(string  verified   ,(p 'verified)                           ,a  ,a)
+    (unless (blank p!email)
+      (if (isnt p!email p!verified)
+          `(string  verify   ,(verify-link p)                     ,u  nil)
+          `(yesno   notify   ,(p 'notify)                         ,u  ,u
+            "Be notified of replies by email?")))
+    `(yesno   showdead   ,(p 'showdead)                           ,u  ,u)
+    `(yesno   noprocrast ,(p 'noprocrast)                         ,u  ,u)
+    `(string  firstview  ,(p 'firstview)                          ,a   nil)
+    `(string  lastview   ,(p 'lastview)                           ,a   nil)
+    `(posint  maxvisit   ,(p 'maxvisit)                           ,u  ,u)
+    `(posint  minaway    ,(p 'minaway)                            ,u  ,u)
+    `(sexpr   keys       ,(p 'keys)                               ,a  ,a)
+    `(hexcol  topcolor   ,(or (p 'topcolor) (hexrep site-color*)) ,k  ,k)
+    `(int     delay      ,(p 'delay)                              ,u  ,u)
+    )))
 
 (def saved-link (user subject)
   (when (or (admin user) (is user subject))
@@ -824,11 +835,54 @@ function vote(node) {
           ""
           (tostring (underlink n (saved-url subject)))))))
 
+(def verify-link (p)
+  (tostring (underlink "verify email" "/verify")))
+
 (def resetpw-link (u)
-  (tostring (underlink "reset password" "resetpw?u=@u")))
+  (tostring (underlink "reset password" "/resetpw?u=@u")))
 
 (newsop welcome ()
   (pr "Welcome to " site-name* ", " user "!"))
+
+; Verify email
+
+(defopg verify req
+  (with (user (get-user req)
+         subject (arg req "u"))
+    (verify-page user subject)))
+
+(def verify-page (user subject (o msg))
+  (let subject (or subject user)
+    (if (~or (admin user) (is user subject))
+        (pr "Sorry.")
+      (minipage "Verify Email"
+        (if msg (pr msg) (pr "Verifying email for @subject"))
+        (br2)
+        (unless msg
+          (uform user req (try-verify user subject (arg req "e"))
+            (single-input "New email:  " 'e 30 "send verification email"
+                          nil (uvar subject email))))))))
+
+(def try-verify (user subject newemail)
+  (if (len< newemail 4)
+      (verify-page user subject "Emails should be a least 4 characters long.  
+                          Please choose another.")
+      (do (send-verification subject newemail)
+          (verify-page user subject "Verification email sent.
+                       Please check your inbox."))))
+
+(def send-verification (subject newemail)
+  (send-email site-email*
+              newemail
+              "Please verify your email address on @site-name*"
+              (+ "Click here to verify your email: "
+                 site-url*
+                 (rflink [let u (profile subject)
+                           (= u!email newemail
+                              u!verified newemail)
+                           (save-prof subject)
+                           (user-url subject)]))))
+
 
 
 ; Main Operators
@@ -2102,7 +2156,16 @@ function suggestTitle() {
          (comment-ban-test user c ip text comment-kill* comment-ignore*)
          (if (bad-user user) (kill c 'ignored/karma))
          (submit-item user c)
+         (process-reply parent!by c)
          (+ whence "#" c!id))))
+
+(def process-reply (user c)
+  (aand user
+        (uvar user notify)
+        (uvar user email)
+        (if (is it (uvar user verified)) it)
+        (send-email site-email* it "New reply from @c!by" "@(do site-url*)@(item-url c!id)")
+        t))
 
 (def bad-user (u)
   (or (ignored u) (< (karma u) comment-threshold*)))

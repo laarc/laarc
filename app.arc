@@ -707,3 +707,6 @@
 (def moment-secs ((o secs (seconds)))
   (moment (* 1000 secs)))
 
+(def send-email (from to subject message)
+  (tostring:shell "python2" "../sendmail.py" from to subject message))
+

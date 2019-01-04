@@ -337,9 +337,9 @@
                                          value ,text)))))))
             (tuples args 4))))
 
-(def single-input (label name chars btext (o pwd))
+(def single-input (label name chars btext (o pwd) (o value))
   (pr label)
-  (gentag input type (if pwd 'password 'text) name name size chars)
+  (gentag input type (if pwd 'password 'text) name name size chars value value)
   (sp)
   (submit btext))
 

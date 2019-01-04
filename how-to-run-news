@@ -50,3 +50,8 @@ To improve performance:
 
 (declare 'explicit-flush t) ; you take responsibility for flushing output
                             ; (all existing news code already does)
+
+Production installation:
+
+sudo pip install --upgrade google-api-python-client oauth2client
+
