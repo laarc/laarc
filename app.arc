@@ -416,11 +416,13 @@
        (submit button))))
                 
 (def showvars (fields (o liveurls))
-  (each (typ id val view mod question) fields
+  (each (typ id val view mod question (o n 1)) (rem empty fields)
     (when view
       (when question
-        (tr (td (prn question))))
-      (tr (unless question (tag (td valign 'top)  (pr id ":")))
+        (tr (repeat n (td)) (td (prn question))))
+      (tr (if question
+              (repeat n (td))
+              (tag (td valign 'top)  (pr id ":")))
           (td (if mod 
                   (varfield typ id val)
                   (varline  typ id val liveurls))))
