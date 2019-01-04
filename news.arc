@@ -1680,15 +1680,16 @@ function suggestTitle() {
 ; Give overeager users the key toofast to make limit permanent.
 
 (def oversubmitting (user ip kind (o url))
-  (and enforce-oversubmit*
-       (or (check-key user 'toofast)
-           (ignored user)
-           (< (user-age user) new-age-threshold*)
-           (< (karma user) new-karma-threshold*))
-       (len> (recent-items [or (author user _) (is _!ip ip)] 180)
-             (if (is kind 'story)
-                 (if (bad-user user) 0 1)
-                 (if (bad-user user) 1 10)))))
+  (or (check-key user 'rebuff)
+      (and enforce-oversubmit*
+           (or (check-key user 'toofast)
+               (ignored user)
+               (< (user-age user) new-age-threshold*)
+               (< (karma user) new-karma-threshold*))
+           (len> (recent-items [or (author user _) (is _!ip ip)] 180)
+                 (if (is kind 'story)
+                     (if (bad-user user) 0 1)
+                     (if (bad-user user) 1 10))))))
 
 ; Note that by deliberate tricks, someone could submit a story with a 
 ; blank title.
