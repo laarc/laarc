@@ -469,6 +469,10 @@
          (trtd (longfoot ,gu (- (now) ,gt) ,whence))))))
 
 (def longfoot (user elapsed whence)
+  (when (in whence "/l/chess")
+    (vspace 10)
+    (center
+      (chess-board user)))
   (vspace 10)
   (color-stripe (main-color user))
   (br)
@@ -2986,4 +2990,82 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
       (each c (dedup (map downcase (trues [uvar _ topcolor] (users))))
         (tr (td c) (tdcolor (hex>color c) (hspace 30)))))))
 
+
+(= chess-board* (trim (rem #\return "
+rnbqkbnr
+pppppppp
+        
+        
+        
+        
+PPPPPPPP
+RNBQKBNR
+")))
+
+(def chess-encode (x)
+  (multisubst
+    `(("K" "&#9812;")
+      ("Q" "&#9813;")
+      ("R" "&#9814;")
+      ("B" "&#9815;")
+      ("N" "&#9816;")
+      ("P" "&#9817;")
+      ("k" "&#9818;")
+      ("q" "&#9819;")
+      ("r" "&#9820;")
+      ("b" "&#9821;")
+      ("n" "&#9822;")
+      ("p" "&#9823;")
+      (" " "&nbsp;"))
+    (string x)))
+
+(def chars (x)
+  (accum a
+    (each c x
+      (a c))))
+
+(def chess ((o board chess-board*))
+  (accum a
+    (each y (lines chess-board*)
+      (a:accum a
+        (map a:chess-encode (chars y))))))
+
+(def chess-piece (text (o a) (o b) (o from) (o to))
+  (let op (if (~blank from) (+ "from=" from "&to=") "from=")
+    (tag (form method 'post action (+ "/chess?" op a "," b))
+      (gentag input type 'submit value2 text style "width: 3em;"))))
+
+(def chess-board ((o user) (o from) (o to) (o board chess-board*))
+  (idtab "chess"
+    (with (i 0 j 0 from (or from "") to (or to ""))
+      (each y (chess board)
+        (= i 0)
+        (++ j)
+        (row (chess-piece y.0 (++ i) j from to)
+             (chess-piece y.1 (++ i) j from to)
+             (chess-piece y.2 (++ i) j from to)
+             (chess-piece y.3 (++ i) j from to)
+             (chess-piece y.4 (++ i) j from to)
+             (chess-piece y.5 (++ i) j from to)
+             (chess-piece y.6 (++ i) j from to)
+             (chess-piece y.7 (++ i) j from to))))))
+
+(def chess-page (user (o from) (o to) (o board chess-board*))
+  (longpage user (now) nil "chess" "Chess" "chess"
+    (center
+      (chess-board user from to board))))
+
+(def chess-at (x y)
+  (+ (* (- y 1) 9) (- x 1)))
+
+(newsop chess (from to)
+  (when (and (~blank from) (~blank to))
+    (let ((a b) (x y)) (map [map int (tokens _ #\,)] (list from to))
+      (swap (chess-board* (chess-at x y))
+            (chess-board* (chess-at a b)))
+      (wipe (lncache* "chess")))
+    (wipe from)
+    (wipe to))
+  (if (blank from) (wipe to))
+  (chess-page user from to))
 

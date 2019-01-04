@@ -115,6 +115,7 @@
 (attribute input      value          opesc)
 (attribute input      checked        opcheck)
 (attribute input      id             opsym)
+(attribute input      class          opstring)
 (attribute input      oninput        opstring)
 (attribute input      onfocus        opstring)
 (attribute select     name           opstring)
@@ -188,7 +189,9 @@
   (if (no options)
       '()
       (let ((opt val) . rest) options
-        (let meth (if (is opt 'style) opstring (opmeth spec opt))
+        (let meth (if (is opt 'style) opstring
+                      (is opt 'value2) (do (= opt 'value) opstring)
+                      (opmeth spec opt))
           (if meth
               (if val
                   (cons (if (precomputable-tagopt val)
@@ -294,8 +297,10 @@
 
 (def cellpr (x) (pr (or x "&nbsp;")))
 
-(def but ((o text "submit") (o name nil))
-  (gentag input type 'submit name name value text))
+(def but ((o text "submit") (o name nil) (o noesc))
+  (if noesc
+      (gentag input type 'submit name name value2 text)
+      (gentag input type 'submit name name value  text)))
 
 (def submit ((o val "submit"))
   (gentag input type 'submit value val))
