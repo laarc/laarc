@@ -251,20 +251,6 @@ Connection: close"))
                                 (writeb b str))))
                         (respond-err str unknown-msg*))))))))
 
-; reload changed code each request
-
-(when (readenv "DEV" nil)
-  (defhook respond (str op args cooks ips . rest)
-    (let (op args) (parseop op args)
-      (when (srvops* op)
-        (prn op)
-        (awhen (any:reload)
-          (when (readenv "PULL" nil)
-            (system "git pull || git merge --abort"))
-          (write it)
-          (prn))))
-    nil))
-
 (def static-filetype (sym)
   (let fname (str sym)
     (and (~find #\/ fname)
@@ -617,6 +603,32 @@ Connection: close"))
   `(do (pull [caris _ ',id] pending-bgthreads*)
        (push (list ',id (fn () ,@body) ,sec) 
              pending-bgthreads*)))
+
+
+; reload changed code each request
+
+(def noisy-reload ()
+  (awhen (any:reload)
+    (write it)
+    (prn)))
+
+(when (readenv "DEV" nil)
+  (defhook respond (str op args cooks ips . rest)
+    (let (op args) (parseop op args)
+      (when (srvops* op)
+        (prn op)
+        (noisy-reload)))
+    nil))
+
+; pull from github periodically
+
+(def git-pull ()
+  (~headmatch "Already" (tostring:system "git pull>/dev/null && printf 1 || git merge --abort")))
+
+(awhen (readenv "PULL" nil)
+  (defbg git-pull it
+    (when (git-pull)
+      (noisy-reload))))
 
 
 
