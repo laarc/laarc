@@ -128,7 +128,7 @@
           
 (def init-user (u)
   (= (votes* u) (table) 
-     (profs* u) (inst 'profile 'id u))
+     (profs* u) (inst 'profile 'id u 'email (user->email* u)))
   (save-votes u)
   (save-prof u)
   u)

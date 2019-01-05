@@ -25,7 +25,7 @@
 
 ; idea: a bidirectional table, so don't need two vars (and sets)
 
-(= cookie->user* (table) user->cookie* (table) logins* (table))
+(= cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
 
 (def get-user (req) 
   (let u (aand (alref req!cooks "user") (cookie->user* (sym it)))
@@ -120,9 +120,10 @@
   (wipe (cookie->user* (user->cookie* user)) (user->cookie* user))
   (save-table cookie->user* cookfile*))
 
-(def create-acct (user pw)
+(def create-acct (user pw (o email))
   (set (dc-usernames* (downcase user)))
-  (set-pw user pw))
+  (set-pw user pw)
+  (= (user->email* user) email))
 
 (def disable-acct (user)
   (set-pw user (rand-string 20))
@@ -172,10 +173,10 @@
 
 (def create-handler (req switch afterward)
   (logout-user (get-user req))
-  (with (user (arg req "u") pw (arg req "p"))
+  (with (user (arg req "u") pw (arg req "p") email (arg req "e"))
     (aif (bad-newacct user pw)
          (failed-login switch it afterward)
-         (do (create-acct user pw)
+         (do (create-acct user pw email)
              (login user req!ip (cook-user user) afterward)))))
 
 (def login (user ip cookie afterward)
@@ -198,8 +199,12 @@
   (prn "Set-Cookie: user=" cook "; expires=Sun, 17-Jan-2038 19:14:07 GMT"))
 
 (def pwfields ((o label "login"))
-  (inputs u username 20 nil
-          p password 20 nil)
+  (if (headmatch "create" label)
+      (inputs u username 20 nil
+              p password 20 nil
+              e email?)
+      (inputs u username 20 nil
+              p password 20 nil))
   (br)
   (submit label))
 
