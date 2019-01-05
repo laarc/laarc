@@ -1087,7 +1087,7 @@ function vote(node) {
   (when i (tag (td align 'right valign 'top class 'title)
             (pr i "."))))
 
-(= follow-threshold* 0)
+(= follow-threshold* 1)
 
 (def titleline (s url user whence)
   (tag (td class 'title)
