@@ -262,7 +262,7 @@
 
 (def errpage args (whitepage (apply prn args)))
 
-(def blank-url () "s.gif")
+(def blank-url () "/s.gif")
 
 ; Could memoize these.
 
