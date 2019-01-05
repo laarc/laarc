@@ -4,7 +4,7 @@
 
 (= arcdir* "arc/" logdir* "arc/logs/" staticdir* "static/")
 
-(= quitsrv* nil breaksrv* nil) 
+(^ quitsrv* nil breaksrv* nil) 
 
 (def serve ((o port 8080))
   (wipe quitsrv*)
@@ -25,7 +25,7 @@
 (def ensure-srvdirs ()
   (map ensure-dir (list arcdir* logdir* staticdir*)))
 
-(= srv-noisy* nil)
+(^ srv-noisy* nil)
 
 ; http requests currently capped at 2 meg by socket-accept
 
@@ -37,7 +37,7 @@
 ; to handle it. also arrange to kill that thread if it
 ; has not completed in threadlife* seconds.
 
-(= threadlife* 30  requests* 0  requests/ip* (table)  
+(^ threadlife* 30  requests* 0  requests/ip* (table)  
    throttle-ips* (table)  ignore-ips* (table)  spurned* (table))
 
 (def handle-request (s breaksrv)
@@ -73,7 +73,7 @@
 ; To adjust this while running, adjust the req-window* time, not 
 ; req-limit*, because algorithm doesn't enforce decreases in the latter.
 
-(= req-times* (table) req-limit* 30 req-window* 10 dos-window* 2 dos-protection* nil)
+(^ req-times* (table) req-limit* 30 req-window* 10 dos-window* 2 dos-protection* nil)
 
 (def abusive-ip (ip)
   (and dos-protection*
@@ -149,7 +149,7 @@
           (noisy-header (list line) "Post Contents: ")
           (respond o op (+ (parseargs line) args) cooks ip)))))
 
-(= type-header* (table))
+(^ type-header* (table))
 
 (def gen-type-header (ctype)
   (+ "HTTP/1.0 200 OK
@@ -177,7 +177,7 @@ Connection: close"))
 
 (= rdheader* "HTTP/1.0 302 Moved")
 
-(= srvops* (table) redirector* (table) optimes* (table) opcounts* (table))
+(^ srvops* (table) redirector* (table) optimes* (table) opcounts* (table))
 
 (def save-optime (name elapsed)
   ; this is the place to put a/b testing
@@ -222,7 +222,8 @@ Connection: close"))
   cooks nil
   ip    nil)
 
-(= unknown-msg* "Unknown." max-age* (table) static-header* (table) static-max-age* nil)
+(= unknown-msg* "Unknown.")
+(^ max-age* (table) static-header* (table) static-max-age* nil)
 
 (def respond (str op args cooks ip)
   (w/stdout str
@@ -337,7 +338,7 @@ Connection: close"))
                                            it)))
        ""))
 
-(= fns* (table) fnids* nil timed-fnids* nil)
+(^ fns* (table) fnids* nil timed-fnids* nil)
 
 ; count on huge (expt 64 10) size of fnid space to avoid clashes
 
@@ -526,7 +527,7 @@ Connection: close"))
 
 ; only unique per server invocation
 
-(= unique-ids* (table))
+(^ unique-ids* (table))
 
 (def unique-id ((o len 8))
   (let id (sym (rand-string (max 5 len)))
@@ -587,7 +588,7 @@ Connection: close"))
 
 ; Background Threads
 
-(= bgthreads* (table) pending-bgthreads* nil)
+(^ bgthreads* (table) pending-bgthreads* nil)
 
 (def new-bgthread (id f sec)
   (aif (bgthreads* id) (break-thread it))

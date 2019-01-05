@@ -79,9 +79,9 @@
    profdir*  "arc/news/profile/"
    votedir*  "arc/news/vote/")
 
-(= votes* (table) profs* (table))
+(^ votes* (table) profs* (table))
 
-(= initload-users* nil)
+(^ initload-users* nil)
 
 (def load-news ((o reload))
   (when reload
@@ -92,7 +92,9 @@
   (unless stories* (load-items))
   (if (and initload-users* (empty profs*)) (load-users)))
 
-(def nsv ((o port 8080))
+(defvar srv-port* (readenv "PORT" 8080))
+
+(def nsv ((o port srv-port*))
   (load-news)
   (asv port))
 
@@ -169,7 +171,7 @@
 (def author (u i) (is u i!by))
 
 
-(= stories* nil comments* nil 
+(^ stories* nil comments* nil 
    items* (table) url->story* (table)
    maxid* 0 initload* 15000)
 
@@ -222,7 +224,7 @@
 
 ; redefined later
 
-(= stemmable-sites* (table))
+(^ stemmable-sites* (table))
 
 (def canonical-url (url)
   (if (stemmable-sites* (sitename url))
@@ -260,7 +262,7 @@
     (set i!dead)
     (save-item i)))
 
-(= kill-log* nil)
+(^ kill-log* nil)
 
 (def log-kill (i how)
   (push (list i!id how) kill-log*))
@@ -458,7 +460,7 @@
                      bgcolor sand)
            ,@body)))))
 
-(= pagefns* nil)
+(^ pagefns* nil)
 
 (mac fulltop (user lid label title whence . body)
   (w/uniq (gu gi gl gt gw)
@@ -695,7 +697,7 @@ function vote(node) {
            (newslog ip user ',name ,@parms)
            ,@body)))))
 
-(= newsop-names* nil)
+(^ newsop-names* nil)
 
 (mac newsop args
   `(do (pushnew ',(car args) newsop-names*)
@@ -1315,7 +1317,7 @@ function vote(node) {
 
 (= user-changetime* 120 editor-changetime* 1440)
 
-(= everchange* (table) noedit* (table))
+(^ everchange* (table) noedit* (table))
 
 (def canedit (user i)
   (or (admin user)
@@ -1952,7 +1954,7 @@ function suggestTitle() {
         (do (note-baditem user ip)
             (pr "No such item.")))))
 
-(= baditemreqs* (table) baditem-threshold* 1/100)
+(^ baditemreqs* (table) baditem-threshold* 1/100)
 
 ; Something looking at a lot of deleted items is probably the bad sort
 ; of crawler.  Throttle it for this server invocation.
@@ -2001,7 +2003,7 @@ function suggestTitle() {
            (mem 'commentable i!keys))))
 
 
-(= displayfn* (table))
+(^ displayfn* (table))
 
 (= (displayfn* 'story)   (fn (n i user here inlist)
                            (display-story n i user here)))
@@ -2048,7 +2050,7 @@ function suggestTitle() {
 
 (def editable-type (i) (fieldfn* i!type))
 
-(= fieldfn* (table))
+(^ fieldfn* (table))
 
 (= (fieldfn* 'story)
    (fn (user s)
@@ -3001,7 +3003,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
         (tr (td c) (tdcolor (hex>color c) (hspace 30)))))))
 
 
-(= chess-board* (trim (rem #\return "
+(^ chess-board* (trim (rem #\return "
 rnbqkbnr
 pppppppp
         
@@ -3079,3 +3081,4 @@ RNBQKBNR
   (if (blank from) (wipe to))
   (chess-page user from to))
 
+run-news

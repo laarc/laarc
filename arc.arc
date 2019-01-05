@@ -444,11 +444,20 @@
 (mac ^ args
   `(vars ,@args))
 
+(mac @ args
+  `(consts ,@args))
+
 (mac vars args
   `(do ,@(map [cons 'defvar _] (pair args))))
 
+(mac consts args
+  `(do ,@(map [cons 'defconst _] (pair args))))
+
 (mac defvar (name value)
-  `(if (bound ',name) ,name (= ,name ,value)))
+  `(if (bound ',name) ,name (defconst ,name ,value defvar)))
+
+(mac defconst (name value (o init 'defconst))
+  `(assign ,name ,value))
 
 (mac loop (start test update . body)
   (w/uniq (gfn gparm)
