@@ -106,7 +106,8 @@
                 (= that (eval expr) thatexpr expr)
                 (push (list expr that) repl-history*))))
     (form url
-      (textarea "expr" 8 60)
+      (textarea "expr" 8 60
+        (write (car repl-history*)))
       (sp) 
       (submit))
     (tag xmp
