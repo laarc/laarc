@@ -1244,7 +1244,7 @@
   (+ xs (rem (fn (y) (some [f _ y] xs))
              ys)))
 
-(= templates* (table))
+(^ templates* (table))
 
 (mac deftem (tem . fields)
   (withs (name (carif tem) includes (if (acons tem) (cdr tem)))
@@ -1470,11 +1470,39 @@
        (pr ,@(parse-format str))))
 )
 
+(^ loaded-files* (list "arc.arc"))
+(^ loaded-file-times* (obj "arc.arc" (modtime "arc.arc")))
+
+(def loaded-files () (rev loaded-files*))
+
+(def loadtime (file) (loaded-file-times* file))
+
+(def notetime (file value (o secs (modtime file)))
+  (pushnew file loaded-files*)
+  (= (loaded-file-times* file) secs)
+  value)
+
+(def load-code (file)
+  (let x nil
+    (w/infile f file
+      (w/uniq eof
+        (whiler e (read f eof) eof
+          (= x (eval e)))))
+    x))
+
 (def load (file)
-  (w/infile f file
-    (w/uniq eof
-      (whiler e (read f eof) eof
-        (eval e)))))
+  (let value (or (hook 'load file) (load-code file))
+    (notetime file value)
+    value))
+
+(def file-changed? (file)
+  (isnt (modtime file) (loadtime file)))
+
+(def reload ((o file (loaded-files)))
+  (if (acons file)
+       (map reload file)
+      (file-changed? file)
+       (list file (load file))))
 
 (def positive (x)
   (and (number x) (> x 0)))
@@ -1620,7 +1648,7 @@
     `(atwiths ,binds
        (or ,val (,setter ,expr)))))
 
-(= hooks* (table))
+(^ hooks* (table))
 
 (def hook (name . args)
   (aif (hooks* name) (apply it args)))
@@ -1634,7 +1662,7 @@
 
 (def get (index) [_ index])
 
-(= savers* (table))
+(^ savers* (table))
 
 (mac fromdisk (var file init load save)
   (w/uniq (gf gv)
@@ -1683,6 +1711,12 @@
   (aif (get-environment-variable name)
        (errsafe:read it)
        default))
+
+(def any (l (o test idfn))
+  (catch
+    (each x l
+      (when (test x)
+        (throw t)))))
 
 
 ; any logical reason I can't say (push x (if foo y z)) ?

@@ -864,6 +864,8 @@
 
 (xdef ccc call-with-current-continuation)
 
+(xdef modtime file-or-directory-modify-seconds)
+
 (xdef infile  open-input-file)
 
 (xdef outfile (lambda (f . args)
