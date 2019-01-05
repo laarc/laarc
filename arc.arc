@@ -824,11 +824,6 @@
 (def read ((o x (stdin)) (o eof nil))
   (if (isa x 'string) (readstring1 x eof) (sread x eof)))
 
-(def readenv (name (o default))
-  (aif (get-environment-variable name)
-       (errsafe:read it)
-       default))
-
 ; inconsistency between names of readfile[1] and writefile
 
 (def readfile (name) (w/infile s name (drain (read s))))
@@ -1665,6 +1660,11 @@
   (if (empty xs)
       0
       (/ (count test xs) (len xs))))
+
+(def readenv (name (o default))
+  (aif (get-environment-variable name)
+       (errsafe:read it)
+       default))
 
 
 ; any logical reason I can't say (push x (if foo y z)) ?
