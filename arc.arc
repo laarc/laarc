@@ -441,6 +441,15 @@
 (mac = args
   (expand=list args))
 
+(mac ^ args
+  `(vars ,@args))
+
+(mac vars args
+  `(do ,@(map [cons 'defvar _] (pair args))))
+
+(mac defvar (name value)
+  `(if (bound ',name) ,name (= ,name ,value)))
+
 (mac loop (start test update . body)
   (w/uniq (gfn gparm)
     `(do ,start
