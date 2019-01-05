@@ -25,7 +25,7 @@
 
 ; idea: a bidirectional table, so don't need two vars (and sets)
 
-(= cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
+(^ cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
 
 (def get-user (req) 
   (let u (aand (alref req!cooks "user") (cookie->user* (sym it)))
@@ -208,7 +208,7 @@
   (br)
   (submit label))
 
-(= good-logins* (queue) bad-logins* (queue))
+(^ good-logins* (queue) bad-logins* (queue))
 
 (def good-login (user pw ip)
   (let record (list (seconds) ip user)
@@ -229,7 +229,7 @@
       (do1 (cut res 0 (- (len res) 1))
            (rmfile fname)))))
 
-(= dc-usernames* (table))
+(^ dc-usernames* (table))
 
 (def username-taken (user)
   (when (empty dc-usernames*)
