@@ -293,7 +293,8 @@
        (min 1 (expt (/ (realscore s) it) 2))
        1))
 
-(def realscore (i) (- i!score i!sockvotes))
+(def realscore (i)
+  (if (mem 'bury i!keys) -1000 (- i!score i!sockvotes)))
 
 (disktable lightweights* (+ newsdir* "lightweights"))
 
