@@ -107,7 +107,7 @@
                 (push (list expr that) repl-history*))))
     (form url
       (textarea "expr" 8 60
-        (car repl-history*))
+        (write:caar repl-history*))
       (sp) 
       (submit))
     (tag xmp
