@@ -631,10 +631,11 @@ Connection: close"))
         (~headmatch "1" it)))
 
 (def git-pull-reload ()
-  (if (errsafe:git-pull) (++ git-pull-count*))
-  (errsafe:reload)
-  (cons git-pull-count* (reload-stats)))
+  (if (errsafe:git-pull) (++ git-pull-count*)))
 
+(def git-pull-stats ()
+  (git-pull-reload)
+  (cons git-pull-count* (reload-stats)))
 
 (awhen git-pull-time*
   (defbg git-pull it (git-pull-reload)))
