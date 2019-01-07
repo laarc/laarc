@@ -552,7 +552,8 @@ Connection: close"))
 
 )
 
-(defop || req (pr "It's alive."))
+(unless (srvops* '||)
+  (defop || req (pr "It's alive.")))
 
 (defop topips req
   (when (admin (get-user req))
