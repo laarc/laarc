@@ -626,10 +626,6 @@ Connection: close"))
 (^ git-pull-time* (readenv "PULL" nil)
    git-pull-count* 0)
 
-(def git-pull ()
-  (aand (tostring:system "git pull>/dev/null && printf 1 || git merge --abort")
-        (~headmatch "1" it)))
-
 (def git-pull-reload ()
   (if (errsafe:git-pull) (++ git-pull-count*))
   (errsafe:reload))
