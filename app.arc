@@ -129,14 +129,31 @@
   (set-pw user (rand-string 20))
   (logout-user user))
 
-(def hash-pw (pw) (clean-hash:shash pw))
-(def user-pw (user) (clean-hash:hpasswords* user))
+(= bcrypt-work-factor* 10) ; must be >= 10
 
-(def is-pw (user pw)
-  (and user pw (is (user-pw user) (hash-pw pw))))
+(def rand-salt ((o work-factor bcrypt-work-factor*))
+  (+ "$2b$" (int work-factor) "$" (rand-string 22)))
+
+(def clean-hash (h)
+  (last:tokens h))
+
+(def user-pw (user)
+  (and user (clean-hash:hpasswords* user)))
+
+(def bcrypt-pw (user pw)
+  (aand (<= (len pw) 72) (user-pw user) (is it (bcrypt pw it nil))))
+
+(def sha1-pw (user pw)
+  (aand (<= (len pw) 72) (user-pw user) (is it (shash pw))))
+
+(def check-pw (user pw)
+  (or (bcrypt-pw user pw)
+      (and (sha1-pw user pw)
+           (do (set-pw user pw)
+               (bcrypt-pw user pw)))))
   
 (def set-pw (user pw)
-  (= (hpasswords* user) (hash-pw pw))
+  (= (hpasswords* user) (bcrypt pw (rand-salt)))
   (save-table hpasswords* hpwfile*))
 
 (def hello-page (user ip)
@@ -218,15 +235,12 @@
 
 (def good-login (user pw ip)
   (let record (list (seconds) ip user)
-    (if (is-pw user pw)
+    (if (check-pw user pw)
         (do (unless (user->cookie* user) (cook-user user))
             (enq-limit record good-logins*)
             user)
         (do (enq-limit record bad-logins*)
             nil))))
-
-(def clean-hash (h)
-  (last:tokens h))
 
 (def shash (str)
   (w/stdin (instring str)
