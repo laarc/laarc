@@ -109,6 +109,15 @@
     (save-table cookie->user* cookfile*)
     id))
 
+; upgrade user cookie
+
+(defhook respond-headers (str req f redir)
+  (whenlet user (get-user req)
+    (when (< (len:alref req!cooks "user") 16)
+      (prcookie (cook-user user))
+      (= (logins* user) req!ip)))
+  nil)
+
 ; Unique-ids are only unique per server invocation.
 
 (def new-user-cookie (user)
