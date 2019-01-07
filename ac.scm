@@ -1492,4 +1492,6 @@
         (bcrypt pwd salt p)
         (cast p _pointer _string))))))
 
+(xdef system-type system-type)
+
 )

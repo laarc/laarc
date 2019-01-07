@@ -1707,16 +1707,19 @@
       0
       (/ (count test xs) (len xs))))
 
-(def readenv (name (o default))
-  (aif (get-environment-variable name)
-       (errsafe:read it)
-       default))
-
 (def any (l (o test idfn))
   (catch
     (each x l
       (when (test x)
         (throw t)))))
+
+(def readenv (name (o default))
+  (aif (get-environment-variable name)
+       (errsafe:read it)
+       default))
+
+(def macos? ()
+  (is (system-type) 'macosx))
 
 
 ; any logical reason I can't say (push x (if foo y z)) ?
