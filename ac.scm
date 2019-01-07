@@ -1216,6 +1216,9 @@
 (xdef eval (lambda (e)
               (eval (ac (ac-denil e) '()))))
 
+(xdef scheme-eval (lambda (e)
+                    (eval (ac-denil e))))
+
 ; If an err occurs in an on-err expr, no val is returned and code
 ; after it doesn't get executed.  Not quite what I had in mind.
 
