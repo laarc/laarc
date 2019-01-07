@@ -631,7 +631,8 @@ Connection: close"))
         (~headmatch "1" it)))
 
 (def git-pull-reload ()
-  (if (errsafe:git-pull) (++ git-pull-count*)))
+  (if (errsafe:git-pull) (++ git-pull-count*))
+  (errsafe:reload))
 
 (def git-pull-stats ()
   (git-pull-reload)
