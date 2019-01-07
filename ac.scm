@@ -1145,7 +1145,10 @@
           ((eqv? form ':a) eof)
           (#t `(ac-prompt-eval ',form)))))
 
+(define reload #f)
+
 (define (ac-prompt-eval expr)
+  (when reload (arc-eval '(reload)))
   (let ((val (arc-eval expr)))
     (namespace-set-variable-value! (ac-global-name 'that) val)
     (namespace-set-variable-value! (ac-global-name 'thatexpr) expr)
@@ -1413,6 +1416,7 @@
 (xdef declare (lambda (key val)
                 (let ((flag (not (ar-false? val))))
                   (case key
+                    ((reload)         (set! reload         flag))
                     ((atstrings)      (set! atstrings      flag))
                     ((direct-calls)   (set! direct-calls   flag))
                     ((explicit-flush) (set! explicit-flush flag)))
