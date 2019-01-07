@@ -53,5 +53,9 @@ To improve performance:
 
 Production installation:
 
+sudo pkg install racket
+sudo pkg install python
+# install pip
 sudo pip install --upgrade google-api-python-client oauth2client
+sudo pkg install shuf # for /terry
 
