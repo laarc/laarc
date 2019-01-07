@@ -103,7 +103,7 @@
       (pwfields "create (server) account"))))
 
 (def cook-user (user)
-  (let id (new-user-cookie)
+  (let id (new-user-cookie user)
     (= (cookie->user*   id) user
        (user->cookie* user)   id)
     (save-table cookie->user* cookfile*)
@@ -111,9 +111,9 @@
 
 ; Unique-ids are only unique per server invocation.
 
-(def new-user-cookie ()
-  (let id (unique-id)
-    (if (cookie->user* id) (new-user-cookie) id)))
+(def new-user-cookie (user)
+  (let id (sym:string user "&" (unique-id))
+    (if (cookie->user* id) (new-user-cookie user) id)))
 
 (def logout-user (user)
   (wipe (logins* user))
