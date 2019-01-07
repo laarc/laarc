@@ -227,16 +227,11 @@
       (do (prn)
           (login-page switch msg afterward))))
 
-(def prcookie (cook (o key 'user) (o secure t) (o httponly (is key 'user)))
+(def prcookie (cook (o key 'user) (o httponly (is key 'user)))
   (prn:string
     "Set-Cookie: " key "=" cook "; expires=Sun, 17-Jan-2038 19:14:07 GMT"
-    (when httponly
-      "; HttpOnly")
-    (when (and secure (can-secure-cookie))
-      "; Secure")))
-
-(def can-secure-cookie ()
-  (is (alref ((the-req*) 'args) "X-Arc-Secure") "1"))
+    (if httponly "; HttpOnly")
+    (if (srvsecure) "; Secure")))
 
 (def pwfields ((o label "login"))
   (if (headmatch "create" label)

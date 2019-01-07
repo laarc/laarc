@@ -158,6 +158,11 @@ Content-Type: "
 Connection: close"))
 
 (= header* (gen-type-header "text/html; charset=utf-8"))
+(= secure-header* "X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31556900
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://cdnjs.cloudflare.com/; frame-src 'self' https://www.google.com/recaptcha/; style-src 'self' 'unsafe-inline'")
 
 (map (fn ((k v)) (= (type-header* k) (gen-type-header v)))
      '((image/x-icon "image/x-icon")
@@ -240,6 +245,8 @@ Connection: close"))
                        (do (prn (aif (static-header* op) (gen-type-header it) header*))
                            (awhen (max-age* op)
                              (prn "Cache-Control: max-age=" it))
+                           (when (srvsecure req)
+                             (prn secure-header*))
                            (or (hook 'respond-headers str req f nil)
                                (f str req)))))
                  (withs (op (car (tokens op #\?))
@@ -289,6 +296,9 @@ Connection: close"))
 
 (^ the-header* (make-param nil)
    the-req* (make-param nil))
+
+(def srvsecure ((o req (the-req*)))
+  (is (arg req "X-Arc-Secure") "1"))
 
 (def parsereq (xs)
   (let (type op args n cooks ip . more) xs
