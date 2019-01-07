@@ -212,22 +212,22 @@
 
 (def good-login (user pw ip)
   (let record (list (seconds) ip user)
-    (if (and user pw (aand (shash pw) (is it (hpasswords* user))))
+    (if (ispw user pw)
         (do (unless (user->cookie* user) (cook-user user))
             (enq-limit record good-logins*)
             user)
         (do (enq-limit record bad-logins*)
             nil))))
 
-; Create a file in case people have quote chars in their pws.  I can't 
-; believe there's no way to just send the chars.
+(def clean-hash (h)
+  (last:tokens h))
 
 (def shash (str)
-  (let fname (+ "/tmp/shash" (rand-string 10))
-    (w/outfile f fname (disp str f))
-    (let res (tostring (system (+ "openssl dgst -sha1 <" fname)))
-      (do1 (cut res 0 (- (len res) 1))
-           (rmfile fname)))))
+  (w/stdin (instring str)
+    (clean-hash:shell "openssl" 'dgst '-sha1)))
+
+(def ispw (user pw)
+  (aand user pw (shash pw) (is it (clean-hash (hpasswords* user)))))
 
 (^ dc-usernames* (table))
 
