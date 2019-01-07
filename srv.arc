@@ -629,7 +629,7 @@ Connection: close"))
 (def git-pull-reload ()
   (when (errsafe:git-pull)
     (when (readenv "NUKE")
-      (errsafe:git-reset-to-origin))
+      (errsafe:git-reset-to-origin t))
     (++ git-pull-count*))
   (errsafe:reload))
 
