@@ -27,10 +27,18 @@
 
 (^ cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
 
-(def get-user (req) 
+(def get-user ((o req (the-req*)))
   (let u (aand (alref req!cooks "user") (cookie->user* (sym it)))
     (when u (= (logins* u) req!ip))
     u))
+
+(def get-auth ((o user (get-user)))
+  (aand user
+        (user->cookie* user)
+        (shash:string it)))
+
+(def is-auth (auth (o user (get-user)))
+  (is auth (get-user-auth user)))
 
 (mac when-umatch (user req . body)
   `(if (is ,user (get-user ,req))
