@@ -724,6 +724,8 @@
        ,@(map [do `(aif ,_ (,ga it))]
               body))))
 
+(def eof () nil)
+
 ; Repeatedly evaluates its body till it returns nil, then returns vals.
 
 (mac drain (expr (o eof nil))
@@ -848,13 +850,14 @@
 
 (def readfile1 (name) (w/infile s name (read s)))
 
-(def readall (src (o eof nil))
-  ((afn (i)
+(def readall (src (o n))
+  ((afn (i n)
     (let x (read i eof)
-      (if (is x eof)
+      (if (or (is x eof) (and n (<= n 0)))
           nil
-          (cons x (self i)))))
-   (if (isa src 'string) (instring src) src)))
+          (cons x (self i (- n 1))))))
+   (if (isa src 'string) (instring src) src)
+   n))
 
 (def allchars (str)
   (tostring (whiler c (readc str nil) no
