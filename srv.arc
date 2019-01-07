@@ -627,7 +627,10 @@ Connection: close"))
    git-pull-count* 0)
 
 (def git-pull-reload ()
-  (if (errsafe:git-pull) (++ git-pull-count*))
+  (when (errsafe:git-pull)
+    (when (readenv "NUKE")
+      (errsafe:git-reset-to-origin))
+    (++ git-pull-count*))
   (errsafe:reload))
 
 (def git-pull-stats ()
