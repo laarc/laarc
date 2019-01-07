@@ -19,12 +19,14 @@
 
 (defmemo gray (n) (color n n n))
 
-(= white    (gray 255) 
-   black    (gray 0)
-   linkblue (color 0 0 190)
-   orange   (color 255 102 0)
-   darkred  (color 180 0 0)
-   darkblue (color 0 0 120)
+(= white     (gray 255) 
+   black     (gray 0)
+   linkblue  (color 0 0 190)
+   orange    (color 255 102 0)
+   orangered (color 218 83 44)
+   darkred   (color 180 0 0)
+   darkblue  (color 0 0 120)
+   teal      (color 91 186 213)
    )
 
 (^ opmeths* (table))
