@@ -487,6 +487,8 @@
     (vspace 10)
     (center
       (chess-board user)))
+  (when (in whence "/l/templeos")
+    (terry))
   (vspace 10)
   (color-stripe (main-color user))
   (br)
@@ -3083,5 +3085,14 @@ RNBQKBNR
     (wipe to))
   (if (blank from) (wipe to))
   (chess-page user from to))
+
+(def lorem ()
+  ; https://news.ycombinator.com/item?id=15609972
+  (trim:shell "@(if (macos?) 'gshuf 'shuf) -n 32 /usr/share/dict/words | tr '\\n' ' '"))
+
+(defcache terry 1 ()
+  (awhen (lorem)
+    (unless (blank it)
+      (prn "\"God says... @it\""))))
 
 run-news
