@@ -642,7 +642,6 @@ Connection: close"))
   (defbg git-pull it (git-pull-reload)))
 
 
-
 ; Idea: make form fields that know their value type because of
 ; gensymed names, and so the receiving fn gets args that are not
 ; strings but parsed values.
