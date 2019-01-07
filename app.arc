@@ -38,7 +38,7 @@
         (shash:string it)))
 
 (def is-auth (auth (o user (get-user)))
-  (is auth (get-user-auth user)))
+  (is auth (get-auth user)))
 
 (mac when-umatch (user req . body)
   `(if (is ,user (get-user ,req))

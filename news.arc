@@ -1228,7 +1228,7 @@ function vote(node) {
          (pr "No such item.")
         (no (in dir 'up 'down))
          (pr "Can't make that vote.")
-        (and by (is by user) (is-auth auth user))
+        (and by (or (isnt by user) (~is-auth auth user)))
          (pr "User mismatch.")
         (no user)
          (login-page 'both "You have to be logged in to vote."
