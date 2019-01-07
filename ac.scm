@@ -1490,11 +1490,17 @@
 
 (xdef bcrypt ; (passwd salt) see BSD manual crypt(3)
   (let* ((p (malloc 'atomic 256)))
-    (lambda (pwd salt)
+    (lambda (pwd salt . failed)
       (atomic-invoke (lambda ()
         (memset p 0 256)
         (bcrypt pwd salt p)
-        (cast p _pointer _string))))))
+        (let ((x (cast p _pointer _string)))
+          (if (or (<= (string-length x) 0)
+                  (not (eqv? (string-ref x 0) #\$)))
+              (if (pair? failed)
+                  (car failed)
+                  (err "bcrypt failed; use a salt like (+ \"$2a$10$\" (rand-string 22))"))
+              x)))))))
 
 (xdef system-type system-type)
 
