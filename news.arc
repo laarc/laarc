@@ -10,8 +10,12 @@
 (= site-name*    "laarc"
    site-abbrev*  "LN"
    site-email*   "hi@@laarc.io"
+   site-twitter* "theshawwn"
+   site-discord* "shawwn#3694"
+   discord-url*  "https://discord.gg/qaqkc9z"
    site-url*     "https://www.laarc.io"
    parent-url*   "https://www.laarc.io"
+   welcome-url*  "/welcome.html"
    favicon-url*  ""
    site-desc*    "Links for the curious"     ; for rss feed
    site-color*   (color 154 186 170)
@@ -500,7 +504,7 @@
       (link "Bookmarklet" "/bookmarklet.html")
       (link "Feature Requests" "/item?id=230")
       (link "Contact" "mailto:@site-email*")
-      (link "Twitter" "https://twitter.com/theshawwn"))
+      (link "Twitter" "https://twitter.com/@site-twitter*"))
     (br2)
     (w/bars
       (link "RSS (stories)" "/rss")
@@ -632,9 +636,6 @@ function vote(node) {
 (= toplabels* '(nil "welcome" "new" "threads" "comments" "discord" "*"))
 
 ; redefined later
-
-(= welcome-url* "/welcome.html"
-   discord-url* "https://discord.gg/qaqkc9z")
 
 (def toprow (user label)
   (w/bars 
@@ -3094,5 +3095,13 @@ RNBQKBNR
   (awhen (lorem)
     (unless (blank it)
       (prn "\"God says... @it\""))))
+
+(def prize-msg ()
+  "You found an easter egg. Message @site-discord* on
+  @(tostring:underlink 'discord discord-url*) or email @site-email* to
+  claim a prize.")
+
+(newsop test ()
+  (msgpage user (prize-msg)))
 
 run-news
