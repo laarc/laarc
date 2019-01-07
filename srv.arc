@@ -106,8 +106,7 @@
         (if (is c #\newline)
             (if (is (++ nls) 2) 
                 (withs (h (noisy-header (rev lines) (+ "Time: " (moment-ms) "\nHeader: "))
-                        (type op args n cooks ip2) (parseheader h))
-                  (if ip2 (= ip ip2))
+                        (type op args n cooks ip . more) (parseheader h ip))
                   (let t1 (msec)
                     (case type
                       get  (respond o op args cooks ip)
@@ -284,25 +283,39 @@ Connection: close"))
         (list op args)
         (list (sym (car xs)) (join (list (list "path" (concat (cdr xs) #\/))) args)))))
 
-(def parseheader (lines)
+(^ the-header* (make-param nil)
+   the-req* (make-param nil))
+
+(def parsereq (xs)
+  (let (type op args n cooks ip . more) xs
+    (the-req* (inst 'request 'type type 'op op 'args args 'cooks cooks 'n n 'ip ip 'more more))
+    xs))
+
+(def parseheader (lines (o ip))
+  (the-header* lines)
   (let (type op args) (parseurl (car lines))
-    (list type
-          op
-          args
-          (and (is type 'post)
-               (some (fn (s)
-                       (and (begins s "Content-Length:")
-                            (errsafe:coerce (cadr (tokens s)) 'int)))
-                     (cdr lines)))
-          (some (fn (s)
-                  (and (or (begins s "Cookie:")
-                           (begins s "cookie:"))
-                       (parsecookies s)))
-                (cdr lines))
-          (some (fn (s)
-                  (and (begins s "CF-Connecting-IP:")
-                       (errsafe:cadr (tokens s))))
-                (cdr lines)))))
+    (parsereq
+      (list type
+            op
+            (+ (rem nil (map [when (begins _ "X-Arc-")
+                               (tokens _ [or (whitec _) (is _ #\:)])]
+                             (cdr lines)))
+               args)
+            (and (is type 'post)
+                 (some (fn (s)
+                         (and (begins s "Content-Length:")
+                              (errsafe:coerce (cadr (tokens s)) 'int)))
+                       (cdr lines)))
+            (some (fn (s)
+                    (and (or (begins s "Cookie:")
+                             (begins s "cookie:"))
+                         (parsecookies s)))
+                  (cdr lines))
+            (or (some (fn (s)
+                         (and (begins s "CF-Connecting-IP:")
+                              (errsafe:cadr (tokens s))))
+                       (cdr lines))
+                 ip)))))
 
 ; (parseurl "GET /p1?foo=bar&ug etc") -> (get p1 (("foo" "bar") ("ug")))
 

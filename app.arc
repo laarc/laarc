@@ -218,8 +218,16 @@
       (do (prn)
           (login-page switch msg afterward))))
 
-(def prcookie (cook)
-  (prn "Set-Cookie: user=" cook "; expires=Sun, 17-Jan-2038 19:14:07 GMT"))
+(def prcookie (cook (o key 'user) (o secure t) (o httponly (is key 'user)))
+  (prn:string
+    "Set-Cookie: " key "=" cook "; expires=Sun, 17-Jan-2038 19:14:07 GMT"
+    (when httponly
+      "; HttpOnly")
+    (when (and secure (can-secure-cookie))
+      "; Secure")))
+
+(def can-secure-cookie ()
+  (is (alref ((the-req*) 'args) "X-Arc-Secure") "1"))
 
 (def pwfields ((o label "login"))
   (if (headmatch "create" label)
@@ -283,7 +291,9 @@
 
 (defop whoami req
   (aif (get-user req)
-       (prs it 'at req!ip)
+       (if (admin it)
+           (prs it 'at req!ip (tostring:write:the-req*))
+           (prs it 'at req!ip))
        (do (pr "You are not logged in. ")
            (w/link (login-page 'both) (pr "Log in"))
            (pr "."))))

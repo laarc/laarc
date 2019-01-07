@@ -1507,4 +1507,6 @@
 
 (xdef system-type system-type)
 
+(xdef make-param make-parameter)
+
 )
