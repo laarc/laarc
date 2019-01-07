@@ -1473,7 +1473,7 @@
        (pr ,@(parse-format str))))
 )
 
-(^ loaded-files* (list "arc.arc"))
+(^ loaded-files* (list "arc.arc" "libs.arc"))
 (^ loaded-file-times* (obj "arc.arc" (modtime "arc.arc")))
 
 (def loaded-files () (rev loaded-files*))
