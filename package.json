@@ -7,8 +7,7 @@
   "author": "Shawn Presser <shawnpresser@gmail.com>",
   "license": "MIT",
   "private": false,
-  "dependencies": {
-  },
+  "dependencies": {},
   "scripts": {
     "arc": "echo 'NOISY=1 DEV=1 rlwrap bin/arc, then evaluate ((load \"news.arc\"))'",
     "dev": "DEV=1 bin/laarc",
