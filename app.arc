@@ -697,7 +697,7 @@
   (+ "'" (multisubst (list (list "'" "'\"'\"'")) str) "'"))
 
 (def shell (cmd . args)
-  (tostring:system (+ (string cmd) " " (string:intersperse #\space (map shellquote:string args)))))
+  (tostring:system (+ (string cmd) " " (string:intersperse #\space (map shellquote:string (rem nil args))))))
 
 (def GET (url)
   (shell "curl" "-fsSL" (clean-url url)))
