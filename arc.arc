@@ -855,7 +855,7 @@
     (let x (read i eof)
       (if (or (is x eof) (and n (<= n 0)))
           nil
-          (cons x (self i (- n 1))))))
+          (cons x (self i (and n (- n 1)))))))
    (if (isa src 'string) (instring src) src)
    n))
 
