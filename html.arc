@@ -118,6 +118,7 @@
 (attribute link       href           opstring)
 (attribute link       sizes          opstring)
 (attribute link       title          opstring)
+(attribute link       color          opcolor)
 
 (attribute input      name           opstring)
 (attribute input      size           opnum)
