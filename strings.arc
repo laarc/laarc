@@ -123,10 +123,11 @@
     nil))
 
 (def headmatch (pat seq (o start 0))
-  (let p (len pat) 
-    ((afn (i)      
-       (or (is i p) 
-           (and (is (pat i) (seq (+ i start)))
+  (with (p (len pat) s (len seq))
+    ((afn (i)
+       (or (is i p)
+           (and (< (+ i start) s)
+                (is (pat i) (seq (+ i start)))
                 (self (+ i 1)))))
      0)))
 
