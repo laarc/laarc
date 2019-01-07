@@ -1498,11 +1498,19 @@
 (def file-changed? (file)
   (isnt (modtime file) (loadtime file)))
 
+(^ reload-count* 0)
+
 (def reload ((o file (loaded-files)))
   (if (acons file)
        (map reload file)
       (file-changed? file)
-       (list file (load file))))
+       (do1 (list file (load file))
+            (++ reload-count*))))
+
+(def reload-stats ()
+  (list reload-count*
+        (map [+ (cut (shash:string:cadr _) 0 4) ":" (car _)]
+             (tablist loaded-file-times*))))
 
 (def positive (x)
   (and (number x) (> x 0)))
