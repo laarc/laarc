@@ -343,7 +343,7 @@ Connection: close"))
 ; count on huge (expt 64 10) size of fnid space to avoid clashes
 
 (def new-fnid ()
-  (check (sym (rand-string 10)) ~fns* (new-fnid)))
+  (check (sym (rand-string 22)) ~fns* (new-fnid)))
 
 (def fnid (f)
   (atlet key (new-fnid)
@@ -529,7 +529,7 @@ Connection: close"))
 
 (^ unique-ids* (table))
 
-(def unique-id ((o len 8))
+(def unique-id ((o len 32))
   (let id (sym (rand-string (max 5 len)))
     (if (unique-ids* id)
         (unique-id)
