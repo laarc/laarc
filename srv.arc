@@ -623,12 +623,16 @@ Connection: close"))
 ; pull from github periodically
 
 (def git-pull ()
-  (~headmatch "Already" (tostring:system "git pull>/dev/null && printf 1 || git merge --abort")))
+  (~headmatch "1" (tostring:system "git pull>/dev/null && printf 1 || git merge --abort")))
 
-(awhen (readenv "PULL" nil)
-  (defbg git-pull it
-    (when (git-pull)
-      (noisy-reload))))
+(def git-pull-reload ()
+  (errsafe:git-pull)
+  (errsafe:reload))
+
+(^ git-pull-time* (readenv "PULL" nil))
+
+(awhen git-pull-time*
+  (defbg git-pull it (git-pull-reload)))
 
 
 
