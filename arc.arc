@@ -1732,6 +1732,13 @@
 (def macos? ()
   (is (system-type) 'macosx))
 
+(def yesno ((o question) (o default))
+  (if question (prn question))
+  (pr "Continue? " (if default "[Y/n]" "[y/N]") " ")
+  (aand (read (stdin) eof)
+        (if (is it eof)
+            default
+            (in it 'y 'yes 'Y 'YES))))
 
 ; any logical reason I can't say (push x (if foo y z)) ?
 ;   eval would have to always ret 2 things, the val and where it came from
