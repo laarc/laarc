@@ -447,10 +447,8 @@
     (gentag link rel  'icon type 'image/png sizes '32x32   href "/favicon-32x32.png")
     (gentag link rel  'icon type 'image/png sizes '16x16   href "/favicon-16x16.png")
 
-    (gentag link rel  'alternate
-                 title 'RSS
-                 type 'application/rss+xml
-                 href (rss-url label))
+    (gentag link rel   'alternate type 'application/rss+xml
+                 title 'RSS       href (rss-url label))
 
     (tag script (pr votejs*))
     (tag title (pr title))))
