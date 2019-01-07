@@ -128,9 +128,15 @@
 (def disable-acct (user)
   (set-pw user (rand-string 20))
   (logout-user user))
+
+(def hash-pw (pw) (clean-hash:shash pw))
+(def user-pw (user) (clean-hash:hpasswords* user))
+
+(def is-pw (user pw)
+  (and user pw (is (user-pw user) (hash-pw pw))))
   
 (def set-pw (user pw)
-  (= (hpasswords* user) (and pw (shash pw)))
+  (= (hpasswords* user) (hash-pw pw))
   (save-table hpasswords* hpwfile*))
 
 (def hello-page (user ip)
@@ -212,7 +218,7 @@
 
 (def good-login (user pw ip)
   (let record (list (seconds) ip user)
-    (if (ispw user pw)
+    (if (is-pw user pw)
         (do (unless (user->cookie* user) (cook-user user))
             (enq-limit record good-logins*)
             user)
@@ -225,9 +231,6 @@
 (def shash (str)
   (w/stdin (instring str)
     (clean-hash:shell "openssl" 'dgst '-sha1)))
-
-(def ispw (user pw)
-  (aand user pw (shash pw) (is it (clean-hash (hpasswords* user)))))
 
 (^ dc-usernames* (table))
 
