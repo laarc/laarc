@@ -1099,7 +1099,7 @@
   (w/infile i file (read-table i eof)))
 
 (def read-table ((o i (stdin)) (o eof))
-  (let e (read i eof)
+  (let e (quoted (read i eof))
     (if (alist e) (listtab e) e)))
 
 (def load-tables (file)
@@ -1108,10 +1108,10 @@
       (drain (read-table i eof) eof))))
 
 (def save-table (h file)
-  (writefile (tablist h) file))
+  (writefile (unquoted (tablist h)) file))
 
 (def write-table (h (o o (stdout)))
-  (write (tablist h) o))
+  (write (unquoted (tablist h)) o))
 
 (def copy (x . args)
   (let x2 (case (type x)
@@ -1274,7 +1274,7 @@
 ; To write something to be read by temread, (write (tablist x))
 
 (def temread (tem (o str (stdin)))
-  (templatize tem (read str)))
+  (templatize tem (quoted (read str))))
 
 ; Converts alist to inst; ugly; maybe should make this part of coerce.
 ; Note: discards fields not defined by the template.
