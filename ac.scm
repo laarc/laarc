@@ -8,6 +8,7 @@
 (require (lib "pretty.ss"))
 (require (lib "foreign.ss"))
 (require (only racket/base syntax->datum))
+(require json)
 (unsafe!)
 
 ; compile an Arc expression into a Scheme expression,
@@ -1508,5 +1509,7 @@
 (xdef system-type system-type)
 
 (xdef make-param make-parameter)
+
+(xdef write-json write-json)
 
 )
