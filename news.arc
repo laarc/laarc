@@ -1983,6 +1983,11 @@ function suggestTitle() {
         (do (note-baditem user ip)
             (pr "null")))))
 
+(= (static-header* 'maxitem.json) "application/json")
+
+(defop maxitem.json ()
+  (write-json maxid*))
+
 (def tnil (x) (if x #t #f))
 
 (def item>json (user i)
