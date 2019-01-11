@@ -795,7 +795,7 @@ function vote(node) {
        created   u!created
        karma     u!karma
        about     u!about
-       submitted u!submitted))
+       submitted (arc>scheme u!submitted)))
 
 (def user-page (user subject)
   (let here (user-url subject)
@@ -1997,7 +1997,7 @@ function suggestTitle() {
            deleted (tnil i!deleted)
            dead    (tnil i!dead)
            type    (string i!type)
-           kids    i!kids
+           kids    (arc>scheme i!kids)
            by      i!by
            time    i!time
            text    i!text

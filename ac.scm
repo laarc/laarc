@@ -1512,4 +1512,6 @@
 
 (xdef write-json write-json)
 
+(xdef arc>scheme ar-nil-terminate)
+
 )
