@@ -1994,15 +1994,16 @@ function suggestTitle() {
            time    i!time
            parent  i!parent)
       (obj id      i!id
-           deleted (tnil i!deleted)
-           dead    (tnil i!dead)
+           dead    (if i!dead #t nil)
            type    (string i!type)
            kids    i!kids
            by      i!by
            time    i!time
            text    i!text
+           title   i!title
            parent  i!parent
-           score   i!score)))
+           score   i!score
+           descendants (- (visible-family user i) 1))))
 
 (^ baditemreqs* (table) baditem-threshold* 1/100)
 
