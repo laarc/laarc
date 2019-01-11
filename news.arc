@@ -783,6 +783,20 @@ function vote(node) {
       (user-page user id)
       (pr "No such user.")))
 
+(= (static-header* 'user.json) "application/json")
+
+(newsop user.json (id)
+  (aif (only.profile id)
+       (write-json (user>json it))
+       (pr "null")))
+
+(def user>json (u)
+  (obj id        u!id
+       created   u!created
+       karma     u!karma
+       about     u!about
+       submitted u!submitted))
+
 (def user-page (user subject)
   (let here (user-url subject)
     (shortpage user nil nil (+ "Profile: " subject) here
@@ -1959,6 +1973,36 @@ function suggestTitle() {
             (item-page user s))
         (do (note-baditem user ip)
             (pr "No such item.")))))
+
+(= (static-header* 'item.json) "application/json")
+
+(newsop item.json (id)
+  (let s (safe-item id)
+    (if (news-type s)
+        (write-json (item>json user s))
+        (do (note-baditem user ip)
+            (pr "null")))))
+
+(def tnil (x) (if x #t #f))
+
+(def item>json (user i)
+  (if i!deleted
+      (obj id      i!id
+           deleted (tnil i!deleted)
+           dead    (tnil i!dead)
+           type    (string i!type)
+           time    i!time
+           parent  i!parent)
+      (obj id      i!id
+           deleted (tnil i!deleted)
+           dead    (tnil i!dead)
+           type    (string i!type)
+           kids    i!kids
+           by      i!by
+           time    i!time
+           text    i!text
+           parent  i!parent
+           score   i!score)))
 
 (^ baditemreqs* (table) baditem-threshold* 1/100)
 
