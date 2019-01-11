@@ -32,10 +32,14 @@
     (when u (= (logins* u) req!ip))
     u))
 
+
+(defmemo auth-hash (cookie)
+  (shash:string cookie))
+
 (def get-auth ((o user (get-user)))
   (aand user
         (user->cookie* user)
-        (shash:string it)))
+        (auth-hash it)))
 
 (def is-auth (auth (o user (get-user)))
   (is auth (get-auth user)))
