@@ -1355,6 +1355,7 @@ function vote(node) {
        (~mem 'locked i!keys)
        (no i!deleted)
        (or (everchange* i!type)
+           (private i)
            (< (item-age i) user-changetime*))))
 
 (def editlink (i user)
