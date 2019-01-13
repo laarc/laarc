@@ -386,10 +386,14 @@
 
 (= max-delay* 10)
 
+(def private (i)
+  (mem '/l/private i!keys))
+
 (def cansee (user i)
   (if i!deleted   (admin user)
       i!dead      (or (author user i) (seesdead user))
       (delayed i) (author user i)
+      (private i) (or (author user i) (admin user))
       t))
 
 (def isfrom (url i)
