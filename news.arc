@@ -387,7 +387,7 @@
 (= max-delay* 10)
 
 (def private (i)
-  (mem '/l/private i!keys))
+  (mem '/l/private superparent.i!keys))
 
 (def cansee (user i)
   (if i!deleted   (admin user)
