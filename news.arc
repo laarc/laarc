@@ -2486,7 +2486,7 @@ function suggestTitle() {
 (newsop rss () (rsspage nil))
 
 (newscache rsspage user 90
-  (rss-stories (retrieve perpage* live ranked-stories*)))
+  (rss-stories (retrieve perpage* ~private&live ranked-stories*)))
 
 (def rss-stories (stories)
   (tag (rss version "2.0")
@@ -2511,7 +2511,7 @@ function suggestTitle() {
 (newsop rsscomments () (rsscommentspage nil))
 
 (newscache rsscommentspage user 10
-  (rss-comments (retrieve perpage* live comments*)))
+  (rss-comments (retrieve perpage* ~private&live comments*)))
 
 (def rss-comment-title (c)
   (tostring
