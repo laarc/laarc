@@ -841,6 +841,8 @@
 
 (xdef ccc call-with-current-continuation)
 
+(xdef call/ec call-with-escape-continuation)
+
 (xdef modtime file-or-directory-modify-seconds)
 
 (xdef infile  open-input-file)

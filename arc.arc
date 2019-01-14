@@ -196,11 +196,22 @@
 (mac unless (test . body)
   `(if (no ,test) (do ,@body)))
 
+(mac point (name . body)
+  (w/uniq (g p)
+    `(call/ec
+       (fn (,g)
+         (let ,name (fn ((o ,p)) (,g ,p))
+           ,@body)))))
+
+(mac catch body
+  `(point throw ,@body))
+
 (mac while (test . body)
   (w/uniq (gf gp)
-    `((rfn ,gf (,gp)
-        (when ,gp ,@body (,gf ,test)))
-      ,test)))
+    `(point break
+       ((rfn ,gf (,gp)
+          (when ,gp ,@body (,gf ,test)))
+        ,test))))
 
 (def empty (seq) 
   (or (no seq) 
@@ -1573,15 +1584,6 @@
          ,@body)
        (prn)
        (flushout))))
-
-(mac point (name . body)
-  (w/uniq (g p)
-    `(ccc (fn (,g)
-            (let ,name (fn ((o ,p)) (,g ,p))
-              ,@body)))))
-
-(mac catch body
-  `(point throw ,@body))
 
 (def downcase (x)
   (let downc (fn (c)
