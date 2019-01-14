@@ -512,7 +512,7 @@
 
 ; (nthcdr x y) = (cut y x).
 
-(def cut (seq start (o end))
+(def cut (seq (o start 0) (o end))
   (let end (if (no end)   (len seq)
                (< end 0)  (+ (len seq) end) 
                           end)
@@ -1741,6 +1741,7 @@
         (if (is it eof)
             default
             (in it 'y 'yes 'Y 'YES))))
+
 
 ; any logical reason I can't say (push x (if foo y z)) ?
 ;   eval would have to always ret 2 things, the val and where it came from
