@@ -955,6 +955,9 @@
     ((string? x)    (case type
                       ((sym)     (string->symbol x))
                       ((cons)    (string->list x))
+                      ((bytes)   (if (null? args)
+                                     (bytes->list (string->bytes/latin-1 x))
+                                     (bytes->list (string->bytes/utf-8 x))))
                       ((num)     (or (apply string->number x args)
                                      (err "Can't coerce" x type)))
                       ((int)     (let ((n (apply string->number x args)))
@@ -963,14 +966,16 @@
                                        (err "Can't coerce" x type))))
                       (else      (err "Can't coerce" x type))))
     ((pair? x)      (case type
-                      ((string)  (apply string-append
-                                        (map (lambda (y) (ar-coerce y 'string))
-                                             x)))
+                      ((string)  (if (byte? (xcar x))
+                                     (if (null? args)
+                                         (bytes->string/latin-1 (list->bytes x))
+                                         (bytes->string/utf-8 (list->bytes x)))
+                                     (apply string-append
+                                            (map (lambda (y) (ar-coerce y 'string))
+                                                 x))))
                       (else      (err "Can't coerce" x type))))
     ((ar-nil? x)    (case type
-                      ((string)  "")
-                      (else      (err "Can't coerce" x type))))
-    ((null? x)      (case type
+                      ((bytes)   ar-nil)
                       ((string)  "")
                       (else      (err "Can't coerce" x type))))
     ((symbol? x)    (case type
