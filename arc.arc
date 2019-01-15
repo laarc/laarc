@@ -91,8 +91,8 @@
 (mac and args
   (if args
       (if (cdr args)
-          `(if ,(car args) (and ,@(cdr args)))
-          (car args))
+          `(if ,(car args) (and ,@(cdr args)) false)
+          `(if ,(car args)))
       't))
 
 (def assoc (key al)

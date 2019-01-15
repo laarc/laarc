@@ -292,9 +292,12 @@
 ; (if nil a b) -> b
 ; (if nil a b c) -> (if b c)
 
+(define (ar-yes x)
+  (if (ar-nil? x) ar-false x))
+
 (define (ac-if args env)
-  (cond ((null? args) (list 'quote ar-nil))
-        ((null? (cdr args)) (ac (car args) env))
+  (cond ((null? args) (list 'quote ar-false))
+        ((null? (cdr args)) `(ar-yes ,(ac (car args) env)))
         (#t `(if (not (ar-false? ,(ac (car args) env)))
                  ,(ac (cadr args) env)
                  ,(ac-if (cddr args) env)))))
@@ -574,7 +577,7 @@
      (let ((nm (ac-global-name 'a))
            (a b))
        (namespace-set-variable-value! nm a)
-       a))))
+       (void)))))
 
 (xdef void void)
 
@@ -701,7 +704,7 @@
                    ((eq? x #f)    ar-nil)
                    (#t            (err "Can't take cdr of" x)))))
 
-(define (tnil x) (if x ar-t ar-false))
+(define (tnil x) (if x ar-true ar-false))
 
 ; (pairwise pred '(a b c d)) =>
 ;   (and (pred a b) (pred b c) (pred c d))
@@ -709,8 +712,8 @@
 ; reduce?
 
 (define (pairwise pred lst)
-  (cond ((null? lst) ar-t)
-        ((null? (cdr lst)) ar-t)
+  (cond ((null? lst) ar-true)
+        ((null? (cdr lst)) ar-true)
         ((not (ar-false? (pred (car lst) (cadr lst))))
          (pairwise pred (cdr lst)))
         (#t ar-false)))
@@ -1007,7 +1010,11 @@
     ((symbol? x)    (case type
                       ((string)  (symbol->string x))
                       ((keyword) (symbol->keyword x))
-                      ((bool)    #t)
+                      ((bool)    (if (eq? x 'nil) ar-false ar-true))
+                      (else      (err "Can't coerce" x type))))
+    ((boolean? x)   (case type
+                      ((string)  (if x "t" ""))
+                      ((sym)     (if x 't ar-nil))
                       (else      (err "Can't coerce" x type))))
     (#t             x)))
 
@@ -1443,7 +1450,7 @@
 (xdef get-environment-variable getenv)
 (xdef set-environment-variable putenv)
 
-(putenv "TZ" ":GMT")
+(void (putenv "TZ" ":GMT"))
 
 (define (gmt-date sec) (seconds->date sec))
 
