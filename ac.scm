@@ -799,6 +799,7 @@
 (xdef len (lambda (x)
              (cond ((string? x) (string-length x))
                    ((hash? x) (hash-count x))
+                   ((eqv? x #f) 0)
                    (#t (length x)))))
 
 (define (ar-tagged? x)
