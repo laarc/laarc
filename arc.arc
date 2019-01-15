@@ -43,6 +43,12 @@
 (def cddr (xs) (cdr (cdr xs)))
 
 (def no (x) (is x nil))
+(def yes (x) (if x true false))
+
+(def bool (x)
+  (if (is (type x) 'fn)
+      (fn args (yes (apply x args)))
+      (yes x)))
 
 (def acons (x) (is (type x) 'cons))
 

@@ -434,6 +434,8 @@
         (list 'let `((zz ,b))
                (cond ((eqv? a 'nil) (err "Can't rebind nil"))
                      ((eqv? a 't) (err "Can't rebind t"))
+                     ((eqv? a 'true) (err "Can't rebind true"))
+                     ((eqv? a 'false) (err "Can't rebind false"))
                      ((lex? a env) `(set! ,a zz))
                      (#t `(namespace-set-variable-value! ',(ac-global-name a)
                                                          zz)))
@@ -728,6 +730,8 @@
 (xdef err err)
 (xdef nil ar-nil)
 (xdef t   ar-t)
+(xdef false #f)
+(xdef true  #t)
 
 (define (all test seq)
   (or (null? seq)
@@ -821,6 +825,7 @@
         ((exn? x)           'exception)
         ((thread? x)        'thread)
         ((keyword? x)       'keyword)
+        ((boolean? x)       'bool)
         (#t                 (err "Type: unknown type" x))))
 (xdef type ar-type)
 
@@ -946,16 +951,19 @@
                       ((int)     (char->ascii x))
                       ((string)  (string x))
                       ((sym)     (string->symbol (string x)))
+                      ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((exint? x)     (case type
                       ((num)     x)
                       ((char)    (ascii->char x))
                       ((string)  (apply number->string x args))
+                      ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((number? x)    (case type
                       ((int)     (iround x))
                       ((char)    (ascii->char (iround x)))
                       ((string)  (apply number->string x args))
+                      ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((string? x)    (case type
                       ((sym)     (string->symbol x))
@@ -970,6 +978,7 @@
                                    (if n
                                        (iround n)
                                        (err "Can't coerce" x type))))
+                      ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((pair? x)      (case type
                       ((string)  (if (byte? (xcar x))
@@ -979,19 +988,23 @@
                                      (apply string-append
                                             (map (lambda (y) (ar-coerce y 'string))
                                                  x))))
+                      ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((ar-nil? x)    (case type
                       ((bytes)   ar-nil)
                       ((string)  "")
+                      ((bool)    #f)
                       ((keyword) (string->keyword ""))
                       (else      (err "Can't coerce" x type))))
     ((keyword? x)    (case type
                       ((string)  (keyword->string x))
                       ((sym)     (keyword->symbol x))
+                      ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     ((symbol? x)    (case type
                       ((string)  (symbol->string x))
                       ((keyword) (symbol->keyword x))
+                      ((bool)    #t)
                       (else      (err "Can't coerce" x type))))
     (#t             x)))
 
