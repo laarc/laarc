@@ -1039,6 +1039,11 @@
 (xdef kill-thread kill-thread)
 (xdef break-thread break-thread)
 (xdef current-thread current-thread)
+(xdef wait (lambda (thd)
+             (when (thread? thd)
+               (unless (eqv? thd (current-thread))
+                 (thread-wait thd)))
+             ar-t))
 
 (define (wrapnil f) (lambda args (apply f args) ar-nil))
 
