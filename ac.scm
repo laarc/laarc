@@ -1200,7 +1200,7 @@
 (xdef eval (lambda (e)
               (eval (ac e '()))))
 
-(xdef scheme-eval eval)
+(xdef seval eval)
 
 ; If an err occurs in an on-err expr, no val is returned and code
 ; after it doesn't get executed.  Not quite what I had in mind.
