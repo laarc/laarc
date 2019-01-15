@@ -62,7 +62,8 @@
       (char? x)
       (string? x)
       (number? x)
-      (ar-nil? x)))
+      (ar-nil? x)
+      (keyword? x)))
 
 (define (ssyntax? x)
   (and (symbol? x)
@@ -819,6 +820,7 @@
         ((tcp-listener? x)  'socket)
         ((exn? x)           'exception)
         ((thread? x)        'thread)
+        ((keyword? x)       'keyword)
         (#t                 (err "Type: unknown type" x))))
 (xdef type ar-type)
 
@@ -931,6 +933,9 @@
 (define char->ascii char->integer)
 (define ascii->char integer->char)
 
+(define (keyword->symbol x) (string->symbol (keyword->string x)))
+(define (symbol->keyword x) (string->keyword (symbol->string x)))
+
 (define (iround x) (inexact->exact (round x)))
 
 (define (ar-coerce x type . args)
@@ -955,6 +960,7 @@
     ((string? x)    (case type
                       ((sym)     (string->symbol x))
                       ((cons)    (string->list x))
+                      ((keyword) (string->keyword x))
                       ((bytes)   (if (null? args)
                                      (bytes->list (string->bytes/latin-1 x))
                                      (bytes->list (string->bytes/utf-8 x))))
@@ -977,9 +983,15 @@
     ((ar-nil? x)    (case type
                       ((bytes)   ar-nil)
                       ((string)  "")
+                      ((keyword) (string->keyword ""))
+                      (else      (err "Can't coerce" x type))))
+    ((keyword? x)    (case type
+                      ((string)  (keyword->string x))
+                      ((sym)     (keyword->symbol x))
                       (else      (err "Can't coerce" x type))))
     ((symbol? x)    (case type
                       ((string)  (symbol->string x))
+                      ((keyword) (symbol->keyword x))
                       (else      (err "Can't coerce" x type))))
     (#t             x)))
 
