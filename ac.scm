@@ -490,7 +490,7 @@
           ((and (pair? fn) (eqv? (car fn) 'fn))
            `(,(ac fn env) ,@(ac-args (cadr fn) args env)))
           ((and direct-calls (symbol? fn) (not (lex? fn env)) (bound? fn)
-                (procedure? (namespace-variable-value (ac-global-name fn))))
+                (procedure? (bound? fn)))
            (ac-global-call fn args env))
           ((= (length args) 0)
            `(ar-funcall0 ,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
@@ -515,9 +515,7 @@
 
 (define (ac-macro? fn)
   (if (symbol? fn)
-      (let ((v (namespace-variable-value (ac-global-name fn)
-                                         #t
-                                         (lambda () #f))))
+      (let ((v (bound? fn)))
         (if (and v
                  (ar-tagged? v)
                  (eq? (ar-type v) 'mac))
@@ -1417,7 +1415,7 @@
 
 (xdef force-close (lambda args
                        (map (lambda (p)
-                              (if (not (try-custodian p))
+                              (unless (try-custodian p)
                                   (ar-close p)))
                             args)
                        ar-nil))
