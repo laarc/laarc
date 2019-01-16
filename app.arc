@@ -247,11 +247,11 @@
 
 (def pwfields ((o label "login"))
   (if (headmatch "create" label)
-      (inputs u username 20 nil
-              p password 20 nil
-              e email?)
-      (inputs u username 20 nil
-              p password 20 nil))
+      (inputs (u username 20 nil 'plain)
+              (p password 20 nil)
+              (e email?   20 nil 'plain))
+      (inputs (u username 20 nil 'plain 'autofocus)
+              (p password 20 nil)))
   (br)
   (submit label))
 

@@ -129,6 +129,10 @@
 (attribute input      class          opstring)
 (attribute input      oninput        opstring)
 (attribute input      onfocus        opstring)
+(attribute input      autocorrect    opstring)
+(attribute input      spellcheck     opstring)
+(attribute input      autocapitalize opstring)
+(attribute input      autofocus      opstring)
 (attribute select     name           opstring)
 (attribute option     selected       opsel)
 (attribute table      bgcolor        opcolor)
@@ -338,7 +342,7 @@
 
 (mac inputs args
   `(tag (table border 0)
-     ,@(map (fn ((name label len text))
+     ,@(map (fn ((name label len text plain autofocus))
               (w/uniq (gl gt)
                 `(let ,gl ,len
                    (tr (td (pr ',label ":"))
@@ -350,8 +354,12 @@
                                                     'text)
                                          name ',name 
                                          size ,len 
-                                         value ,text)))))))
-            (tuples args 4))))
+                                         value ,text
+                                         autofocus (if ,autofocus "true")
+                                         autocorrect (if ,plain "off")
+                                         spellcheck (if ,plain "false")
+                                         autocapitalize (if ,plain "off"))))))))
+            args)))
 
 (def single-input (label name chars btext (o pwd) (o value))
   (pr label)
