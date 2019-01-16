@@ -390,6 +390,7 @@
   (retrieve n 
             [and (>= (realscore _) threshold)
                  (cansee user _)
+                 (or (~private _) (is sub '/l/private))
                  (or (no sub) (mem sub _!keys))]
             ranked-stories*))
 
