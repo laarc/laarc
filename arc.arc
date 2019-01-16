@@ -837,6 +837,9 @@
   `(let ,var (outfile ,name 'append)
      (after (do ,@body) (close ,var))))
 
+(mac w/param (var val . body)
+  `(call-w/param ,var ,val (fn () ,@body)))
+
 ; rename this simply "to"?  - prob not; rarely use
 
 (mac w/stdout (str . body)

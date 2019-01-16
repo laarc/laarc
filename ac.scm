@@ -870,6 +870,10 @@
 (xdef stdin  current-input-port)
 (xdef stderr current-error-port)
 
+(xdef call-w/param
+      (lambda (var val thunk)
+        (parameterize ((var val)) (thunk))))
+
 (xdef call-w/stdout
       (lambda (port thunk)
         (parameterize ((current-output-port port)) (thunk))))
