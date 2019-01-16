@@ -1521,6 +1521,7 @@
 (xdef make-param make-parameter)
 
 (xdef write-json write-json)
+(xdef read-json read-json)
 
 (define uuid-generate
   (get-ffi-obj "uuid_generate" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))

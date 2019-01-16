@@ -157,7 +157,7 @@
 
 (def save-votes (u) (save-table (votes* u) (+ votedir* u)))
 
-(def save-prof  (u) (save-table (profs* u) (+ profdir* u)))
+(def save-prof  (u) (save-table (profs* u) (+ profdir* u)) (hook 'save-prof (profs* u)))
 
 (mac uvar (u k) `((profile ,u) ',k))
 
@@ -236,7 +236,8 @@
       url))
 
 (def new-item-id ()
-  (evtil (++ maxid*) [~file-exists (+ storydir* _)]))
+  (do1 (evtil (++ maxid*) [~file-exists (+ storydir* _)])
+       (hook 'maxid maxid*)))
 
 (def item (id)
   (or (items* id) (errsafe:load-item id)))
@@ -257,7 +258,7 @@
 
 (def live (i) (nor i!dead i!deleted))
 
-(def save-item (i) (save-table i (+ storydir* i!id)))
+(def save-item (i) (save-table i (+ storydir* i!id)) (hook 'save-item i))
 
 (def kill (i how)
   (unless i!dead
@@ -334,12 +335,20 @@
 ; Only looks at the 1000 most recent stories, which might one day be a 
 ; problem if there is massive spam. 
 
+(def ranked-stories ((o n 500))
+  (map !id (firstn n ranked-stories*)))
+
 (def gen-topstories ()
-  (= ranked-stories* (rank-stories 180 1000 (memo frontpage-rank))))
+  (= ranked-stories* (rank-stories 180 1000 (memo frontpage-rank)))
+  (hook 'save-topstories))
 
 (def save-topstories ()
-  (writefile (map !id (firstn 180 ranked-stories*))
-             (+ newsdir* "topstories")))
+  (let ids (ranked-stories)
+    (writefile ids (+ newsdir* "topstories"))
+    (hook 'save-topstories ids)))
+
+(defhook save-topstories ((o ids (ranked-stories)))
+  (firebase-set "v0/topstories" ids))
  
 (def rank-stories (n consider scorefn)
   (bestn n (compare > scorefn) (latest-items metastory nil consider)))
@@ -801,6 +810,9 @@ function vote(node) {
        about     u!about
        submitted u!submitted))
 
+(defhook save-prof (u)
+  (firebase-set "v0/user/@u!id" (user>json u)))
+
 (def user-page (user subject)
   (let here (user-url subject)
     (shortpage user nil nil (+ "Profile: " subject) here
@@ -989,6 +1001,9 @@ function vote(node) {
 (def newstories (user n)
   (retrieve n [cansee user _] stories*))
 
+(defhook create-story (s)
+  (let ids (map !id (newstories nil 500))
+    (firebase-set "v0/newstories" ids)))
 
 (newsop best () (bestpage user))
 
@@ -1775,6 +1790,7 @@ function suggestTitle() {
     (= (items* s!id) s)
     (unless (blank url) (register-url s url))
     (push s stories*)
+    (hook 'create-story s)
     s))
 
 
@@ -1984,7 +2000,7 @@ function suggestTitle() {
 (newsop item.json (id)
   (let s (safe-item id)
     (if (news-type s)
-        (write-json (item>json user s))
+        (write-json (item>json s user))
         (do (note-baditem user ip)
             (pr "null")))))
 
@@ -1993,18 +2009,29 @@ function suggestTitle() {
 (defop maxitem.json ()
   (write-json maxid*))
 
-(def tnil (x) (if x #t #f))
+(defhook maxid (n)
+  (firebase-set "v0/maxitem" maxid*))
 
-(def item>json (user i)
-  (if i!deleted
+(def descendants (i (o user))
+  (sum [visible-family user _]
+       (map item i!kids)))
+
+(def story-comment-count (i (o user))
+  (when (astory i) (descendants i user)))
+
+(def tnil (x) (if x #t nil))
+
+(def item>json (i (o user))
+  (if (or i!deleted (private i))
       (obj id      i!id
            deleted (tnil i!deleted)
            dead    (tnil i!dead)
+           private (tnil (private i))
            type    (string i!type)
            time    i!time
            parent  i!parent)
       (obj id      i!id
-           dead    (if i!dead #t nil)
+           dead    (tnil i!dead)
            type    (string i!type)
            kids    i!kids
            by      i!by
@@ -2013,7 +2040,13 @@ function suggestTitle() {
            title   i!title
            parent  i!parent
            score   i!score
-           descendants (- (visible-family user i) 1))))
+           descendants (story-comment-count i user))))
+
+(defhook save-item (i)
+  (firebase-set "v0/item/@i!id" (item>json i))
+  (let s (superparent i)
+    (unless (is s!id i!id)
+      (hook 'save-item s))))
 
 (^ baditemreqs* (table) baditem-threshold* 1/100)
 
