@@ -806,6 +806,12 @@ function vote(node) {
        (write-json (user>json it))
        (pr "null")))
 
+(= (static-header* 'apple-app-site-association) "application/json")
+
+(defop apple-app-site-association req
+  (write-json (obj webcredentials
+                   (obj apps (list "B9452FEMTF.com.emilykolar.LaarcIOS")))))
+
 (def user>json (u)
   (obj id        u!id
        created   u!created
