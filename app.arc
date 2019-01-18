@@ -142,10 +142,18 @@
   (let id (sym:string user "&" (unique-id))
     (if (cookie->user* id) (new-user-cookie user) id)))
 
-(def logout-user (user)
-  (wipe (logins* user))
-  (wipe (cookie->user* (user->cookie* user)) (user->cookie* user))
-  (save-table cookie->user* cookfile*))
+(def user-cookies ((o user (get-user)))
+  (accum a
+    (each (c u) cookie->user*
+      (when (is u user)
+        (a c)))))
+
+(def logout-user ((o user (get-user)))
+  (each c (user-cookies user)
+    (wipe (cookie->user* c)))
+  (save-table cookie->user* cookfile*)
+  (wipe (user->cookie* user))
+  (wipe (logins* user)))
 
 (def create-acct (user pw (o email))
   (set (dc-usernames* (downcase user)))
