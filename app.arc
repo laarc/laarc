@@ -27,11 +27,17 @@
 
 (^ cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
 
-(def get-user ((o req (the-req*)))
-  (let u (aand (alref req!cooks "user") (cookie->user* (sym it)))
-    (when u (= (logins* u) req!ip))
-    u))
+(def get-ip ((o req (the-req*)))
+  req!ip)
 
+(def get-cookie (key (o req (the-req*)))
+  (alref req!cooks key))
+
+(def get-user ((o req (the-req*)))
+  (let u (aand (get-cookie "user" req)
+               (cookie->user* (sym it)))
+    (when u (= (logins* u) (get-ip req)))
+    u))
 
 (defmemo auth-hash (cookie)
   (shash:string cookie))
