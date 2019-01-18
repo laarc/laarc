@@ -7,6 +7,8 @@
 
 (declare 'atstrings t)
 
+(load "firebase.arc")
+
 (= site-name*    "laarc"
    site-abbrev*  "LN"
    site-email*   "hi@@laarc.io"
