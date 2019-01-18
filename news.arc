@@ -806,6 +806,13 @@ function vote(node) {
        (write-json (user>json it))
        (pr "null")))
 
+(= (static-header* 'auth.json) "application/json")
+
+(newsop auth.json ()
+  (aif (get-auth)
+       (write-json (obj auth it))
+       (pr "null")))
+
 (= (static-header* 'apple-app-site-association) "application/json")
 
 (defop apple-app-site-association req
