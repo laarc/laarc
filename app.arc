@@ -120,20 +120,30 @@
                           (admin-page user))))))
       (pwfields "create (server) account"))))
 
-(def cook-user (user)
-  (let id (new-user-cookie user)
-    (= (cookie->user*   id) user
-       (user->cookie* user)   id)
-    (save-table cookie->user* cookfile*)
-    id))
+(def cook-user ((o user (get-user)) (o cookie (get-cookie "user")))
+  (when user
+    (let id (if (is cookie t) (new-user-cookie user) cookie)
+      (= (user->cookie* user) id)
+      (unless (is (cookie->user* id) user)
+        (= (cookie->user* id) user)
+        (save-table cookie->user* cookfile*))
+      id)))
 
-; upgrade user cookie
+(def cook-user! ((o user (get-user)) (o cookie (new-user-cookie user)))
+  (whenlet c (cook-user user cookie)
+    (prcookie c)
+    (= (logins* user) (get-ip))
+    c))
+
+(def ensure-user ((o user (get-user)))
+  (whenlet c (cook-user user)
+    ; upgrade old user cookies
+    (when (< (len c) 16)
+      (cook-user! user))
+    user))
 
 (defhook respond-headers (str req f redir)
-  (whenlet user (get-user req)
-    (when (< (len:alref req!cooks "user") 16)
-      (prcookie (cook-user user))
-      (= (logins* user) req!ip)))
+  (ensure-user)
   nil)
 
 ; Unique-ids are only unique per server invocation.
@@ -235,7 +245,7 @@
     (aif (bad-newacct user pw)
          (failed-login switch it afterward)
          (do (create-acct user pw email)
-             (login user req!ip (cook-user user) afterward)))))
+             (login user req!ip (cook-user! user) afterward)))))
 
 (def login (user ip cookie afterward)
   (= (logins* user) ip)
@@ -274,7 +284,7 @@
 (def good-login (user pw ip)
   (let record (list (seconds) ip user)
     (if (check-pw user pw)
-        (do (unless (user->cookie* user) (cook-user user))
+        (do (unless (user->cookie* user) (cook-user! user))
             (enq-limit record good-logins*)
             user)
         (do (enq-limit record bad-logins*)
