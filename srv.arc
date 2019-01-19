@@ -162,7 +162,8 @@ Connection: close"))
 X-Content-Type-Options: nosniff
 X-XSS-Protection: 1; mode=block
 Strict-Transport-Security: max-age=31556900
-Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://cdnjs.cloudflare.com/; frame-src 'self' https://www.google.com/recaptcha/; style-src 'self' 'unsafe-inline'")
+";Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://cdnjs.cloudflare.com/; frame-src 'self' https://www.google.com/recaptcha/; style-src 'self' 'unsafe-inline'"
+)
 
 (map (fn ((k v)) (= (type-header* k) (gen-type-header v)))
      '((image/x-icon "image/x-icon")
