@@ -420,7 +420,8 @@ Strict-Transport-Security: max-age=31556900
 
 (= fnurl* "/x" rfnurl* "/r" rfnurl2* "/y" jfnurl* "/a")
 
-(= dead-msg* "\nUnknown or expired link.")
+(= todo-msg* (tostring:out:gentag img src "/todo.gif" width 18 height 18)
+   dead-msg* (+ "\nUnknown or expired link. " (out:br) todo-msg*))
  
 (defop-raw x (str req)
   (w/stdout str 
