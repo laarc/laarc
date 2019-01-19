@@ -769,7 +769,7 @@
 (def fetch-title (url)
   (let s (GET url)
     (whenlet p1 (posmatch "<title" s)
-      (whenlet p2 (posmatch "</title>" s)
+      (whenlet p2 (posmatch "</title>" s p1)
         (whenlet p3 (posmatch ">" s p1)
           (trim (cut s (+ p3 1) p2)))))))
 
