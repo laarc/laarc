@@ -28,7 +28,7 @@
 (^ cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
 
 (def get-ip ((o req (the-req*)))
-  req!ip)
+  (or req!ip "::1"))
 
 (def get-cookie (key (o req (the-req*)))
   (alref req!cooks key))
