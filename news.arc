@@ -141,12 +141,27 @@
   (or (votes* u)
       (aand (file-exists (+ votedir* u))
             (= (votes* u) (load-table it)))))
+
+(def make-user (name (o email (user->email* name)) (o ip (get-ip)))
+  (inst 'profile
+        'id       name
+        ; For the moment, trust that users aren't giving bogus emails
+        ; at signup. No need to force them to verify just yet.
+        'email    email
+        'verified email
+        ; Punish users for giving out their email by spamming them
+        ; with cat pictures and NP-hard problems.
+        ; https://www.explainxkcd.com/wiki/index.php/287:_NP-Complete
+        ; Actually, I've been reluctant to notify by default. But it's
+        ; been a surprisingly popular feature, so this might be ok.
+        'notify   t))
           
-(def init-user (u)
+(def init-user (u (o email (user->email* u)))
   (= (votes* u) (table) 
-     (profs* u) (inst 'profile 'id u 'email (user->email* u)))
+     (profs* u) (make-user u email))
   (save-votes u)
   (save-prof u)
+  (newslog (get-ip) u 'noob email)
   u)
 
 ; Need this because can create users on the server (for other apps)
