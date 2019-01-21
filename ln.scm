@@ -1,3 +1,2 @@
 (load "arc.scm")
-(aload "news.arc")
-(arc-eval '(run-news))
+(arc-eval '((load "news.arc")))
