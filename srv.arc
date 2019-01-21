@@ -371,7 +371,7 @@ Strict-Transport-Security: max-age=31556900
 ; count on huge (expt 64 10) size of fnid space to avoid clashes
 
 (def new-fnid ()
-  (check (sym (rand-string 22)) ~fns* (new-fnid)))
+  (check (sym:rand-string 22) ~fns* (new-fnid)))
 
 (def fnid (f)
   (atlet key (new-fnid)
