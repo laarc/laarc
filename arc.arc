@@ -470,11 +470,16 @@
 (mac consts args
   `(do ,@(map [cons 'defconst _] (pair args))))
 
-(mac defvar (name value)
-  `(if (bound ',name) ,name (defconst ,name ,value defvar)))
+(mac defvar (slot value)
+  `(atomic
+   ,(if (ssyntax slot)
+        `(defvar ,(ssexpand slot) ,value)
+        (alist slot)
+        `(or ,slot (defconst ,slot ,value))
+      `(if (bound ',slot) ,slot (defconst ,slot ,value)))))
 
-(mac defconst (name value (o init 'defconst))
-  `(assign ,name ,value))
+(mac defconst (name value)
+  `(= ,name ,value))
 
 (mac loop (start test update . body)
   (w/uniq (gfn gparm)
