@@ -3230,22 +3230,20 @@ RNBQKBNR
 ;; handy to have around for flushing all site data to disk and
 ;; to firebase.
 
-(^ resave-items-count*    0 resave-items-total*    0
-   resave-items-thread* nil resave-items-errors* nil resave-items* nil)
+(^ resave-items-finished* 0 resave-items-total*    0
+   resave-items-thread* nil resave-items-errors* nil resave-items-failed* nil)
 (= resave-items-throttle* 0.3)
 
 (def resave-items-thread ((o throttle resave-items-throttle*))
-  (= resave-items-count*  0   resave-items-total*  0
-     resave-items-errors* nil resave-items*        nil)
+  (= resave-items-done*   0   resave-items-total*  0
+     resave-items-errors* nil resave-items-failed* nil)
   (each-loaded-item i
     (++ resave-items-total*))
   (each-loaded-item i
     (sleep throttle)
     (on-err (fn (c) (push (list c i) resave-items-errors*))
             (fn () (save-item i) (push i resave-items*)))
-    (++ resave-items-count*))
-  (unless resave-items-errors*
-    (wipe resave-items*)))
+    (++ resave-items-done*)))
 
 (def stop-resaving-items ()
   (when resave-items-thread*
@@ -3254,7 +3252,6 @@ RNBQKBNR
 
 (def start-resaving-items ((o throttle resave-items-throttle*))
   (stop-resaving-items)
-  (^ resave-items-thread*
-     (thread (resave-items-thread throttle))))
+  (= resave-items-thread* (thread (resave-items-thread throttle))))
 
 run-news
