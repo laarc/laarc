@@ -476,7 +476,7 @@
         `(defvar ,(ssexpand slot) ,value)
         (alist slot)
         `(or ,slot (defconst ,slot ,value))
-      `(if (bound ',slot) ,slot (defconst ,slot ,value)))))
+      `(or (if (bound ',slot) ,slot) (defconst ,slot ,value)))))
 
 (mac defconst (name value)
   `(= ,name ,value))
