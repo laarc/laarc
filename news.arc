@@ -2068,8 +2068,9 @@ function suggestTitle() {
            kids    i!kids
            by      i!by
            time    i!time
-           text    i!text
            title   i!title
+           url     i!url    
+           text    i!text
            parent  i!parent
            score   i!score
            descendants (story-comment-count i user))))
