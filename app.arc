@@ -120,10 +120,11 @@
                           (admin-page user))))))
       (pwfields "create (server) account"))))
 
-(def cook-user ((o user (get-user)) (o cookie (get-cookie "user")))
+(def cook-user ((o user (get-user)) (o cookie (get-cookie "user")) (o alt))
   (when user
     (let id (if (is cookie t) (new-user-cookie user) cookie)
-      (= (user->cookie* user) id)
+      (unless alt
+        (= (user->cookie* user) id))
       (unless (is (cookie->user* id) user)
         (= (cookie->user* id) user)
         (save-table cookie->user* cookfile*))
