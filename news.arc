@@ -1816,7 +1816,7 @@ function suggestTitle() {
   (let s (inst 'item 'type 'story 'id (new-item-id) 
                      'url url 'title title 'text text 'by user 'ip ip)
     (when sub
-      (each x (rev (tokens sub))
+      (each x (rev (tokens sub [or (whitec _) (in _ #\,)]))
         (pushnew (clean-sub x) s!keys)))
     (save-item s)
     (= (items* s!id) s)
