@@ -900,10 +900,19 @@
                                       (current-input-port)))))
                 (if (eof-object? c) ar-nil c))))
 
+(define (ready? check peek i fail)
+  (atomic-invoke
+    (lambda ()
+      (if (check i) (peek i) fail))))
+
 (xdef peekc (lambda str
-              (let ((c (peek-char (if (pair? str)
-                                      (car str)
-                                      (current-input-port)))))
+              (let* ((i (if (pair? str) (car str) (current-input-port)))
+                     (c (ready? char-ready? peek-char i eof)))
+                (if (eof-object? c) ar-nil c))))
+
+(xdef peekb (lambda str
+              (let* ((i (if (pair? str) (car str) (current-input-port)))
+                     (c (ready? byte-ready? peek-byte i eof)))
                 (if (eof-object? c) ar-nil c))))
 
 (xdef writec (lambda (c . args)
