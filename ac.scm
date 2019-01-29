@@ -748,6 +748,8 @@
                               args)))
                  ((arc-list? (car args))
                   (apply append args))
+                 [(evt? (car args))
+                  (apply choice-evt args)]
                  (#t (apply + args)))))
 
 (define (char-or-string? x) (or (string? x) (char? x)))
@@ -822,6 +824,9 @@
         ((tcp-listener? x)  'socket)
         ((exn? x)           'exception)
         ((thread? x)        'thread)
+        ((channel? x)       'channel)
+        ((async-channel? x) 'channel)
+        ((evt? x)           'event)
         ((keyword? x)       'keyword)
         ((boolean? x)       'bool)
         (#t                 (err "Type: unknown type" x))))
@@ -1369,6 +1374,53 @@
 (xdef atomic-invoke atomic-invoke)
 
 (xdef dead (lambda (x) (tnil (thread-dead? x))))
+
+(require racket/async-channel)
+
+(xdef chan (lambda args
+             (cond
+               ((null? args)           (make-channel))
+               ((ar-false? (car args)) (make-async-channel #f))
+               ((positive? (car args)) (make-async-channel (car args)))
+               ((zero? (car args))     (make-channel))
+               (#t (err "Channel limit must be > 0 or nil: " (car args))))))
+
+(define (sync? . args)
+  (apply sync/timeout 0 args))
+
+(define (chan-fn c method)
+  (cond ((channel? c)
+         (cond ((eq? method 'get)     channel-get)
+               ((eq? method 'try-get) channel-try-get)
+               ((eq? method 'put)     channel-put)
+               ((eq? method 'put-evt) channel-put-evt)
+               (#t (err "chan-fn: invalid method: " method))))
+        ((async-channel? c)
+         (cond ((eq? method 'get)     async-channel-get)
+               ((eq? method 'try-get) async-channel-try-get)
+               ((eq? method 'put)     async-channel-put)
+               ((eq? method 'put-evt) async-channel-put-evt)
+               (#t (err "chan-fn: invalid method: " method))))
+        ((and (evt? c) (or (eq? method 'get) (eq? method 'try-get)))
+         sync?)
+        (#t (err "chan-fn: invalid channel: " c))))
+
+(xdef <- (lambda (c . args)
+           (ar-nill
+             (if (null? args)
+                 ((chan-fn c 'get) c)
+                 (begin ((chan-fn c 'put) c args)
+                        args)))))
+
+(xdef <-? (lambda (c . args)
+            (ar-nill
+              (if (null? args)
+                  ((chan-fn c 'try-get) c)
+                  (let* ((evt ((chan-fn c 'put-evt) c args))
+                         (ret (sync/timeout 0 evt)))
+                    (if (eq? ret #f)
+                        ar-nil
+                        args))))))
 
 ; Added because Mzscheme buffers output.  Not a permanent part of Arc.
 ; Only need to use when declare explicit-flush optimization.
