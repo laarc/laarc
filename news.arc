@@ -541,7 +541,13 @@
     (w/bars
       (link "RSS (stories)" "/rss")
       (link "RSS (comments)" "/rsscomments"))
+    (search-bar user elapsed whence)
     (admin-bar user elapsed whence)))
+
+(def search-bar (user elapsed whence)
+  (br2)
+  (tag (form method "get" action "//search.laarc.io/")
+    (inputs (q Search 17 nil 'plain))))
 
 (def admin-bar (user elapsed whence)
   (br2)
