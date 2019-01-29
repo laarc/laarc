@@ -1,15 +1,13 @@
 ; Arc Compiler.
+#lang racket/load
 
-(module ac mzscheme
-
-(provide (all-defined))
-(require (lib "port.ss"))
-(require (lib "process.ss"))
-(require (lib "pretty.ss"))
-(require (lib "foreign.ss"))
-(require (only racket/base syntax->datum))
 (require json)
-(unsafe!)
+(require racket/port)
+(require racket/pretty)
+(require racket/runtime-path)
+(require racket/system)
+(require racket/tcp)
+(require racket/unsafe/ops)
 
 ; compile an Arc expression into a Scheme expression,
 ; both represented as s-expressions.
@@ -18,6 +16,7 @@
 
 (define (ac s env)
   (cond ((string? s) (ac-string s env))
+        ((keyword? s) s)
         ((literal? s) (list 'quote (ac-quoted s)))
         ((ssyntax? s) (ac (expand-ssyntax s) env))
         ((symbol? s) (ac-var-ref s env))
@@ -62,8 +61,7 @@
       (char? x)
       (string? x)
       (number? x)
-      (ar-nil? x)
-      (keyword? x)))
+      (ar-nil? x)))
 
 (define (ssyntax? x)
   (and (symbol? x)
@@ -236,8 +234,6 @@
          ar-t)
         (#t x)))
 
-(xdef quoted ac-quoted)
-
 (define (ac-unquoted x)
   (cond ((pair? x)
          (imap (lambda (x) (ac-unquoted x)) x))
@@ -246,8 +242,6 @@
         ((eqv? x ar-t)
          't)
         (#t x)))
-
-(xdef unquoted ac-unquoted)
 
 ; quasiquote
 
@@ -492,6 +486,8 @@
           ((and direct-calls (symbol? fn) (not (lex? fn env)) (bound? fn)
                 (procedure? (bound? fn)))
            (ac-global-call fn args env))
+          ((memf keyword? args)
+           `(,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
           ((= (length args) 0)
            `(ar-funcall0 ,(ac fn env) ,@(map (lambda (x) (ac x env)) args)))
           ((= (length args) 1)
@@ -570,20 +566,23 @@
     ((xxdef a b)
      (let ((nm (ac-global-name 'a))
            (a b))
-       (namespace-set-variable-value! nm a)
-       a))))
+       (namespace-set-variable-value! nm a)))))
 
-(define fn-signatures (make-hash-table 'equal))
+(define fn-signatures (make-hash))
 
 ; This is a replacement for xdef that stores opeator signatures.
 ; Haven't started using it yet.
 
 (define (odef a parms b)
   (namespace-set-variable-value! (ac-global-name a) b)
-  (hash-table-put! fn-signatures a (list parms))
+  (hash-set! fn-signatures a (list parms))
   b)
 
 (xdef sig fn-signatures)
+
+(xdef quoted ac-quoted)
+
+(xdef unquoted ac-unquoted)
 
 ; versions of car and cdr for parsing arguments for optional
 ; parameters, that yield nil for nil. maybe we should use
@@ -630,10 +629,10 @@
          fn)
         ((string? fn)
          (string-ref fn (car args)))
-        ((hash-table? fn)
-         (hash-table-get fn
-                         (car args)
-                         (if (pair? (cdr args)) (cadr args) ar-nil)))
+        ((hash? fn)
+         (hash-ref fn
+                   (car args)
+                   (if (pair? (cdr args)) (cadr args) ar-nil)))
 ; experiment: means e.g. [1] is a constant fn
 ;       ((or (number? fn) (symbol? fn)) fn)
 ; another possibility: constant in functional pos means it gets
@@ -792,7 +791,7 @@
 
 (xdef len (lambda (x)
              (cond ((string? x) (string-length x))
-                   ((hash-table? x) (hash-table-count x))
+                   ((hash? x) (hash-count x))
                    (#t (length x)))))
 
 (define (ar-tagged? x)
@@ -818,7 +817,7 @@
         ((string? x)        'string)
         ((exint? x)         'int)
         ((number? x)        'num)     ; unsure about this
-        ((hash-table? x)    'table)
+        ((hash? x)          'table)
         ((output-port? x)   'output)
         ((input-port? x)    'input)
         ((tcp-listener? x)  'socket)
@@ -839,13 +838,13 @@
 
 (xdef rep ar-rep)
 
-; currently rather a joke: returns interned symbols
-
-(define ar-gensym-count 0)
-
-(define (ar-gensym)
-  (set! ar-gensym-count (+ ar-gensym-count 1))
-  (string->symbol (string-append "gs" (number->string ar-gensym-count))))
+(define (ar-gensym . args)
+  (let ((x (if (null? args) 'x (car args))))
+    (if (or (and (symbol? x)
+                 (not (ssyntax? x)))
+            (string? x))
+        (gensym x)
+        (gensym 'cons))))
 
 (xdef uniq ar-gensym)
 
@@ -859,10 +858,10 @@
 
 (xdef outfile (lambda (f . args)
                  (open-output-file f
-                                   'text
-                                   (if (equal? args '(append))
-                                       'append
-                                       'truncate))))
+                                   #:mode 'text
+                                   #:exists (if (equal? args '(append))
+                                                'append
+                                                'truncate))))
 
 (xdef instring  open-input-string)
 (xdef outstring open-output-string)
@@ -1048,10 +1047,11 @@
 
 ; allow Arc to give up root privileges after it
 ; calls open-socket. thanks, Eli!
-(define setuid (get-ffi-obj 'setuid #f (_fun _int -> _int)
-                 ; dummy version for Windows: http://arclanguage.org/item?id=10625.
-                 (lambda () (lambda (x) ar-nil))))
-(xdef setuid setuid)
+; (define setuid (get-ffi-obj 'setuid #f (_fun _int -> _int)
+;                  ; dummy version for Windows: http://arclanguage.org/item?id=10625.
+;                  (lambda () (lambda (x) ar-nil))))
+; (xdef setuid setuid)
+(xdef setuid (lambda args ar-nil))
 
 (xdef new-thread thread)
 (xdef kill-thread kill-thread)
@@ -1098,23 +1098,23 @@
 ; we need the latter for strings.
 
 (xdef table (lambda args
-              (let ((h (make-hash-table 'equal)))
-                (if (pair? args) ((car args) h))
+              (let ((h (make-hash)))
+                (when (pair? args) ((car args) h))
                 h)))
 
 ;(xdef table (lambda args
-;               (fill-table (make-hash-table 'equal)
+;               (fill-table (make-hash)
 ;                           (if (pair? args) (car args) ar-nil))))
 
 (define (fill-table h pairs)
   (if (ar-nil? pairs)
       h
       (let ((pair (car pairs)))
-        (begin (hash-table-put! h (car pair) (cadr pair))
+        (begin (hash-set! h (car pair) (cadr pair))
                (fill-table h (cdr pairs))))))
 
 (xdef maptable (lambda (fn table)               ; arg is (fn (key value) ...)
-                  (hash-table-for-each table fn)
+                  (hash-for-each table fn)
                   table))
 
 (define (protect during after)
@@ -1204,10 +1204,9 @@
           (write x)
           (newline)
           (let ((v (arc-eval x)))
-            (if (ar-false? v)
-                (begin
-                  (display "  FAILED")
-                  (newline))))
+            (when (ar-false? v)
+              (display "  FAILED")
+              (newline)))
           (atests1 p)))))
 
 (define (aload filename)
@@ -1231,8 +1230,8 @@
 ; useful to examine the Arc compiler output
 (define (acompile inname)
   (let ((outname (string-append inname ".scm")))
-    (if (file-exists? outname)
-        (delete-file outname))
+    (when (file-exists? outname)
+      (delete-file outname))
     (call-with-input-file inname
       (lambda (ip)
         (call-with-output-file outname
@@ -1318,9 +1317,9 @@
 
 (xdef sref
   (lambda (com val ind)
-    (cond ((hash-table? com)  (if (ar-nil? val)
-                                  (hash-table-remove! com ind)
-                                  (hash-table-put! com ind val)))
+    (cond ((hash? com)  (if (ar-nil? val)
+                            (hash-remove! com ind)
+                            (hash-set! com ind val)))
           ((string? com) (string-set! com ind val))
           ((pair? com)   (nth-set! com ind val))
           (#t (err "Can't set reference " com ind val)))
@@ -1452,22 +1451,22 @@
 ; if there is buffered output for a non-responsive socket.
 ; must use custodian-shutdown-all instead.
 
-(define custodians (make-hash-table 'equal))
+(define custodians (make-hash))
 
 (define (associate-custodian c i o)
-  (hash-table-put! custodians i c)
-  (hash-table-put! custodians o c))
+  (hash-set! custodians i c)
+  (hash-set! custodians o c))
 
 ; if a port has a custodian, use it to close the port forcefully.
 ; also get rid of the reference to the custodian.
 ; sadly doing this to the input port also kills the output port.
 
 (define (try-custodian p)
-  (let ((c (hash-table-get custodians p #f)))
+  (let ((c (hash-ref custodians p #f)))
     (if c
         (begin
           (custodian-shutdown-all c)
-          (hash-table-remove! custodians p)
+          (hash-remove! custodians p)
           #t)
         #f)))
 
@@ -1504,7 +1503,7 @@
 (xdef get-environment-variable getenv)
 (xdef set-environment-variable putenv)
 
-(putenv "TZ" ":GMT")
+(void (putenv "TZ" ":GMT"))
 
 (define (gmt-date sec) (seconds->date sec))
 
@@ -1564,22 +1563,31 @@
                                      (cons (car cs) (unesc (cdr cs))))))))
                   (unesc (string->list s)))))
 
-(define bcrypt (get-ffi-obj "bcrypt" (ffi-lib "src/bcrypt/build/libbcrypt")
-                 (_fun _string _string _pointer -> _void)))
 
-(xdef bcrypt ; (passwd salt) see BSD manual crypt(3)
-  (let* ((p (malloc 'atomic 256)))
-    (lambda (pwd salt . failed)
-      (atomic-invoke (lambda ()
+(module bcrypt mzscheme
+  (require (lib "foreign.ss"))
+  (unsafe!)
+  (provide bcrypt)
+  (define bcrypt* (get-ffi-obj "bcrypt" (ffi-lib "src/bcrypt/build/libbcrypt")
+                   (_fun _string _string _pointer -> _void)))
+
+  (define bcrypt ; (passwd salt) see BSD manual crypt(3)
+    (let* ((p (malloc 'atomic 256)))
+      (lambda (pwd salt . failed)
         (memset p 0 256)
-        (bcrypt pwd salt p)
+        (bcrypt* pwd salt p)
         (let ((x (cast p _pointer _string)))
           (if (or (<= (string-length x) 0)
                   (not (eqv? (string-ref x 0) #\$)))
               (if (pair? failed)
                   (car failed)
-                  (err "bcrypt failed; use a salt like (+ \"$2a$10$\" (rand-string 22))"))
-              x)))))))
+                  (error "bcrypt failed; use a salt like (+ \"$2a$10$\" (rand-string 22))"))
+              x))))))
+(require 'bcrypt)
+
+(xdef bcrypt (lambda args
+               (atomic-invoke (lambda ()
+                 (apply bcrypt args)))))
 
 (xdef system-type system-type)
 
@@ -1588,14 +1596,20 @@
 (xdef write-json write-json)
 (xdef read-json read-json)
 
-(define uuid-generate
-  (get-ffi-obj "uuid_generate" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
-    (_fun (out : _bytes = (make-bytes 16)) -> _void -> (uuid-unparse out))))
+(module uuid mzscheme
+  (require (lib "foreign.ss"))
+  (unsafe!)
+  (provide uuid-generate)
 
-(define uuid-unparse
-  (get-ffi-obj "uuid_unparse" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
-    (_fun (uuid : _bytes) (out : _bytes = (make-bytes 32)) -> _void -> (cast out _bytes _string/utf-8))))
+  (define uuid-generate
+    (get-ffi-obj "uuid_generate" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
+      (_fun (out : _bytes = (make-bytes 16)) -> _void -> (uuid-unparse out))))
+
+  (define uuid-unparse
+    (get-ffi-obj "uuid_unparse" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
+      (_fun (uuid : _bytes) (out : _bytes = (make-bytes 32)) -> _void -> (cast out _bytes _string/utf-8))))
+  )
+(require 'uuid)
 
 (xdef uuid uuid-generate)
 
-)

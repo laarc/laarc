@@ -1,4 +1,4 @@
-(require mzscheme) ; promise we won't redefine mzscheme bindings
+#lang racket/load
 
 (require "ac.scm") 
 (require "brackets.scm")
