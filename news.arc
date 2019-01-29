@@ -2078,7 +2078,7 @@ function suggestTitle() {
            descendants (story-comment-count i user))))
 
 (def item>search (i (o user))
-  (if (or i!deleted (private i))
+  (if (or i!dead i!deleted (private i))
       (obj objectID       (string i!id)
            parent_id      (tnull i!parent)
            created_at_i   i!time
@@ -2097,7 +2097,7 @@ function suggestTitle() {
            story_title    'null
            story_url      'null)
     (whenlet s (superparent i)
-      (let r (and (no s!deleted) (isnt s i))
+      (let r (and (no s!deleted) (no s!dead) (isnt s i))
         (obj objectID       (string i!id)
              parent_id      (tnull i!parent)
              created_at_i   i!time
