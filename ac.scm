@@ -2,24 +2,56 @@
 #lang racket/load
 
 (require json)
+(require syntax/stx)
 (require racket/port)
 (require racket/pretty)
 (require racket/runtime-path)
 (require racket/system)
 (require racket/tcp)
 (require racket/unsafe/ops)
+(require racket/path)
+(require racket/trace)
+
+; configure reader
+; (read-square-bracket-with-tag #t)
+; (read-curly-brace-with-tag #t)
+(print-hash-table #t)
+(print-syntax-width 10000)
+
+; sread = scheme read. eventually replace by writing read
+
+(define (sread p (eof eof))
+  (port-count-lines! p)
+  (let ((expr (read-syntax (object-name p) p)))
+    (if (eof-object? expr) eof expr)))
+
+(define (syn x (src #f))
+  (if (syntax? x)
+      (syn (syntax->datum x) (or src x))
+      (datum->syntax #f x (if (syntax? src) src #f))))
+
+(define (datum x)
+  (let ((s (syn x)))
+    (syntax->datum s)))
+
+(define env* (make-parameter (list)))
 
 ; compile an Arc expression into a Scheme expression,
 ; both represented as s-expressions.
 ; env is a list of lexically bound variables, which we
 ; need in order to decide whether set should create a global.
 
-(define (ac s env)
+(define (stx-map proc stxl)
+  (map proc (stx->list stxl)))
+
+(define (ac* e s env)
   (cond ((string? s) (ac-string s env))
         ((keyword? s) s)
         ((literal? s) (list 'quote (ac-quoted s)))
         ((ssyntax? s) (ac (expand-ssyntax s) env))
         ((symbol? s) (ac-var-ref s env))
+        ((eq? (xcar s) 'syntax) (cadr (syntax-e e)))
+        ((eq? (xcar (xcar s)) 'syntax) (stx-map ac e))
         ((ssyntax? (xcar s)) (ac (cons (expand-ssyntax (car s)) (cdr s)) env))
         ((eq? (xcar s) 'quote) (list 'quote (ac-quoted (cadr s))))
         ((eq? (xcar s) 'quasiquote) (ac-qq (cadr s) env))
@@ -34,7 +66,16 @@
          (ac (list 'no (cons (cadar s) (cdr s))) env))
         ((eq? (xcar (xcar s)) 'andf) (ac-andf s env))
         ((pair? s) (ac-call (car s) (cdr s) env))
+        ((syntax? s) s)
         (#t (err "Bad object in expression" s))))
+
+(define (ac stx (env (env*)) (ns (arc-namespace)))
+  (parameterize ((env* env))
+    (let* ((s (syn stx))
+           (e (syntax->datum s))
+           (expr (ac* s e env)))
+      (parameterize ((current-namespace ns))
+        (namespace-syntax-introduce (syn expr stx))))))
 
 (define ar-nil '())
 (define ar-t 't)
@@ -424,16 +465,17 @@
 
 (define (ac-set1 a b1 env)
   (if (symbol? a)
-      (let ((b (ac b1 (ac-dbname! a env))))
-        (list 'let `((zz ,b))
+      (let ((n (string->symbol (string-append " " (symbol->string a))))
+            (b (ac b1 (ac-dbname! a env))))
+        (list 'let `((,n ,b))
                (cond ((eqv? a 'nil) (err "Can't rebind nil"))
                      ((eqv? a 't) (err "Can't rebind t"))
                      ((eqv? a 'true) (err "Can't rebind true"))
                      ((eqv? a 'false) (err "Can't rebind false"))
-                     ((lex? a env) `(set! ,a zz))
+                     ((lex? a env) `(set! ,a ,n))
                      (#t `(namespace-set-variable-value! ',(ac-global-name a)
-                                                         zz)))
-               'zz))
+                                                         ,n)))
+               n))
       (err "First arg to set must be a symbol" a)))
 
 ; given a list of Arc expressions, return a list of Scheme expressions.
@@ -554,6 +596,11 @@
       env))
 
 (define err error)
+
+(define-namespace-anchor arc-anchor)
+; (define (arc-namespace) (namespace-anchor->namespace arc-anchor))
+
+(define arc-namespace current-namespace)
 
 ; run-time primitive procedures
 
@@ -724,6 +771,7 @@
 
 (xdef is (lambda args (pairwise ar-is2 args)))
 
+(xdef raise raise)
 (xdef err err)
 (xdef nil ar-nil)
 (xdef t   ar-t)
@@ -828,6 +876,7 @@
         ((evt? x)           'event)
         ((keyword? x)       'keyword)
         ((boolean? x)       'bool)
+        ((syntax? x)        'syntax)
         (#t                 (err "Type: unknown type" x))))
 (xdef type ar-type)
 
@@ -944,9 +993,10 @@
 
 ; sread = scheme read. eventually replace by writing read
 
-(xdef sread (lambda (p eof)
+(xdef sdata (lambda (p eof)
                (let ((expr (read p)))
                  (if (eof-object? expr) eof expr))))
+(xdef sread sread)
 
 ; these work in PLT but not scheme48
 
@@ -1148,8 +1198,8 @@
 ; top level read-eval-print
 ; tle kept as a way to get a break loop when a scheme err
 
-(define (arc-eval expr)
-  (eval (ac expr '())))
+(define (arc-eval expr (ns (arc-namespace)))
+  (seval (ac expr) ns))
 
 (define (tle)
   (display "Arc> ")
@@ -1163,17 +1213,36 @@
   (display "Use (quit) to quit, (tl) to return here after an interrupt.\n")
   (tl2))
 
+(define (ac-read-interaction src in)
+  (parameterize ((read-accept-reader #t)
+                 (read-accept-lang #f))
+    (let ((stx (read-syntax src in)))
+      (if (eof-object? stx) stx
+        (if (eq? (xcar (syntax->datum stx)) 'unquote) stx
+          (let* ((form (syntax->datum stx))
+                 (expr (ac form))
+                 (stx1 (datum->syntax #f expr stx)))
+            (parameterize ((current-namespace (arc-namespace)))
+              (namespace-syntax-introduce stx1))))))))
+
 (define (ac-prompt-read-1)
   (let* ((in ((current-get-interaction-input-port)))
          (form ((current-read-interaction) (object-name in) in)))
     (if (eof-object? form) form (syntax->datum form))))
 
-(define (ac-prompt-read)
-  (display "arc> ")
-  (let ((form (ac-prompt-read-1)))
-    (cond ((eof-object? form) eof)
-          ((eqv? form ':a) eof)
-          (#t `(ac-prompt-eval ',form)))))
+ (define (ac-prompt-read)
+   (display "arc> ")
+   (let ((form (ac-prompt-read-1)))
+     (cond ((eof-object? form) eof)
+           ((eqv? (xcar (syntax->datum form)) 'unquote) form)
+           (#t
+            (writeln form)
+            (parameterize ((current-namespace (arc-namespace))
+                           (port-count-lines-enabled #t)
+                           (current-read-interaction ac-read-interaction))
+              (namespace-syntax-introduce 
+                (datum->syntax #f (ac (syntax->datum form)) form)))))))
+ 
 
 (define reload #f)
 
@@ -1184,12 +1253,37 @@
     (namespace-set-variable-value! (ac-global-name 'thatexpr) expr)
     val))
 
+; (define (tl2)
+;   (parameterize ((current-prompt-read ac-prompt-read))
+;     (read-eval-print-loop)))
+
 (define (tl2)
-  (parameterize ((current-prompt-read ac-prompt-read))
+  (parameterize ((port-count-lines-enabled #t)
+                 (current-namespace (arc-namespace))
+                 (current-read-interaction ac-read-interaction)
+                 ; ((dynamic-require 'readline/pread 'current-prompt) #"arc> ")
+                 ; (current-prompt-read (dynamic-require 'readline/pread 'read-cmdline-syntax))
+                 )
+    ; (dynamic-require 'xrepl #f)
     (read-eval-print-loop)))
+ 
+(define (cwd)
+  (path->string (find-system-path 'orig-dir)))
+
+(define-syntax-rule (get-here)
+  (begin 
+    (let ([ccr (current-contract-region)])
+      (let-values ([(here-dir here-name ignored) (split-path ccr)])
+        (build-path here-dir here-name)))))
+
+(define ac-load-path
+  (list (path->string (path-only (path->complete-path (find-system-path 'run-file))))
+        (cwd)))
+
+(xdef load-path ac-load-path)
 
 (define (aload1 p)
-  (let ((x (read p)))
+  (let ((x (sread p)))
     (if (eof-object? x)
         #t
         (begin
@@ -1197,7 +1291,7 @@
           (aload1 p)))))
 
 (define (atests1 p)
-  (let ((x (read p)))
+  (let ((x (sread p)))
     (if (eof-object? x)
         #t
         (begin
@@ -1216,10 +1310,10 @@
   (call-with-input-file filename atests1))
 
 (define (acompile1 ip op)
-  (let ((x (read ip)))
+  (let ((x (sread ip)))
     (if (eof-object? x)
         #t
-        (let ((scm (ac x '())))
+        (let ((scm (ac x)))
           (eval scm)
           (pretty-print scm op)
           (newline op)
@@ -1242,10 +1336,14 @@
 
 (xdef macex1 (lambda (e) (ac-macex e 'once)))
 
-(xdef eval (lambda (e)
-              (eval (ac e '()))))
+(xdef eval arc-eval)
 
-(xdef seval eval)
+(define (seval s (ns (current-namespace)))
+  (if (syntax? s)
+      (eval-syntax s ns)
+      (eval s ns)))
+
+(xdef seval seval)
 
 ; If an err occurs in an on-err expr, no val is returned and code
 ; after it doesn't get executed.  Not quite what I had in mind.
@@ -1438,7 +1536,7 @@
 (xdef ssyntax (lambda (x) (tnil (ssyntax? x))))
 
 (xdef ssexpand (lambda (x)
-                  (if (symbol? x) (expand-ssyntax x) x)))
+                  (if (ssyntax? x) (expand-ssyntax x) x)))
 
 (xdef quit exit)
 

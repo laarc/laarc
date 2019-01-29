@@ -144,7 +144,7 @@
 ; Composes in functional position are transformed away by ac.
 
 (mac compose args
-  (let g (uniq)
+  (let g (uniq 'compose)
     `(fn ,g
        ,((afn (fs)
            (if (cdr fs)
@@ -155,7 +155,7 @@
 ; Ditto: complement in functional position optimized by ac.
 
 (mac complement (f)
-  (let g (uniq)
+  (let g (uniq 'complement)
     `(fn ,g (no (apply ,f ,g)))))
 
 (def rev (xs) 
@@ -169,10 +169,10 @@
 
 (mac w/uniq (names . body)
   (if (acons names)
-      `(with ,(apply + nil (map1 (fn (n) (list n '(uniq)))
+      `(with ,(apply + nil (map1 (fn (n) (list n `(uniq ',n)))
                              names))
          ,@body)
-      `(let ,names (uniq) ,@body)))
+      `(let ,names (uniq ',names) ,@body)))
 
 (mac or args
   (and args
@@ -864,10 +864,10 @@
    `(w/instring ,gv ,str
       (w/stdin ,gv ,@body))))
 
-(def readstring1 (s (o eof nil)) (w/instring i s (read i eof)))
+(def readstring1 (s (o eof nil) (o data t)) (w/instring i s (read i eof data)))
 
-(def read ((o x (stdin)) (o eof nil))
-  (if (isa x 'string) (readstring1 x eof) (sread x eof)))
+(def read ((o x (stdin)) (o eof nil) (o data t))
+  (if (isa x 'string) (readstring1 x eof data) ((if data sdata sread) x eof)))
 
 ; inconsistency between names of readfile[1] and writefile
 
@@ -1514,7 +1514,7 @@
   (let x nil
     (w/infile f file
       (w/uniq eof
-        (whiler e (read f eof) eof
+        (whiler e (read f eof nil) eof
           (= x (eval e)))))
     x))
 

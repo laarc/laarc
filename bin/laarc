@@ -1,2 +1,2 @@
 #!/bin/sh
-exec racket -f ln.scm "$@"
+exec racket -t ln.scm "$@"
