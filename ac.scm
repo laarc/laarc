@@ -18,7 +18,7 @@
 
 (define (ac s env)
   (cond ((string? s) (ac-string s env))
-        ((literal? s) s)
+        ((literal? s) (list 'quote (ac-quoted s)))
         ((ssyntax? s) (ac (expand-ssyntax s) env))
         ((symbol? s) (ac-var-ref s env))
         ((ssyntax? (xcar s)) (ac (cons (expand-ssyntax (car s)) (cdr s)) env))
