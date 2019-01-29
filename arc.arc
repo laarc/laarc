@@ -1498,8 +1498,10 @@
        (pr ,@(parse-format str))))
 )
 
-(^ loaded-files* (list "arc.arc" "libs.arc"))
-(^ loaded-file-times* (obj "arc.arc" (modtime "arc.arc")))
+(^ loaded-files* (list "ac.scm" "arc.arc" "libs.arc"))
+(^ loaded-file-times* (obj "ac.scm" (modtime "ac.scm")
+                           "arc.arc" (modtime "arc.arc")
+                           "libs.arc" (modtime "libs.arc")))
 
 (def loaded-files () (rev loaded-files*))
 
@@ -1510,12 +1512,16 @@
   (= (loaded-file-times* file) secs)
   value)
 
-(def load-code (file)
+(def arcfile? (file)
+  (and (> (len file) 4)
+       (is ".arc" (cut file (- (len file) 4)))))
+
+(def load-code (file (o evalfn (if (arcfile? file) eval seval)))
   (let x nil
     (w/infile f file
       (w/uniq eof
         (whiler e (read f eof nil) eof
-          (= x (eval e)))))
+          (= x (evalfn e)))))
     x))
 
 (def load (file)
