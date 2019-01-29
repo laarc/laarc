@@ -8,6 +8,7 @@
 (declare 'atstrings t)
 
 (load "firebase.arc")
+(load "algolia.arc")
 
 (= site-name*    "laarc"
    site-abbrev*  "LN"
@@ -2052,6 +2053,7 @@ function suggestTitle() {
   (when (astory i) (descendants i user)))
 
 (def tnil (x) (if x #t nil))
+(def tnull (x) (or x 'null))
 
 (def item>json (i (o user))
   (if (or i!deleted (private i))
@@ -2074,6 +2076,45 @@ function suggestTitle() {
            parent  i!parent
            score   i!score
            descendants (story-comment-count i user))))
+
+(def item>search (i (o user))
+  (if (or i!deleted (private i))
+      (obj objectID       (string i!id)
+           parent_id      (tnull i!parent)
+           created_at_i   i!time
+           created_at     (moment-secs i!time)
+           deleted        (tnil i!deleted)
+           dead           (tnil i!dead)
+           private        (tnil (private i))
+           title          'null
+           url            'null
+           author         'null
+           points         'null
+           comment_text   'null
+           num_comments   'null
+           story_id       'null
+           story_text     'null
+           story_title    'null
+           story_url      'null)
+    (whenlet s (superparent i)
+      (obj objectID       (string i!id)
+           parent_id      (tnull i!parent)
+           created_at_i   i!time
+           created_at     (moment-secs i!time)
+           deleted        (tnil i!deleted)
+           dead           (tnil i!dead)
+           private        (tnil (private i))
+           title          (tnull i!title)
+           url            (tnull i!url)
+           author         (tnull i!by)
+           points         (tnull i!score)
+           comment_text   (tnull:if (acomment i) (tnull i!text))
+           num_comments   (tnull:if (astory i) (story-comment-count i user))
+           story_id       (tnull:if (isnt s i) s!id)
+           story_text     (tnull:if (isnt s i) s!text)
+           story_title    (tnull:if (isnt s i) s!title)
+           story_url      (tnull:if (isnt s i) s!url)
+           _tags          (list (string i!type) "author_@i!by" "story_@s!id")))))
 
 (defhook save-item (i)
   (firebase-set "v0/item/@i!id" (item>json i))
