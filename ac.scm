@@ -21,9 +21,11 @@
 ; sread = scheme read. eventually replace by writing read
 
 (define (sread p (eof eof))
-  (port-count-lines! p)
-  (let ((expr (read-syntax (object-name p) p)))
-    (if (eof-object? expr) eof expr)))
+  (parameterize ((read-accept-lang #t)
+                 (read-accept-reader #t))
+    (port-count-lines! p)
+    (let ((expr (read-syntax (object-name p) p)))
+      (if (eof-object? expr) eof expr))))
 
 (define (syn x (src #f))
   (if (syntax? x)
@@ -795,8 +797,8 @@
                               args)))
                  ((arc-list? (car args))
                   (apply append args))
-                 [(evt? (car args))
-                  (apply choice-evt args)]
+                 ((evt? (car args))
+                  (apply choice-evt args))
                  (#t (apply + args)))))
 
 (define (char-or-string? x) (or (string? x) (char? x)))
@@ -1272,8 +1274,8 @@
 
 (define-syntax-rule (get-here)
   (begin 
-    (let ([ccr (current-contract-region)])
-      (let-values ([(here-dir here-name ignored) (split-path ccr)])
+    (let ((ccr (current-contract-region)))
+      (let-values (((here-dir here-name ignored) (split-path ccr)))
         (build-path here-dir here-name)))))
 
 (define ac-load-path
@@ -1339,9 +1341,12 @@
 (xdef eval arc-eval)
 
 (define (seval s (ns (current-namespace)))
-  (if (syntax? s)
-      (eval-syntax s ns)
-      (eval s ns)))
+  (parameterize ((current-namespace ns)
+                 (compile-allow-set!-undefined #t)
+                 (compile-enforce-module-constants #f))
+    (eval (if (syntax? s)
+              (compile-syntax (namespace-syntax-introduce s))
+              (compile s)))))
 
 (xdef seval seval)
 
