@@ -598,7 +598,7 @@
 ; convert #f from a Scheme predicate to NIL.
 
 (define (ar-nill x)
-  (if (or (ar-nil? x) (eq? x #f)) ar-nil x))
+  (if (or (ar-nil? x) (eq? x #f) (void? x)) ar-nil x))
 
 ; definition of falseness for Arc if.
 ; must include '() since sometimes Arc functions see
