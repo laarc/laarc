@@ -2356,7 +2356,8 @@ function suggestTitle() {
         (uvar user notify)
         (uvar user email)
         (if (is it (uvar user verified)) it)
-        (send-email site-email* it "New reply from @c!by" "@(do site-url*)@(item-url c!id)")
+        (send-email site-email* it "New reply from @c!by"
+                    "@(do site-url*)@(item-url c!id) on: @((superparent c) 'title)")
         t))
 
 (def bad-user (u)
