@@ -2570,7 +2570,7 @@ function suggestTitle() {
 
 ; Submitted
 
-(def submitted-url (user) (+ "submitted?id=" user))
+(def submitted-url (user) (+ "/submitted?id=" user))
        
 (newsop submitted (id) 
   (if id 
