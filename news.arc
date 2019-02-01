@@ -39,6 +39,7 @@
   auth       0
   member     nil
   submitted  nil
+  favorites  nil
   votes      nil   ; for now just recent, elts each (time id by sitename dir)
   karma      1
   avg        nil
@@ -912,6 +913,7 @@ function vote(node) {
     `(string  submissions ,(submissions-link s)                    t  nil "")
     `(string  comments    ,(comments-link s)                       t  nil "")
     `(string  upvoted     ,(+ (upvoted-link s)   " (private)")    ,u  nil "")
+    `(string  favorites   ,(+ (favorites-link s) (if u " (shared)" "")) t  nil "")
     )))
 
 (def verify-link (u (o label "verify email"))
@@ -928,6 +930,9 @@ function vote(node) {
 
 (def upvoted-link (u (o label "upvoted"))
   (tostring (underlink label (upvoted-url u))))
+
+(def favorites-link (u (o label "favorites"))
+  (tostring (underlink label (favorites-url u))))
 
 (newsop welcome ()
   (pr "Welcome to " site-name* ", " user "!"))
@@ -1162,14 +1167,15 @@ function vote(node) {
         (tag (td class 'subtext)
           (hook 'itemline s user)
           (itemline s user)
-          (when (in s!type 'story 'poll) (commentlink s user))
           (editlink s user)
           (when (apoll s) (addoptlink s user))
           (unless i (flaglink s user whence))
+          (unless i (favlink s user whence))
           (killlink s user whence)
           ;(blastlink s user whence)
           ;(blastlink s user whence t)
           (deletelink s user whence)
+          (when (in s!type 'story 'poll) (commentlink s user))
           (scorelink s user whence)))))
 
 (def display-item-number (i)
@@ -1449,6 +1455,14 @@ function vote(node) {
                    (save-item i)
                    whence)
         (pr (if (mem 'nokill i!keys) "un-notice" "noted"))))))
+
+(def favlink (i user whence)
+  (when user
+    (pr bar*)
+    (w/rlink (do (togglemem i!id (uvar user favorites))
+                 (save-prof user)
+                 (favorites-url user))
+      (pr "@(if (mem i!id (uvar user favorites)) 'un-)favorite"))))
 
 (def killlink (i user whence)
   (when (admin user)
@@ -2461,6 +2475,7 @@ function suggestTitle() {
           ; a hack to check whence but otherwise need an arg just for this
           (unless (or astree (is whence "newcomments"))
             (flaglink c user whence))
+          (favlink c user whence)
           (deadmark c user)
           (when showon
             (pr " | on: ")
@@ -2559,6 +2574,9 @@ function suggestTitle() {
 (def submissions (user (o limit)) 
   (map item (firstn limit (uvar user submitted))))
 
+(def favorites (user (o limit))
+  (map item (firstn limit (uvar user favorites))))
+
 (def comments (user (o limit))
   (map item (retrieve limit acomment:item (uvar user submitted))))
   
@@ -2569,6 +2587,23 @@ function suggestTitle() {
 (def ancestors (i)
   (accum a (trav i!parent a:item self:!parent:item)))
 
+(def favorites-url (user) (+ "/favorites?id=" user))
+
+(newsop favorites (id)
+  (if id
+      (favorites-page user id)
+      (pr "No user specified.")))
+
+(def favorites-page (user subject)
+  (if (profile subject)
+      (withs (title (+ subject "'s favorites")
+              label (if (is user subject) "favorites" title)
+              here  (favorites-url subject))
+        (longpage user (now) nil label title here
+          (awhen (keep [and (cansee user _) (~subcomment _)]
+                       (favorites subject maxend*))
+            (display-threads user it label title here))))
+      (prn "No such user.")))
 
 ; Submitted
 
