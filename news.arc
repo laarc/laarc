@@ -1347,7 +1347,7 @@ function vote(node) {
 
 (def sublinks (i)
   (each p (item-paths i)
-    (link p)
+    (link (tostring (fontcolor black (pr:last:tokens p #\/))) p)
     (sp)))
 
 (def user-url (user) (+ "/user?id=" user))
