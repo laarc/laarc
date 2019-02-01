@@ -857,11 +857,6 @@ function vote(node) {
     (shortpage user nil nil (+ "Profile: " subject) here
       (profile-form user subject)
       (br2)
-      (when (some astory:item (uvar subject submitted))
-        (underlink "submissions" (submitted-url subject)))
-      (when (some acomment:item (uvar subject submitted))
-        (sp)
-        (underlink "comments" (threads-url subject)))
       (hook 'user user subject))))
 
 (def profile-form (user subject)
@@ -884,13 +879,12 @@ function vote(node) {
           k (and w (> (karma user) topcolor-threshold*))
           u (or a w)
           m (or a (and (member user) w))
-          p (profile subject))
+          p (profile subject)
+          s subject)
   (w/accum
     `(string  user       ,subject                                  t   nil)
     `(string  name       ,(p 'name)                               ,m  ,m)
     `(string  created    ,(text-age:user-age subject)              t   nil)
-    `(string  password   ,(resetpw-link subject)                  ,u   nil)
-    `(string  saved      ,(saved-link user subject)               ,u   nil)
     `(int     auth       ,(p 'auth)                               ,e  ,a)
     `(yesno   member     ,(p 'member)                             ,a  ,a)
     `(posint  karma      ,(p 'karma)                               t  ,a)
@@ -902,7 +896,7 @@ function vote(node) {
     `(string  verified   ,(p 'verified)                           ,a  ,a)
     (unless (blank p!email)
       (if (isnt p!email p!verified)
-          `(string  verify   ,(verify-link p)                     ,u  nil)
+          `(string  verify   ,(verify-link s)                     ,u  nil)
           `(yesno   notify   ,(p 'notify)                         ,u  ,u
             "Be notified of replies by email?")))
     `(yesno   showdead   ,(p 'showdead)                           ,u  ,u)
@@ -914,22 +908,26 @@ function vote(node) {
     `(sexpr   keys       ,(p 'keys)                               ,a  ,a)
     `(hexcol  topcolor   ,(or (p 'topcolor) (hexrep site-color*)) ,k  ,k)
     `(int     delay      ,(p 'delay)                              ,u  ,u)
+    `(string  password    ,(resetpw-link s)                       ,u  nil "")
+    `(string  submissions ,(submissions-link s)                    t  nil "")
+    `(string  comments    ,(comments-link s)                       t  nil "")
+    `(string  upvoted     ,(+ (upvoted-link s)   " (private)")    ,u  nil "")
     )))
 
-(def saved-link (user subject)
-  (when (or (admin user) (is user subject))
-    (let n (if (len> (votes subject) 500) 
-               "many" 
-               (len (voted-stories user subject)))
-      (if (is n 0)
-          ""
-          (tostring (underlink n (saved-url subject)))))))
+(def verify-link (u (o label "verify email"))
+  (tostring (underlink label "/verify?u=@u")))
 
-(def verify-link (p)
-  (tostring (underlink "verify email" "/verify")))
+(def resetpw-link (u (o label "reset password"))
+  (tostring (underlink label "/resetpw?u=@u")))
 
-(def resetpw-link (u)
-  (tostring (underlink "reset password" "/resetpw?u=@u")))
+(def submissions-link (u (o label "submissions"))
+  (tostring (underlink label (submitted-url u))))
+
+(def comments-link (u (o label "comments"))
+  (tostring (underlink label (threads-url u))))
+
+(def upvoted-link (u (o label "upvoted"))
+  (tostring (underlink label (upvoted-url u))))
 
 (newsop welcome ()
   (pr "Welcome to " site-name* ", " user "!"))
@@ -1098,22 +1096,25 @@ function vote(node) {
       (hook 'listspage user))))
 
 
-(def saved-url (user) (+ "saved?id=" user))
+(def upvoted-url (user) (+ "/upvoted?id=" user))
 
-(newsop saved (id) 
+(newsop upvoted (id) 
   (if (only.profile id)
-      (savedpage user id) 
+      (upvotedpage user id) 
       (pr "No such user.")))
 
-(def savedpage (user subject)
+(def upvotedpage (user subject)
   (if (or (is user subject) (admin user))
       (listpage user (now)
-                (sort (compare < item-age) (voted-stories user subject)) 
-               "saved" "Saved Links" (saved-url subject))
+                (sort (compare < item-age) (voted-items user subject)) 
+                "upvoted"
+                "Upvoted items"
+                (upvoted-url subject)
+                nil)
       (pr "Can't display that.")))
 
-(def voted-stories (user subject)
-  (keep [and (astory _) (cansee user _)]
+(def voted-items (user subject)
+  (keep [and (or (astory _) (acomment _)) (cansee user _)]
         (map item (keys:votes subject))))
 
 
