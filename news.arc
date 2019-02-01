@@ -88,7 +88,7 @@
 
 (^ votes* (table) profs* (table))
 
-(^ initload-users* nil)
+(= initload-users* t)
 
 (def load-news ((o reload))
   (when reload
