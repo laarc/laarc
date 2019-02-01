@@ -1534,10 +1534,10 @@ function vote(node) {
 (def logvote (ip user story)
   (newslog ip user 'vote (story 'id) (list (story 'title))))
 
-(def text-age (a)
+(def text-age (a (o day t) (o hrs t))
   (tostring
-    (if (>= a 1440) (pr (plural (trunc (/ a 1440)) "day")    " ago")
-        (>= a   60) (pr (plural (trunc (/ a 60))   "hour")   " ago")
+    (if (and day (>= a 1440)) (pr (plural (trunc (/ a 1440)) "day")    " ago")
+        (and hrs (>= a   60)) (pr (plural (trunc (/ a 60))   "hour")   " ago")
                     (pr (plural (trunc a)          "minute") " ago"))))
 
 
