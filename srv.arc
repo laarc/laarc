@@ -236,6 +236,8 @@ Strict-Transport-Security: max-age=31556900
         (let (op args) (parseop op args)
           (iflet f (srvops* op)
                  (let req (the-req*)
+                   (= req!op op
+                      req!args args)
                    (if (redirector* op)
                        (do (prn rdheader*)
                            (aand (or (hook 'respond-headers str req f t)
