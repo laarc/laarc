@@ -312,10 +312,10 @@ Strict-Transport-Security: max-age=31556900
     (parsereq
       (list type
             op
-            (+ (rem nil (map [when (begins _ "X-Arc-")
+            (+ args
+               (rem nil (map [when (begins _ "X-Arc-")
                                (tokens _ [or (whitec _) (is _ #\:)])]
-                             (cdr lines)))
-               args)
+                             (cdr lines))))
             (and (is type 'post)
                  (some (fn (s)
                          (and (begins s "Content-Length:")
