@@ -12,6 +12,7 @@
 (require racket/path)
 (require racket/trace)
 (require racket/async-channel)
+(require racket/struct)
 
 ; configure reader
 ; (read-square-bracket-with-tag #t)
@@ -20,6 +21,8 @@
 (print-syntax-width 10000)
 
 ; sread = scheme read. eventually replace by writing read
+
+(struct ar-tagged (type rep) #:prefab)
 
 (define (sread p (eof eof))
   (parameterize ((read-accept-lang #t)
@@ -851,12 +854,9 @@
                    ((hash? x) (hash-count x))
                    (#t (length x)))))
 
-(define (ar-tagged? x)
-  (and (vector? x) (eq? (vector-ref x 0) 'tagged)))
-
 (define (ar-tag type rep)
   (cond ((eqv? (ar-type rep) type) rep)
-        (#t (vector 'tagged type rep))))
+        (#t (ar-tagged type rep))))
 
 (xdef annotate ar-tag)
 
@@ -865,7 +865,7 @@
 (define (exint? x) (and (integer? x) (exact? x)))
 
 (define (ar-type x)
-  (cond ((ar-tagged? x)     (vector-ref x 1))
+  (cond ((ar-tagged? x)     (ar-tagged-type x))
         ((pair? x)          'cons)
         ((symbol? x)        'sym)
         ((null? x)          'sym)
@@ -891,7 +891,7 @@
 
 (define (ar-rep x)
   (if (ar-tagged? x)
-      (vector-ref x 2)
+      (ar-tagged-rep x)
       x))
 
 (xdef rep ar-rep)
