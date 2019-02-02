@@ -556,7 +556,7 @@
     (w/bars
       (pr whence)
       (pr (len items*) "/" maxid* " loaded")
-      (pr (round (/ (memory) 1000000)) " mb")
+      (pr (round (/ (memory) 1000)) " kb")
       (pr elapsed " msec")
       (link "settings" "/newsadmin")
       (link "pages" "/pages")
