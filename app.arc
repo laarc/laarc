@@ -205,7 +205,7 @@
 (def hello-page (user ip)
   (whitepage (prs "hello" user "at" ip)))
 
-(defop login req (login-page 'login))
+(defop login req (login-page 'both))
 
 ; switch is one of: register, login, both
 
