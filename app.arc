@@ -111,7 +111,7 @@
     (br2)
     (aform (fn (req)
              (when-umatch user req
-               (with (u (arg req "u") p (arg req "p"))
+               (with (u (arg req "acct") p (arg req "pw"))
                  (if (or (no u) (no p) (is u "") (is p ""))
                       (pr "Bad data.")
                      (user-exists u)
@@ -236,13 +236,13 @@
 
 (def login-handler (req switch afterward)
   (logout-user (get-user req))
-  (aif (good-login (arg req "u") (arg req "p") req!ip)
+  (aif (good-login (arg req "acct") (arg req "pw") req!ip)
        (login it req!ip (user->cookie* it) afterward)
        (failed-login switch "Bad login." afterward)))
 
 (def create-handler (req switch afterward)
   (logout-user (get-user req))
-  (with (user (arg req "u") pw (arg req "p") email (arg req "e"))
+  (with (user (arg req "acct") pw (arg req "pw") email (arg req "email"))
     (aif (bad-newacct user pw)
          (failed-login switch it afterward)
          (do (create-acct user pw email)
@@ -272,11 +272,11 @@
 
 (def pwfields ((o label "login"))
   (if (headmatch "create" label)
-      (inputs (u username 20 nil 'plain)
-              (p password 20 nil)
-              (e email?   20 nil 'plain))
-      (inputs (u username 20 nil 'plain 'autofocus)
-              (p password 20 nil)))
+      (inputs (acct  username 20 nil 'plain)
+              (pw    password 20 nil)
+              (email email?   20 nil 'plain))
+      (inputs (acct  username 20 nil 'plain 'autofocus)
+              (pw    password 20 nil)))
   (br)
   (submit label))
 
