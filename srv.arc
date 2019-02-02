@@ -370,33 +370,53 @@ Strict-Transport-Security: max-age=31556900
                                            it)))
        ""))
 
-(^ fns* (table) fnids* nil timed-fnids* nil)
+(^ fns* (table) fnkeys* (table) fnids* (table) timed-fnids* (table))
 
-; count on huge (expt 64 10) size of fnid space to avoid clashes
+(def lexval (e)
+  (each (id getx setx) e
+    (out (if (isa getx 'fn) (getx) getx))))
 
-(def new-fnid ()
-  (check (sym:rand-string 22) ~fns* (new-fnid)))
+(mac lexkey () `(lexval (lexenv)))
 
-(def fnid (f)
-  (atlet key (new-fnid)
-    (= (fns* key) f)
-    (push key fnids*)
+; count on huge (expt 64 22) size of fnid space to avoid clashes
+
+(def gen-fnid ()
+  (sym:rand-string 22))
+
+(def new-fnid ((o k))
+  (if k 
+      (^ (fnkeys* k) (gen-fnid))
+      (gen-fnid)))
+
+(def fnids ((o getter car))
+  (map getter (sortable fnids* < car)))
+
+(def fnidf (f (o k))
+  (atlet key (new-fnid k)
+    (= (fns* key) f
+       (fnids* key) (list (now) (get-user)))
+    (wipe (timed-fnids* key))
     key))
 
-(def timed-fnid (lasts f)
-  (atlet key (new-fnid)
-    (= (fns* key) f)
-    (push (list key (seconds) lasts) timed-fnids*)
+(def timed-fnidf (lasts f (o k))
+  (atlet key (new-fnid k)
+    (= (fns* key) f
+       (timed-fnids* key) (list (seconds) lasts (get-user)))
+    (wipe (fnids* key))
     key))
+
+(mac fnid             (f (o k '(lexkey))) `(fnidf ,f ,k))
+(mac timed-fnid (lasts f (o k '(lexkey))) `(timed-fnidf ,lasts ,f ,k))
 
 ; Within f, it will be bound to the fn's own fnid.  Remember that this is
 ; so low-level that need to generate the newline to separate from the headers
 ; within the body of f.
 
 (mac afnid (f)
-  `(atlet it (new-fnid)
-     (= (fns* it) ,f)
-     (push it fnids*)
+  `(atlet it (new-fnid (lexkey))
+     (= (fns* it) ,f
+        (fnids* it) (list (now) (get-user)))
+     (wipe (timed-fnids* it))
      it))
 
 ;(defop test-afnid req
@@ -409,18 +429,22 @@ Strict-Transport-Security: max-age=31556900
 ; do is estimate what the max no of fnids can be and set the harvest 
 ; limit there-- beyond that the only solution is to buy more memory.
 
-(def harvest-fnids ((o n 50000))  ; was 20000
-  (when (len> fns* n) 
-    (pull (fn ((id created lasts))
-            (when (> (since created) lasts)    
-              (wipe (fns* id))
-              t))
-          timed-fnids*)
-    (atlet nharvest (trunc (/ n 10))
-      (let (kill keep) (split (rev fnids*) nharvest)
-        (= fnids* (rev keep)) 
-        (each id kill 
-          (wipe (fns* id)))))))
+(= fnid-harvest-max*   50000 ; was 20000
+   fnid-harvest-ratio* 10)
+
+(def harvest-fnids ((o n fnid-harvest-max*)
+                    (o r fnid-harvest-ratio*))
+  (when (len> fns* n)
+    (each (id (created lasts)) timed-fnids*
+      (when (> (since created) lasts)    
+        (wipe (fns* id))
+        t))
+    (when (len> fns* n) 
+      (atlet nharvest (trunc (/ n r))
+        (let (kill keep) (split (fnids) nharvest)
+          (each id kill
+            (wipe (fnids* id))
+            (wipe (fns* id))))))))
 
 (= fnurl* "/x" rfnurl* "/r" rfnurl2* "/y" jfnurl* "/a")
 
@@ -456,11 +480,14 @@ Strict-Transport-Security: max-age=31556900
 (def url-for (fnid)
   (string fnurl* "?fnid=" fnid))
 
-(def flink (f)
-  (string fnurl* "?fnid=" (fnid (fn (req) (prn) (f req)))))
+(def flinkf (f (o k))
+  (string fnurl* "?fnid=" (fnid (fn (req) (prn) (f req)) k)))
 
-(def rflink (f)
-  (string rfnurl* "?fnid=" (fnid f)))
+(def rflinkf (f (o k))
+  (string rfnurl* "?fnid=" (fnid f k)))
+
+(mac flink  (f (o k '(lexkey))) `(flinkf ,f ,k))
+(mac rflink (f (o k '(lexkey))) `(rflinkf ,f ,k))
   
 ; Since it's just an expr, gensym a parm for (ignored) args.
 
@@ -499,10 +526,13 @@ Strict-Transport-Security: max-age=31556900
 
 ; f should be a fn of one arg, which will be http request args.
 
-(def fnform (f bodyfn (o redir))
+(def fnformf (f bodyfn (o redir) (o k))
   (tag (form method 'post action (if redir rfnurl2* fnurl*))
-    (fnid-field (fnid f))
+    (fnid-field (fnid f k))
     (bodyfn)))
+
+(mac fnform (f bodyfn redir (o k '(lexkey)))
+  `(fnformf ,f ,bodyfn ,redir ,k))
 
 ; Could also make a version that uses just an expr, and var capture.
 ; Is there a way to ensure user doesn't use "fnid" as a key?
@@ -527,11 +557,12 @@ Strict-Transport-Security: max-age=31556900
 ; (unless the server is restarted).
 
 (mac taform (lasts f . body)
-  (w/uniq (gl gf gi ga)
+  (w/uniq (gl gf gi ga ge)
     `(withs (,gl ,lasts
+             ,ge (lexkey)
              ,gf (fn (,ga) (prn) (,f ,ga)))
        (tag (form method 'post action fnurl*)
-         (fnid-field (if ,gl (timed-fnid ,gl ,gf) (fnid ,gf)))
+         (fnid-field (if ,gl (timed-fnid ,gl ,gf ,ge) (fnid ,gf ,ge)))
          ,@body))))
 
 (mac arform (f . body)
@@ -542,10 +573,10 @@ Strict-Transport-Security: max-age=31556900
 ; overlong
 
 (mac tarform (lasts f . body)
-  (w/uniq (gl gf)
-    `(withs (,gl ,lasts ,gf ,f)
+  (w/uniq (gl gf ge)
+    `(withs (,ge (lexkey) ,gl ,lasts ,gf ,f)
        (tag (form method 'post action rfnurl*)
-         (fnid-field (if ,gl (timed-fnid ,gl ,gf) (fnid ,gf)))
+         (fnid-field (if ,gl (timed-fnid ,gl ,gf ,ge) (fnid ,gf ,ge)))
          ,@body))))
 
 (mac aformh (f . body)
