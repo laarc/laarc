@@ -592,7 +592,7 @@ Strict-Transport-Security: max-age=31556900
       (sptab
         (each ip (let leaders nil 
                    (maptable (fn (ip n)
-                               (when (> n 10)
+                               (when (>= n 1)
                                  (insort (compare > requests/ip*)
                                          ip
                                          leaders)))
