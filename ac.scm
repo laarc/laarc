@@ -896,13 +896,12 @@
 
 (xdef rep ar-rep)
 
-(define (ar-gensym . args)
-  (let ((x (if (null? args) 'x (car args))))
-    (if (or (and (symbol? x)
-                 (not (ssyntax? x)))
-            (string? x))
-        (gensym x)
-        (gensym 'cons))))
+(define (ar-gensym (x 'x))
+  (if (or (and (symbol? x)
+               (not (ssyntax? x)))
+          (string? x))
+      (gensym x)
+      (gensym 'cons)))
 
 (xdef uniq ar-gensym)
 
