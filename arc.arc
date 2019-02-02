@@ -1262,10 +1262,10 @@
 
 (mac time (expr)
   (w/uniq (t1 t2)
-    `(let ,t1 (msec)
+    `(let ,t1 (now)
        (do1 ,expr
-            (let ,t2 (msec)
-              (prn "time: " (- ,t2 ,t1) " msec."))))))
+            (let ,t2 (now)
+              (prn "time: " (num (- ,t2 ,t1) 4 t) " msec."))))))
 
 (mac jtime (expr)
   `(do1 'ok (time ,expr)))
