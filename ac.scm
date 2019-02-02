@@ -28,6 +28,12 @@
     (let ((expr (read-syntax (object-name p) p)))
       (if (eof-object? expr) eof expr))))
 
+(define (sdata p (eof eof))
+  (parameterize ((read-accept-lang #f)
+                 (read-accept-reader #f))
+    (let ((expr (read p)))
+      (if (eof-object? expr) eof expr))))
+
 (define (syn x (src #f))
   (if (syntax? x)
       (syn (syntax->datum x) (or src x))
@@ -994,11 +1000,7 @@
 (xdef write (lambda args (printwith write   args)))
 (xdef disp  (lambda args (printwith display args)))
 
-; sread = scheme read. eventually replace by writing read
-
-(xdef sdata (lambda (p eof)
-               (let ((expr (read p)))
-                 (if (eof-object? expr) eof expr))))
+(xdef sdata sdata)
 (xdef sread sread)
 
 ; these work in PLT but not scheme48
