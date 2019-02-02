@@ -50,9 +50,7 @@
     (if (and (or (ignore-ips* ip) (abusive-ip ip))
              (++ (spurned* ip 0)))
         (force-close i o)
-        (do (++ requests*)
-            (++ (requests/ip* ip 0))
-            (with (th1 nil th2 nil)
+        (do (with (th1 nil th2 nil)
               (= th1 (thread
                        (after (handle-request-thread i o ip)
                               (close i o)
@@ -304,6 +302,8 @@ Strict-Transport-Security: max-age=31556900
 (def parsereq (xs)
   (let (type op args n cooks ip . more) xs
     (the-req* (inst 'request 'type type 'op op 'args args 'cooks cooks 'n n 'ip ip 'more more))
+    (++ requests*)
+    (++ (requests/ip* ip 0))
     xs))
 
 (def parseheader (lines (o ip))
@@ -590,14 +590,14 @@ Strict-Transport-Security: max-age=31556900
       (sptab
         (each ip (let leaders nil 
                    (maptable (fn (ip n)
-                               (when (> n 100)
+                               (when (> n 10)
                                  (insort (compare > requests/ip*)
                                          ip
                                          leaders)))
                              requests/ip*)
                    leaders)
           (let n (requests/ip* ip)
-            (row ip n (pr (num (* 100 (/ n requests*)) 1)))))))))
+            (row ip n (pr (num (* 10 (/ n requests*)) 1)))))))))
 
 (defop spurned req
   (when (admin (get-user req))
