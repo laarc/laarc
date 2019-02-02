@@ -235,7 +235,7 @@ Strict-Transport-Security: max-age=31556900
       (w/stdout str
         (let (op args) (parseop op args)
           (iflet f (srvops* op)
-                 (let req (inst 'request 'op op 'args args 'cooks cooks 'ip ip)
+                 (let req (the-req*)
                    (if (redirector* op)
                        (do (prn rdheader*)
                            (aand (or (hook 'respond-headers str req f t)
