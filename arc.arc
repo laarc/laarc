@@ -1498,7 +1498,7 @@
        (pr ,@(parse-format str))))
 )
 
-(^ loaded-files*      (list "ac.scm" "arc.arc" "libs.arc")
+(^ loaded-files*      (list "libs.arc" "arc.arc" "ac.scm")
    loaded-file-times* (obj "ac.scm" (modtime "ac.scm")
                            "arc.arc" (modtime "arc.arc")
                            "libs.arc" (modtime "libs.arc")))
