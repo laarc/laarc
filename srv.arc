@@ -370,7 +370,7 @@ Strict-Transport-Security: max-age=31556900
                                            it)))
        ""))
 
-(^ fns* (table) fnkeys* (table) fnids* (table) timed-fnids* (table))
+(= fns* (table) fnkeys* (table) fnids* (table) timed-fnids* (table))
 
 (def lexval (e)
   (each (id getx setx) e
