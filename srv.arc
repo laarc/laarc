@@ -608,14 +608,14 @@ Strict-Transport-Security: max-age=31556900
     (whitepage
       (sptab
         (map (fn ((ip n)) (row ip n))
-             (sortable spurned*))))))
+             (sortable spurned* >))))))
 
 ; eventually promote to general util
 
-(def sortable (ht (o f >))
+(def sortable (ht (o f >) (o key idfn))
   (let res nil
     (maptable (fn kv
-                (insort (compare f cadr) kv res))
+                (insort (compare f key:cadr) kv res))
               ht)
     res))
 
