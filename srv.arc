@@ -129,7 +129,9 @@
                  type
                  op
                  (let arg1 (car args)
-                   (if (caris arg1 "fnid") "" arg1))
+                   (if (caris arg1 "fnid") ""
+                       (caris arg1 "X-Arc-Secure") ""
+                       arg1))
                  cooks)))
 
 ; Could ignore return chars (which come from textarea fields) here by
