@@ -1535,7 +1535,9 @@
 (^ reload-count* 0)
 
 (def reload ((o file (loaded-files)))
-  (if (acons file)
+  (if (file-changed? "ac.scm")
+       (map [list _ (load _)] file)
+      (acons file)
        (map reload file)
       (file-changed? file)
        (do1 (list file (load file))
