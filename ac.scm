@@ -34,7 +34,7 @@
 (define (sdata p (eof eof))
   (parameterize ((read-accept-lang #f)
                  (read-accept-reader #f))
-    (let ((expr (read p)))
+    (let ((expr (ac-quoted (read p))))
       (if (eof-object? expr) eof expr))))
 
 (define (syn x (src #f))
@@ -90,7 +90,7 @@
         (namespace-syntax-introduce (syn expr stx))))))
 
 (define ar-nil '())
-(define ar-t 't)
+(define ar-t #t)
 
 (define (ar-nil? x)
   (eqv? x ar-nil))
