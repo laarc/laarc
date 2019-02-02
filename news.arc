@@ -690,6 +690,7 @@ function vote(node) {
     (toplink "discord"  discord-url* label)
     (hook 'toprow user label)
     (link "tags" "/l")
+    (toplink "ask" "/l/ask" (if (is label "/l/ask") "ask" label))
     (toplink "show" "/l/show" (if (is label "/l/show") "show" label))
     (link "submit" "/submit")
     (unless (mem label toplabels*)
