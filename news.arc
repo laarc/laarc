@@ -1462,7 +1462,7 @@ function vote(node) {
         (pr (if (mem 'nokill i!keys) "un-notice" "noted"))))))
 
 (def favlink (i user whence)
-  (when user
+  (when (and user (cansee user i))
     (pr bar*)
     (w/rlink (do (togglemem i!id (uvar user favorites))
                  (save-prof user)
@@ -2605,7 +2605,7 @@ function suggestTitle() {
               label (if (is user subject) "favorites" title)
               here  (favorites-url subject))
         (longpage user (now) nil label title here
-          (awhen (keep [and (cansee user _) (~subcomment _)]
+          (awhen (keep [cansee user _]
                        (favorites subject maxend*))
             (display-threads user it label title here))))
       (prn "No such user.")))
