@@ -83,9 +83,9 @@
 
 (define (ac stx (env (env*)) (ns (arc-namespace)))
   (parameterize ((env* env))
-    (let* ((s (syn stx))
-           (e (syntax->datum s))
-           (expr (ac* s e env)))
+    (let* ((e (syn stx))
+           (s (syntax->datum e))
+           (expr (ac* e s env)))
       (parameterize ((current-namespace ns))
         (namespace-syntax-introduce (syn expr stx))))))
 
