@@ -504,22 +504,33 @@
 (mac repeat (n . body)
   `(for ,(uniq) 1 ,n ,@body))
 
+(mac accum (accfn . body)
+  (w/uniq gacc
+    `(withs (,gacc nil ,accfn (fn args
+                                (let n (len args)
+                                  (if (is n 0) (atomic:do1 (rev ,gacc) (wipe ,gacc))
+                                      (is n 1) (push (car args) ,gacc)
+                                               (push args ,gacc)))))
+       ,@body
+       (,accfn))))
+
 ; could bind index instead of gensym
 
 (mac each (var expr . body)
   (w/uniq (gseq gf gv)
-    `(let ,gseq ,expr
-       (if (alist ,gseq)
-            ((rfn ,gf (,gv)
-               (when (acons ,gv)
-                 (let ,var (car ,gv) ,@body)
-                 (,gf (cdr ,gv))))
-             ,gseq)
-           (isa ,gseq 'table)
-            (maptable (fn ,var ,@body)
-                      ,gseq)
-            (for ,gv 0 (- (len ,gseq) 1)
-              (let ,var (,gseq ,gv) ,@body))))))
+    `(accum out
+       (let ,gseq ,expr
+         (if (alist ,gseq)
+              ((rfn ,gf (,gv)
+                 (when (acons ,gv)
+                   (let ,var (car ,gv) ,@body)
+                   (,gf (cdr ,gv))))
+               ,gseq)
+             (isa ,gseq 'table)
+              (maptable (fn ,var ,@body)
+                        ,gseq)
+              (for ,gv 0 (- (len ,gseq) 1)
+                (let ,var (,gseq ,gv) ,@body)))))))
 
 ; (nthcdr x y) = (cut y x).
 
@@ -733,12 +744,6 @@
       (no (cdr args))
        (car args)
       `(let it ,(car args) (and it (aand ,@(cdr args))))))
-
-(mac accum (accfn . body)
-  (w/uniq gacc
-    `(withs (,gacc nil ,accfn [push _ ,gacc])
-       ,@body
-       (rev ,gacc))))
 
 (mac w/accum body
   (w/uniq ga
@@ -1099,15 +1104,15 @@
   table)
 
 (def keys (h) 
-  (accum a (each (k v) h (a k))))
+  (each (k v) h (out k)))
 
 (def vals (h) 
-  (accum a (each (k v) h (a v))))
+  (each (k v) h (out v)))
 
 ; These two should really be done by coerce.  Wrap coerce?
 
 (def tablist (h)
-  (accum a (maptable (fn args (a args)) h)))
+  (each kv h (out kv)))
 
 (def listtab (al)
   (let h (table)
@@ -1690,8 +1695,6 @@
 
 (mac defhook (name . rest)
   `(= (hooks* ',name) (fn ,@rest)))
-  
-(mac out (expr) `(pr ,(tostring (eval expr))))
 
 ; if renamed this would be more natural for (map [_ user] pagefns*)
 

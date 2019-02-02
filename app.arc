@@ -20,8 +20,9 @@
      openids*      (safe-load-table oidfile*)
      admins*       (map string (errsafe (readfile adminfile*)))
      cookie->user* (safe-load-table cookfile*))
-  (maptable (fn (k v) (= (user->cookie* v) k))
-            cookie->user*))
+  (each (k v) cookie->user*
+    (= (user->cookie* v) k))
+  t)
 
 ; idea: a bidirectional table, so don't need two vars (and sets)
 

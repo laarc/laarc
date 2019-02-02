@@ -593,12 +593,11 @@ Strict-Transport-Security: max-age=31556900
     (whitepage
       (sptab
         (each ip (let leaders nil 
-                   (maptable (fn (ip n)
-                               (when (>= n 1)
-                                 (insort (compare > requests/ip*)
-                                         ip
-                                         leaders)))
-                             requests/ip*)
+                   (each (ip n) requests/ip*
+                     (when (>= n 1)
+                       (insort (compare > requests/ip*)
+                               ip
+                               leaders)))
                    leaders)
           (let n (requests/ip* ip)
             (row ip n (pr (num (* 10 (/ n requests*)) 1)))))))))
@@ -614,9 +613,8 @@ Strict-Transport-Security: max-age=31556900
 
 (def sortable (ht (o f >) (o key idfn))
   (let res nil
-    (maptable (fn kv
-                (insort (compare f key:cadr) kv res))
-              ht)
+    (each kv ht
+      (insort (compare f key:cadr) kv res))
     res))
 
 

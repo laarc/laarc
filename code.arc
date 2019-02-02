@@ -28,10 +28,9 @@
 (def common-tokens (files)
   (let counts (tokcount files)
     (let ranking nil
-      (maptable (fn (k v)
-                  (unless (nonop k)
-                    (insort (compare > cadr) (list k v) ranking)))
-                counts)
+      (each (k v) counts
+        (unless (nonop k)
+          (insort (compare > cadr) (list k v) ranking)))
       ranking)))
 
 (def nonop (x)
@@ -47,13 +46,12 @@
 (def space-eaters (files)
   (let counts (tokcount files)
     (let ranking nil
-      (maptable (fn (k v)
-                  (when (and (isa k 'sym) (bound k))
-                    (insort (compare > [* (len (string (car _)))
-                                          (cadr _)])
-                            (list k v (* (len (string k)) v))
-                            ranking)))
-                counts)
+      (each (k v) counts
+        (when (and (isa k 'sym) (bound k))
+          (insort (compare > [* (len (string (car _)))
+                                (cadr _)])
+                  (list k v (* (len (string k)) v))
+                  ranking)))
     ranking)))
 
 ;(top40 (space-eaters allfiles*))
