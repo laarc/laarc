@@ -550,7 +550,7 @@
   (tag (form method "get" action "//search.laarc.io/")
     (inputs (q Search 17 nil 'plain))))
 
-(defcache memusage 3
+(defcache memusage 5
   (repeat 3 (seval!collect-garbage 'major))
   (memory))
 
@@ -560,8 +560,9 @@
     (w/bars
       (pr whence)
       (pr (len items*) "/" maxid* " loaded")
-      (pr (round (/ (memusage) 1000)) " kb")
-      (pr elapsed " msec")
+      (pr (num (round (/ (memusage) 1000))) " kb")
+      (pr (len fns*) " fns")
+      (pr (num elapsed) " msec")
       (link "settings" "/newsadmin")
       (link "pages" "/pages")
       (hook 'admin-bar user whence))
