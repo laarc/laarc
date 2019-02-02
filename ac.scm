@@ -11,6 +11,7 @@
 (require racket/unsafe/ops)
 (require racket/path)
 (require racket/trace)
+(require racket/async-channel)
 
 ; configure reader
 ; (read-square-bracket-with-tag #t)
@@ -1485,8 +1486,6 @@
 (xdef atomic-invoke atomic-invoke)
 
 (xdef dead (lambda (x) (tnil (thread-dead? x))))
-
-(require racket/async-channel)
 
 (xdef chan (lambda args
              (cond
