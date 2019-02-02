@@ -550,13 +550,17 @@
   (tag (form method "get" action "//search.laarc.io/")
     (inputs (q Search 17 nil 'plain))))
 
+(defcache memusage 3
+  (repeat 3 (seval!collect-garbage 'major))
+  (memory))
+
 (def admin-bar (user elapsed whence)
   (br2)
   (when (admin user)
     (w/bars
       (pr whence)
       (pr (len items*) "/" maxid* " loaded")
-      (pr (round (/ (memory) 1000)) " kb")
+      (pr (round (/ (memusage) 1000)) " kb")
       (pr elapsed " msec")
       (link "settings" "/newsadmin")
       (link "pages" "/pages")
