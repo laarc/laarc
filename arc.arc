@@ -1324,7 +1324,7 @@
     x))
 
 (def temload (tem file)
-  (dbg (w/infile i file (temread tem i))))
+  (w/infile i file (temread tem i)))
 
 (def temloadall (tem file)
   (map (fn (pairs) (templatize tem pairs))       
