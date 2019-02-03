@@ -88,6 +88,9 @@
                 `(do (sref sig ',parms ',name)
                      (safeset ,name (annotate 'mac (fn ,parms ,@body)))))))
 
+(mac dbg ((o expr 'nil))
+  `(debugger (lexenv) ',expr))
+
 (mac and args
   (if args
       (if (cdr args)
@@ -850,6 +853,10 @@
 (mac w/param (var val . body)
   `(call-w/param ,var ,val (fn () ,@body)))
 
+(^ original-stdin* (stdin)
+   original-stdout* (stdout)
+   original-stderr* (stderr))
+
 ; rename this simply "to"?  - prob not; rarely use
 
 (mac w/stdout (str . body)
@@ -1317,7 +1324,7 @@
     x))
 
 (def temload (tem file)
-  (w/infile i file (temread tem i)))
+  (dbg (w/infile i file (temread tem i))))
 
 (def temloadall (tem file)
   (map (fn (pairs) (templatize tem pairs))       

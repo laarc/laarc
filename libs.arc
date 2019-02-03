@@ -1,4 +1,6 @@
 (map load '("strings.arc"
+            "colors.arc"
+            "dbg.arc"
             "pprint.arc"
             "code.arc"
             "html.arc"

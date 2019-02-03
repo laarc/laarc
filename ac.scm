@@ -13,6 +13,7 @@
 (require racket/trace)
 (require racket/async-channel)
 (require racket/struct)
+(require syntax/srcloc)
 
 ; configure reader
 ; (read-square-bracket-with-tag #t)
@@ -273,9 +274,9 @@
   (string->symbol (string-append "_" (symbol->string s))))
 
 (define (ac-var-ref s env)
-  (if (lex? s env)
-      s
-      (ac-global-name s)))
+  (cond ((ac-boxed? 'get s) (ac-boxed-get s))
+        ((lex? s env)       s)
+        (#t                 (ac-global-name s))))
 
 ; quote
 
@@ -485,6 +486,7 @@
                      ((eqv? a 't) (err "Can't rebind t"))
                      ((eqv? a 'true) (err "Can't rebind true"))
                      ((eqv? a 'false) (err "Can't rebind false"))
+                     ((ac-boxed? 'set a)  `(begin ,(ac-boxed-set a b) ,(ac-boxed-get a)))
                      ((lex? a env) `(set! ,a ,n))
                      (#t `(namespace-set-variable-value! ',(ac-global-name a)
                                                          ,n)))
@@ -522,6 +524,31 @@
                             (lambda ,val ,var)
                             (lambda (,val) (set! ,var ,val)))))
                  (filter (lambda (x) (not (or (ar-false? x) (pair? x)))) env))))
+
+(define boxed* '())
+
+(define (ac-boxed? op name)
+  (let ((result
+    (when (not (ar-false? name))
+      (when (not (ar-false? boxed*))
+        (let ((slot (assoc name boxed*)))
+          (case op
+            ((get) (when (and slot (>= (length slot) 2)) (cadr slot)))
+            ((set) (when (and slot (>= (length slot) 3)) (caddr slot)))
+            (else (err "ac-boxed?: bad op" name op))))))))
+    (if (void? result) #f result)))
+
+(define (ac-boxed-set name val)
+  (let ((setter (ac-boxed? 'set name)))
+     (if (procedure? setter)
+       `(,setter ,val)
+       (err "invalid setter" name val setter))))
+
+(define (ac-boxed-get name)
+  (let ((getter (ac-boxed? 'get name)))
+    (if (procedure? getter)
+      `(,getter 'nil)
+      getter)))
 
 ; generate special fast code for ordinary two-operand
 ; calls to the following functions. this is to avoid
@@ -1220,11 +1247,30 @@
                 (rename-file-or-directory old new #t)
                 ar-nil))
 
+(define-syntax w/restore
+  (syntax-rules ()
+    ((_ var val body ...)
+     (let ((w/restore-prev var)
+           (w/restore-val  val))
+       (dynamic-wind (lambda () (set! var w/restore-val))
+                     (lambda () body ...)
+                     (lambda () (set! var w/restore-prev)))))))
+
 ; top level read-eval-print
 ; tle kept as a way to get a break loop when a scheme err
 
-(define (arc-eval expr (ns (arc-namespace)))
-  (seval (ac expr) ns))
+(define (arc-eval expr . args)
+  (if (null? args)
+      (seval (ac expr))
+      (apply arc-eval-boxed expr args)))
+
+(define (arc-eval-boxed expr lexenv)
+  (w/restore boxed* (if (or (ar-false? boxed*)
+                            (ar-false? lexenv))
+                      lexenv
+                      (append lexenv boxed*))
+    (arc-eval expr)))
+
 
 (define (tle)
   (display "Arc> ")
@@ -1238,58 +1284,42 @@
   (display "Use (quit) to quit, (tl) to return here after an interrupt.\n")
   (tl2))
 
+(define ac-that-expr* (make-parameter (void)))
+
 (define (ac-read-interaction src in)
   (parameterize ((read-accept-reader #t)
                  (read-accept-lang #f))
     (let ((stx (read-syntax src in)))
       (if (eof-object? stx) stx
         (if (eq? (xcar (syntax->datum stx)) 'unquote) stx
-          (let* ((form (syntax->datum stx))
-                 (expr (ac form))
-                 (stx1 (datum->syntax #f expr stx)))
-            (parameterize ((current-namespace (arc-namespace)))
-              (namespace-syntax-introduce stx1))))))))
-
-(define (ac-prompt-read-1)
-  (let* ((in ((current-get-interaction-input-port)))
-         (form ((current-read-interaction) (object-name in) in)))
-    (if (eof-object? form) form (syntax->datum form))))
+          (begin (ac-that-expr* stx)
+                 (ac stx)))))))
 
  (define (ac-prompt-read)
-   (display "arc> ")
-   (let ((form (ac-prompt-read-1)))
-     (cond ((eof-object? form) eof)
-           ((eqv? (xcar (syntax->datum form)) 'unquote) form)
-           (#t
-            (writeln form)
-            (parameterize ((current-namespace (arc-namespace))
-                           (port-count-lines-enabled #t)
-                           (current-read-interaction ac-read-interaction))
-              (namespace-syntax-introduce 
-                (datum->syntax #f (ac (syntax->datum form)) form)))))))
+   (if (syntax? (ac-that-expr*))
+       (display (format "arc:~a> " (source-location-line (ac-that-expr*))))
+       (display "arc:0> "))
+  (let ((in ((current-get-interaction-input-port))))
+    (parameterize ((current-read-interaction ac-read-interaction))
+      ((current-read-interaction) (object-name in) in))))
  
-
-(define reload #f)
-
-(define (ac-prompt-eval expr)
-  (when reload (arc-eval '(reload)))
-  (let ((val (arc-eval expr)))
-    (namespace-set-variable-value! (ac-global-name 'that) val)
-    (namespace-set-variable-value! (ac-global-name 'thatexpr) expr)
-    val))
-
-; (define (tl2)
-;   (parameterize ((current-prompt-read ac-prompt-read))
-;     (read-eval-print-loop)))
+(define (ac-prompt-print val)
+  (namespace-set-variable-value! (ac-global-name 'that) val)
+  (namespace-set-variable-value! (ac-global-name 'thatexpr) (ac-that-expr*))
+  (unless (void? val)
+    (pretty-print val))
+  val)
 
 (define (tl2)
   (parameterize ((port-count-lines-enabled #t)
                  (current-namespace (arc-namespace))
-                 (current-read-interaction ac-read-interaction)
+                 (current-prompt-read ac-prompt-read)
+                 (current-print       ac-prompt-print)
                  ; ((dynamic-require 'readline/pread 'current-prompt) #"arc> ")
                  ; (current-prompt-read (dynamic-require 'readline/pread 'read-cmdline-syntax))
                  )
     ; (dynamic-require 'xrepl #f)
+    (port-count-lines! (current-input-port))
     (read-eval-print-loop)))
  
 (define (cwd)
@@ -1618,7 +1648,6 @@
 (xdef declare (lambda (key val)
                 (let ((flag (not (ar-false? val))))
                   (case key
-                    ((reload)         (set! reload         flag))
                     ((atstrings)      (set! atstrings      flag))
                     ((direct-calls)   (set! direct-calls   flag))
                     ((explicit-flush) (set! explicit-flush flag)))
