@@ -1341,7 +1341,8 @@ function vote(node) {
 (def itemscore (i (o user))
   (tag (span id (+ "score_" i!id))
     (let score (if (is i!type 'pollopt) (realscore i) i!score)
-      (when (> score show-score-threshold*)
+      (when (or (is i!type 'pollopt)
+                (> score show-score-threshold*))
         (pr (plural score "point")))))
   (hook 'itemscore i user))
 
