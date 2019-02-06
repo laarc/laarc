@@ -537,7 +537,8 @@
       (link "Bookmarklet" "/bookmarklet.html")
       (link "Feature Requests" "/item?id=230")
       (link "Contact" "mailto:@site-email*")
-      (link "Twitter" "https://twitter.com/@site-twitter*"))
+      (link "Twitter" "https://twitter.com/@site-twitter*")
+      (link "Lists" "/lists"))
     (br2)
     (w/bars
       (link "RSS (stories)" "/rss")
