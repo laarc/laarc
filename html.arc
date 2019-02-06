@@ -29,7 +29,7 @@
    teal      (color 91 186 213)
    )
 
-(^ opmeths* (table))
+(or= opmeths* (table))
 
 (mac opmeth args
   `(opmeths* (list ,@args)))

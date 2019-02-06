@@ -26,7 +26,7 @@
 
 ; idea: a bidirectional table, so don't need two vars (and sets)
 
-(^ cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
+(or= cookie->user* (table) user->cookie* (table) user->email* (table) logins* (table))
 
 (def get-ip ((o req (the-req*)))
   (or req!ip "::1"))
@@ -281,7 +281,7 @@
   (br)
   (submit label))
 
-(^ good-logins* (queue) bad-logins* (queue))
+(or= good-logins* (queue) bad-logins* (queue))
 
 (def good-login (user pw ip)
   (let record (list (seconds) ip user)
@@ -296,7 +296,7 @@
   (w/stdin (instring str)
     (clean-hash:shell "openssl" 'dgst '-sha1)))
 
-(^ dc-usernames* (table))
+(or= dc-usernames* (table))
 
 (def username-taken (user)
   (when (empty dc-usernames*)

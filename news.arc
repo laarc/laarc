@@ -87,7 +87,7 @@
    profdir*  "arc/news/profile/"
    votedir*  "arc/news/vote/")
 
-(^ votes* (table) profs* (table))
+(or= votes* (table) profs* (table))
 
 (= initload-users* t)
 
@@ -100,7 +100,7 @@
   (unless stories* (load-items))
   (if (and initload-users* (empty profs*)) (load-users)))
 
-(defvar srv-port* (readenv "PORT" 8080))
+(or= srv-port* (readenv "PORT" 8080))
 
 (def nsv ((o port srv-port*))
   (load-news)
@@ -194,9 +194,9 @@
 (def author (u i) (is u i!by))
 
 
-(^ stories* nil comments* nil 
-   items* (table) url->story* (table)
-   maxid* 0 initload* 15000)
+(or= stories* nil comments* nil 
+     items* (table) url->story* (table)
+     maxid* 0 initload* 15000)
 
 ; The dir expression yields stories in order of file creation time 
 ; (because arc infile truncates), so could just rev the list instead of
@@ -247,7 +247,7 @@
 
 ; redefined later
 
-(^ stemmable-sites* (table))
+(or= stemmable-sites* (table))
 
 (def canonical-url (url)
   (if (stemmable-sites* (sitename url))
@@ -286,7 +286,7 @@
     (set i!dead)
     (save-item i)))
 
-(^ kill-log* nil)
+(or= kill-log* nil)
 
 (def log-kill (i how)
   (push (list i!id how) kill-log*))
@@ -500,7 +500,7 @@
                      bgcolor sand)
            ,@body)))))
 
-(^ pagefns* nil)
+(or= pagefns* nil)
 
 (mac fulltop (user lid label title whence . body)
   (w/uniq (gu gi gl gt gw)
@@ -750,7 +750,7 @@ function vote(node) {
            (newslog ip user ',name ,@parms)
            ,@body)))))
 
-(^ newsop-names* nil)
+(or= newsop-names* nil)
 
 (mac newsop args
   `(do (pushnew ',(car args) newsop-names*)
@@ -1411,7 +1411,7 @@ function vote(node) {
 
 (= user-changetime* 120 editor-changetime* 1440)
 
-(^ everchange* (table) noedit* (table))
+(or= everchange* (table) noedit* (table))
 
 (def canedit (user i)
   (or (admin user)
@@ -2163,7 +2163,7 @@ function suggestTitle() {
     (unless (is s!id i!id)
       (hook 'save-item s))))
 
-(^ baditemreqs* (table) baditem-threshold* 1/100)
+(or= baditemreqs* (table) baditem-threshold* 1/100)
 
 ; Something looking at a lot of deleted items is probably the bad sort
 ; of crawler.  Throttle it for this server invocation.
@@ -2212,7 +2212,7 @@ function suggestTitle() {
            (mem 'commentable i!keys))))
 
 
-(^ displayfn* (table))
+(or= displayfn* (table))
 
 (= (displayfn* 'story)   (fn (n i user here inlist)
                            (display-story n i user here)))
@@ -2259,7 +2259,7 @@ function suggestTitle() {
 
 (def editable-type (i) (fieldfn* i!type))
 
-(^ fieldfn* (table))
+(or= fieldfn* (table))
 
 (= (fieldfn* 'story)
    (fn (user s)
@@ -3275,7 +3275,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
         (tr (td c) (tdcolor (hex>color c) (hspace 30)))))))
 
 
-(^ chess-board* (trim (rem #\return "
+(or= chess-board* (trim (rem #\return "
 rnbqkbnr
 pppppppp
         
@@ -3375,8 +3375,8 @@ RNBQKBNR
 ;; handy to have around for flushing all site data to disk and
 ;; to firebase.
 
-(^ resave-items-finished* 0 resave-items-total*    0
-   resave-items-thread* nil resave-items-errors* nil resave-items-failed* nil)
+(or= resave-items-finished* 0 resave-items-total*    0
+     resave-items-thread* nil resave-items-errors* nil resave-items-failed* nil)
 (= resave-items-throttle* 0.3)
 
 (def resave-items-thread ((o throttle resave-items-throttle*))

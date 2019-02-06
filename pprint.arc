@@ -2,7 +2,7 @@
 
 ; todo: indentation of long ifs; quasiquote, unquote, unquote-splicing
            
-(^ bodops* (table))
+(or= bodops* (table))
 
 (each (k v) (pair
    '(let 2 with 1 while 1 def 2 fn 1 rfn 2 afn 1

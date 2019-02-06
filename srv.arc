@@ -4,7 +4,7 @@
 
 (= arcdir* "arc/" logdir* "arc/logs/" staticdir* "static/")
 
-(^ quitsrv* nil breaksrv* nil killreq* (no (readenv "DEV" nil)))
+(or= quitsrv* nil breaksrv* nil killreq* (no (readenv "DEV" nil)))
 
 (def serve ((o port 8080))
   (wipe quitsrv*)
@@ -25,7 +25,7 @@
 (def ensure-srvdirs ()
   (map ensure-dir (list arcdir* logdir* staticdir*)))
 
-(^ srv-noisy* nil)
+(or= srv-noisy* nil)
 
 ; http requests currently capped at 2 meg by socket-accept
 
@@ -37,8 +37,8 @@
 ; to handle it. also arrange to kill that thread if it
 ; has not completed in threadlife* seconds.
 
-(^ threadlife* 30  requests* 0  requests/ip* (table)  
-   throttle-ips* (table)  ignore-ips* (table)  spurned* (table))
+(or= threadlife* 30  requests* 0  requests/ip* (table)  
+     throttle-ips* (table)  ignore-ips* (table)  spurned* (table))
 
 (def handle-request (s breaksrv)
   (if breaksrv
@@ -72,7 +72,7 @@
 ; To adjust this while running, adjust the req-window* time, not 
 ; req-limit*, because algorithm doesn't enforce decreases in the latter.
 
-(^ req-times* (table) req-limit* 30 req-window* 10 dos-window* 2 dos-protection* nil)
+(or= req-times* (table) req-limit* 30 req-window* 10 dos-window* 2 dos-protection* nil)
 
 (def abusive-ip (ip)
   (and dos-protection*
@@ -149,7 +149,7 @@
           (noisy-header (list line) "Post Contents: ")
           (respond o op (+ (parseargs line) args) cooks ip)))))
 
-(^ type-header* (table))
+(or= type-header* (table))
 
 (def gen-type-header (ctype)
   (+ "HTTP/1.0 200 OK
@@ -183,7 +183,7 @@ Strict-Transport-Security: max-age=31556900
 
 (= rdheader* "HTTP/1.0 302 Moved")
 
-(^ srvops* (table) redirector* (table) optimes* (table) opcounts* (table))
+(or= srvops* (table) redirector* (table) optimes* (table) opcounts* (table))
 
 (def save-optime (name elapsed)
   ; this is the place to put a/b testing
@@ -229,7 +229,7 @@ Strict-Transport-Security: max-age=31556900
   ip    nil)
 
 (= unknown-msg* "Unknown.")
-(^ max-age* (table) static-header* (table) static-max-age* nil)
+(or= max-age* (table) static-header* (table) static-max-age* nil)
 
 (def respond (str op args cooks ip)
   (or (hook 'respond str op args cooks ip)
@@ -298,8 +298,8 @@ Strict-Transport-Security: max-age=31556900
         (list op args)
         (list (sym (car xs)) (join (list (list "path" (concat (cdr xs) #\/))) args)))))
 
-(^ the-header* (make-param nil)
-   the-req* (make-param nil))
+(or= the-header* (make-param nil)
+     the-req* (make-param nil))
 
 (def srvsecure ((o req (the-req*)))
   (is (arg req "X-Arc-Secure") "1"))
@@ -376,7 +376,7 @@ Strict-Transport-Security: max-age=31556900
                                            it)))
        ""))
 
-(^ fns* (table) fnkeys* (table) fnids* (table) timed-fnids* (table))
+(or= fns* (table) fnkeys* (table) fnids* (table) timed-fnids* (table))
 
 (def lexval (e)
   (each (id getx setx) e
@@ -391,7 +391,7 @@ Strict-Transport-Security: max-age=31556900
 
 (def new-fnid ((o k))
   (if k 
-      (^ (fnkeys* k) (gen-fnid))
+      (or= (fnkeys* k) (gen-fnid))
       (gen-fnid)))
 
 (def fnids ((o getter car))
@@ -597,7 +597,7 @@ Strict-Transport-Security: max-age=31556900
 
 ; only unique per server invocation
 
-(^ unique-ids* (table))
+(or= unique-ids* (table))
 
 (def unique-id ((o len 32))
   (let id (sym (rand-string (max 5 len)))
@@ -657,7 +657,7 @@ Strict-Transport-Security: max-age=31556900
 
 ; Background Threads
 
-(^ bgthreads* (table) pending-bgthreads* nil)
+(or= bgthreads* (table) pending-bgthreads* nil)
 
 (def new-bgthread (id f sec)
   (aif (bgthreads* id) (break-thread it))
@@ -691,8 +691,8 @@ Strict-Transport-Security: max-age=31556900
 
 ; pull from github periodically
 
-(^ git-pull-time* (readenv "PULL" nil)
-   git-pull-count* 0)
+(or= git-pull-time* (readenv "PULL" nil)
+     git-pull-count* 0)
 
 (def git-pull-reload ()
   (when (errsafe:git-pull)

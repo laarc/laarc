@@ -4,7 +4,7 @@
 (= passed* 0
    failed* 0)
 
-(^ tests* (obj))
+(or= tests* (obj))
 
 (mac test! (x msg)
   `(if (no ,x)
@@ -687,8 +687,8 @@
   (test? nil (whenlet (a b) nil b))
   (test? 123 (whenlet a 0 (+ a 123))))
 
-(defconst zzop 99)
-(defconst zzap 100)
+(= zzop 99
+   zzap 100)
 
 (withs (zzop 10
         zzap (+ zzop 10)

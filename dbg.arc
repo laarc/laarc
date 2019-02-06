@@ -21,7 +21,7 @@
 
 (= *debug nil)
 
-(^ *env (obj))
+(or= *env (obj))
 
 (def *envwipe ()
   (each k (keys *env)

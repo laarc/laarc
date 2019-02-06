@@ -5,9 +5,10 @@
 ; arc> (bsv)
 ; go to http://localhost:8080/blog
 
-(^ postdir* "arc/posts/"  postid* 0  posts* (table))
+(= postdir*   "arc/posts/"
+   blogtitle* "A Blog")
 
-(= blogtitle* "A Blog")
+(or= postid* 0 posts* (table))
 
 (deftem post  id nil  title nil  text nil)
 

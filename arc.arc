@@ -461,28 +461,16 @@
 (mac = args
   (expand=list args))
 
-(mac ^ args
-  `(vars ,@args))
+(mac or= args
+  `(do ,@(map [cons 'or-assign _] (pair args))))
 
-(mac @ args
-  `(consts ,@args))
-
-(mac vars args
-  `(do ,@(map [cons 'defvar _] (pair args))))
-
-(mac consts args
-  `(do ,@(map [cons 'defconst _] (pair args))))
-
-(mac defvar (slot value)
+(mac or-assign (slot value)
   `(atomic
-   ,(if (ssyntax slot)
-        `(defvar ,(ssexpand slot) ,value)
-        (alist slot)
-        `(or ,slot (defconst ,slot ,value))
-      `(or (if (bound ',slot) ,slot) (defconst ,slot ,value)))))
-
-(mac defconst (name value)
-  `(= ,name ,value))
+     ,(if (ssyntax slot)
+          `(or-assign ,(ssexpand slot) ,value)
+          (alist slot)
+          `(or ,slot (= ,slot ,value))
+        `(or (if (bound ',slot) ,slot) (= ,slot ,value)))))
 
 (mac loop (start test update . body)
   (w/uniq (gfn gparm)
@@ -853,9 +841,9 @@
 (mac w/param (var val . body)
   `(call-w/param ,var ,val (fn () ,@body)))
 
-(^ original-stdin* (stdin)
-   original-stdout* (stdout)
-   original-stderr* (stderr))
+(or= original-stdin* (stdin)
+     original-stdout* (stdout)
+     original-stderr* (stderr))
 
 ; rename this simply "to"?  - prob not; rarely use
 
@@ -1284,7 +1272,7 @@
   (+ xs (rem (fn (y) (some [f _ y] xs))
              ys)))
 
-(^ templates* (table))
+(or= templates* (table))
 
 (mac deftem (tem . fields)
   (withs (name (carif tem) includes (if (acons tem) (cdr tem)))
@@ -1513,10 +1501,10 @@
        (pr ,@(parse-format str))))
 )
 
-(^ loaded-files*      (list "libs.arc" "arc.arc" "ac.scm")
-   loaded-file-times* (obj "ac.scm" (modtime "ac.scm")
-                           "arc.arc" (modtime "arc.arc")
-                           "libs.arc" (modtime "libs.arc")))
+(or= loaded-files*      (list "libs.arc" "arc.arc" "ac.scm")
+     loaded-file-times* (obj "ac.scm" (modtime "ac.scm")
+                             "arc.arc" (modtime "arc.arc")
+                             "libs.arc" (modtime "libs.arc")))
 
 (def loaded-files () (rev loaded-files*))
 
@@ -1547,7 +1535,7 @@
 (def file-changed? (file)
   (isnt (modtime file) (loadtime file)))
 
-(^ reload-count* 0)
+(or= reload-count* 0)
 
 (def reload ((o file (loaded-files)))
   (if (file-changed? "ac.scm")
@@ -1693,12 +1681,7 @@
           ,@(map [list _ g] fs)))
       ,x)))
 
-(mac or= (place expr)
-  (let (binds val setter) (setforms place)
-    `(atwiths ,binds
-       (or ,val (,setter ,expr)))))
-
-(^ hooks* (table))
+(or= hooks* (table))
 
 (def hook (name . args)
   (aif (hooks* name) (apply it args)))
@@ -1710,7 +1693,7 @@
 
 (def get (index) [_ index])
 
-(^ savers* (table))
+(or= savers* (table))
 
 (mac fromdisk (var file init load save)
   (w/uniq (gf gv)
