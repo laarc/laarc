@@ -2157,8 +2157,8 @@ function suggestTitle() {
 
 (defhook save-item (i)
   (firebase-set "v0/item/@i!id" (item>json i))
-  (algolia-set "Item_production" (item>search i))
-  (let s (superparent i)
+  (whenlet s (superparent i)
+    (algolia-set "Item_production" (item>search i))
     (unless (is s!id i!id)
       (hook 'save-item s))))
 
