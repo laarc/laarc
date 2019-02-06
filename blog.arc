@@ -5,7 +5,7 @@
 ; arc> (bsv)
 ; go to http://localhost:8080/blog
 
-(= postdir* "arc/posts/"  maxid* 0  posts* (table))
+(^ postdir* "arc/posts/"  postid* 0  posts* (table))
 
 (= blogtitle* "A Blog")
 
@@ -13,7 +13,7 @@
 
 (def load-posts ()
   (each id (map int (dir postdir*))
-    (= maxid*      (max maxid* id)
+    (= postid*      (max postid* id)
        (posts* id) (temload 'post (string postdir* id)))))
 
 (def save-post (p) (save-table p (string postdir* p!id)))
@@ -38,37 +38,38 @@
        (f (get-user req) it) 
        (blogpage (pr "No such post."))))
 
-(def permalink (p) (string "viewpost?id=" p!id))
+(def post-url (p) (string "/viewpost?id=" p!id))
 
 (def post-page (user p) (blogpage (display-post user p)))
 
 (def display-post (user p)
-  (tag b (link p!title (permalink p)))
+  (tag b (link p!title (post-url p)))
   (when user
     (sp)
-    (link "[edit]" (string "editpost?id=" p!id)))
+    (link "[edit]" (string "/editpost?id=" p!id)))
   (br2)
   (pr p!text))
 
 (defopl newpost req
   (whitepage
     (aform [let u (get-user _)
-             (post-page u (addpost u (arg _ "t") (arg _ "b")))]
+             (post-page u (addpost u (arg _ "t") (md-from-form:arg _ "b")))]
       (tab (row "title" (input "t" "" 60))
            (row "text"  (textarea "b" 10 80))
            (row ""      (submit))))))
 
 (def addpost (user title text)
-  (let p (inst 'post 'id (++ maxid*) 'title title 'text text)
+  (let p (inst 'post 'id (++ postid*) 'title title 'text text)
     (save-post p)
     (= (posts* p!id) p)))
 
-(defopl editpost req (blogop edit-page req))
+(defopl editpost req (blogop edit-post-page req))
 
-(def edit-page (user p)
+(def edit-post-page (user p)
   (whitepage
     (vars-form user
-               `((string title ,p!title t t) (text text ,p!text t t))
+               `((string title ,p!title t t)
+                 (mdtext text  ,p!text  t t))
                (fn (name val) (= (p name) val))
                (fn () (save-post p)
                       (post-page user p)))))
@@ -76,14 +77,14 @@
 (defop archive req
   (blogpage
     (tag ul
-      (each p (map post (rev (range 1 maxid*)))
-        (tag li (link p!title (permalink p)))))))
+      (each p (map post (rev (range 1 postid*)))
+        (tag li (link p!title (post-url p)))))))
 
 (defop blog req
   (let user (get-user req)
     (blogpage
       (for i 0 4
-        (awhen (posts* (- maxid* i)) 
+        (awhen (posts* (- postid* i)) 
           (display-post user it)
           (br 3))))))
 
