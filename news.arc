@@ -1097,6 +1097,7 @@ function vote(node) {
 (newsop lists () 
   (longpage user (now) nil "lists" "Lists" "lists"
     (sptab
+      (row (link "/votes")        "Recent votes.")
       (row (link "/best")         "Highest voted recent links.")
       (row (link "/active")       "Most active current discussions.")
       (row (link "/bestcomments") "Highest voted recent comments.")
@@ -1104,7 +1105,7 @@ function vote(node) {
       (row (link "/noobcomments") "Comments from new accounts.")
       (when (admin user)
         (map row:link
-             '(optimes topips flagged killed badguys badlogins goodlogins)))
+             '(optimes noobs topips flagged killed badguys badlogins goodlogins)))
       (hook 'listspage user))))
 
 
