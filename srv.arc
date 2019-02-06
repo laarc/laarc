@@ -358,7 +358,12 @@ Strict-Transport-Security: max-age=31556900
   (map [tokens _ #\=] 
        (cdr (tokens s [or (whitec _) (is _ #\;)]))))
 
-(def arg (req key) (alref req!args key))
+(def arg args
+  (case (len args)
+    0 ((the-req*) 'args)
+    1 (apply arg (the-req*) args)
+    (let (req key) args
+      (alref req!args (str key)))))
 
 ; *** Warning: does not currently urlencode args, so if need to do
 ; that replace v with (urlencode v).
