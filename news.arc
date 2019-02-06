@@ -3227,24 +3227,31 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
               (tdr:prt n)
               (tdr:prt (and n (round (/ (* n ms) 1000))))))))))
 
-(adop votes ()
-  (sptab
-    (tr (td "") (td "age") (td "id") (td "dir") (td "score") (td "who") (td "title"))
-    (spacerow 10)
-    (let i 0
-      (each x (map [let (id (ts ip who dir score)) _
-                     (unless (is who item.id!by)
-                       (list (text-age (minutes-since ts) nil)
-                             id dir score who 
-                             (if (astory item.id)
-                                 "> @item.id!by : @item.id!title"
-                                 "| @item.id!by | @(ellipsize item.id!text)")))]
-                   (sort (compare > car:cadr) (apply + (map tablist (vals votes*)))))
-        (whenlet (age id dir score who title) x
-          (with (age (multisubst '(("hour" "hr") ("minute" "m") (" ago" "") (" " "")) age))
-            (row "@(++ i). " age (pr:itemlink item.id id) dir score
-                 (userlink user who) (tag (span) (itemlink item.id (multisubst '(("<p>" " ")) title))))
-            (spacerow 10)))))))
+(newsop votes () (votes-page user))
+
+(newscache votes-page user 90
+  (longpage user (now) nil "votes" "Votes" "votes"
+    (sptab
+      (tr (td "") (td "age") (tdr "id") (td "dir") (td "score") (td "") (tdr "voter") (td "") (tdr "author") (td "title"))
+      (spacerow 10)
+      (let i 0
+        (each x (map [let (id (ts ip who dir score)) _
+                       (unless (is who item.id!by)
+                         (list (text-age (minutes-since ts))
+                               id dir (+ 1 score) who item.id!by
+                               (if (metastory item.id)
+                                    "@item.id!title"
+                                   (is item.id!type 'pollopt)
+                                    "[@(do item.id!text)]"
+                                   "> @(ellipsize item.id!text)")))]
+                     (sort (compare > car:cadr) (apply + (map tablist (vals votes*)))))
+          (whenlet (age id dir score who by title) x
+            (with (age (multisubst '(("hour" "hr") ("minute" "m") (" ago" "") (" " "")) age))
+              (row "@(++ i). " age (pr:itemlink item.id id) dir score
+                   (tdr (if (or (is user (str who)) (admin user)) (userlink user who) (pr "[hidden]")))
+                   (tdr (userlink user by) (pr ":"))
+                   (tag (span) (itemlink item.id (multisubst '(("<p>" " ")) title))))
+              (spacerow 10))))))))
 
 (adop noobs ()
   (sptab
