@@ -1559,7 +1559,7 @@ function vote(node) {
 
 (def text-age (a (o day t) (o hrs t))
   (tostring
-    (if (and day (>= a 1440)) (pr (plural (trunc (/ a 1440)) "day")    " ago")
+    (if (and day (>= a 2880)) (pr (plural (trunc (/ a 1440)) "day")    " ago")
         (and hrs (>= a   60)) (pr (plural (trunc (/ a 60))   "hour")   " ago")
                     (pr (plural (trunc a)          "minute") " ago"))))
 
