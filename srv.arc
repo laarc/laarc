@@ -4,7 +4,7 @@
 
 (= arcdir* "arc/" logdir* "arc/logs/" staticdir* "static/")
 
-(^ quitsrv* nil breaksrv* nil) 
+(^ quitsrv* nil breaksrv* nil killreq* (no (readenv "DEV" nil)))
 
 (def serve ((o port 8080))
   (wipe quitsrv*)
@@ -57,10 +57,11 @@
                               (kill-thread th2))))
               (= th2 (thread
                        (sleep threadlife*)
-                       (unless (dead th1)
-                         (prn "srv thread took too long for " ip))
-                       (break-thread th1)
-                       (force-close i o))))))))
+                       (when killreq*
+                         (unless (dead th1)
+                           (prn "srv thread took too long for " ip))
+                         (break-thread th1)
+                         (force-close i o)))))))))
 
 ; Returns true if ip has made req-limit* requests in less than
 ; req-window* seconds.  If an ip is throttled, only 1 request is 
