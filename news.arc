@@ -405,13 +405,34 @@
   (when ranked-stories*
     (adjust-rank (ranked-stories* (rand (min 50 (len ranked-stories*)))))))
 
+(def subs (i)
+  (let acc nil
+    (push (if (private i) '/l/private '/l/all) acc)
+    (each k i!keys
+      (when (begins (string k) "/")
+        (pushnew k acc)))
+    (rev acc)))
+
+(def match-subs ((o x))
+  (let x (or x "all")
+    (apply orf
+      (each x (tokens (str x) #\|)
+        (let fns (each x (tokens x #\&)
+                   (if (begins x "!")
+                       (let x (sym (string "/l/" (cut x 1)))
+                         (out [~mem x (subs _)]))
+                       (let x (sym (string "/l/" x))
+                         (out [mem x (subs _)]))))
+          (unless (empty fns)
+            (out (apply andf fns))))))))
+
 (def topstories (user n (o sub) (o threshold front-threshold*))
-  (retrieve n 
-            [and (>= (realscore _) threshold)
-                 (cansee user _)
-                 (or (~private _) (is sub '/l/private))
-                 (or (no sub) (mem sub _!keys))]
-            ranked-stories*))
+  (let sub (match-subs sub)
+    (retrieve n 
+              [and (>= (realscore _) threshold)
+                   (cansee user _)
+                   (sub _)]
+              ranked-stories*)))
 
 (= max-delay* 10)
 
@@ -1025,8 +1046,7 @@ function vote(node) {
               (let sub (+ "/l/" path)
                 (listpage user (now)
                           (topstories user maxend*
-                                      (unless (is path "all")
-                                        (sym sub)))
+                                      path)
                           sub sub sub)))))
      user)))
 
