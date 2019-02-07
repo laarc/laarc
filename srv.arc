@@ -296,7 +296,7 @@ Strict-Transport-Security: max-age=31556900
   (let xs (tokens op #\/)
     (if (< (len xs) 2)
         (list op args)
-        (list (sym (car xs)) (join (list (list "path" (concat (cdr xs) #\/))) args)))))
+        (list (sym (car xs)) (join (list (list "path" (concat (map urldecode (cdr xs)) #\/))) args)))))
 
 (or= the-header* (make-param nil)
      the-req* (make-param nil))
