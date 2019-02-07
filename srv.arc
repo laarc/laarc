@@ -394,9 +394,6 @@ Strict-Transport-Security: max-age=31556900
       (or= (fnkeys* k) (gen-fnid))
       (gen-fnid)))
 
-(def fnids ((o getter car))
-  (map getter (sortable fnids* < car)))
-
 (def fnidf (f (o k))
   (atlet key (new-fnid k)
     (= (fns* key) f
@@ -436,21 +433,40 @@ Strict-Transport-Security: max-age=31556900
 ; limit there-- beyond that the only solution is to buy more memory.
 
 (= fnid-harvest-max*   50000 ; was 20000
-   fnid-harvest-ratio* 10)
+   fnid-harvest-ratio* 10
+   fnid-hours-max*     6)
 
-(def harvest-fnids ((o n fnid-harvest-max*)
+(def fnids ((o getter car))
+  (map getter (sortable fnids* < car)))
+
+(def kill-fnid (id)
+  (wipe (fnids* id) (timed-fnids* id) (fns* id)) t)
+
+(def user-fnids (user)
+  (sort (compare > car)
+        (each (id (created subj)) fnids*
+          (when (is subj user)
+            (out (minutes-since created t) id)))))
+
+(def dead-fnids ((o max-hours fnid-hours-max*))
+  (+ (each (id (created lasts)) timed-fnids*
+       (when (> (since created) lasts)    
+         (out id)))
+     (each (id (ms user)) fnids*
+       (when (>= (hours-since ms t) max-hours)
+         (out id)))))
+
+(def harvest-fnids ((o force nil)
+                    (o n fnid-harvest-max*)
                     (o r fnid-harvest-ratio*))
-  (when (len> fns* n)
-    (each (id (created lasts)) timed-fnids*
-      (when (> (since created) lasts)    
-        (wipe (fns* id))
-        t))
-    (when (len> fns* n) 
-      (atlet nharvest (trunc (/ n r))
+  (when (or force (len> fns* n))
+    (each id (dead-fnids)
+      (kill-fnid id))
+    (when (or force (len> fns* n))
+      (atlet nharvest (trunc (/ (min n (len fns*)) r))
         (let (kill keep) (split (fnids) nharvest)
           (each id kill
-            (wipe (fnids* id))
-            (wipe (fns* id))))))))
+            (kill-fnid id)))))))
 
 (= fnurl* "/x" rfnurl* "/r" rfnurl2* "/y" jfnurl* "/a")
 
@@ -649,10 +665,7 @@ Strict-Transport-Security: max-age=31556900
 ; eventually promote to general util
 
 (def sortable (ht (o f >) (o key idfn))
-  (let res nil
-    (each kv ht
-      (insort (compare f key:cadr) kv res))
-    res))
+  (sort (compare f key:cadr) (each kv ht (out kv))))
 
 
 ; Background Threads
