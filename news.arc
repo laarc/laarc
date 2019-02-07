@@ -2386,6 +2386,7 @@ function suggestTitle() {
 
 (def process-reply (user c)
   (aand user
+        (isnt user c!by)
         (uvar user notify)
         (uvar user email)
         (if (is it (uvar user verified)) it)
