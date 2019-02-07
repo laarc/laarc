@@ -2910,6 +2910,45 @@ first asterisk isn't whitespace.
       (do (set-pw subject newpw)
           (newspage user))))
 
+(def send-resetpw (subject email)
+  (send-email site-email*
+              email
+              "@site-name* password recovery"
+              (let s (+ "Someone (hopefully you) requested we reset your password for @subject at @(do site-name*). If you want to change it, please visit "
+                        site-url*
+                        (flink [force-resetpw-page subject])
+                        "\n\n"
+                        "If not, just ignore this message.\n")
+                (when (readenv "DEV" nil)
+                  (disp s (stderr)))
+                s)))
+
+(def force-resetpw-page (subject (o msg))
+  (minipage "Reset Password for @subject"
+    (if msg (pr msg))
+    (br2)
+    (aform (fn (req) (try-force-resetpw subject (arg req "pw")))
+      (single-input "New password: " 'pw 20 "reset" t))))
+
+(def try-force-resetpw (subject newpw)
+  (if (len< newpw 4)
+      (force-resetpw-page subject "Passwords should be a least 4 characters long.  
+                          Please choose another.")
+      (do (set-pw subject newpw)
+          (newspage nil))))
+
+(defop forgot req
+  (prbold "Reset your password")
+  (br2)
+  (aform (fn (req)
+           (aand (arg req "acct")
+                 (profile it)
+                 (unless (blank it!verified)
+                   (send-resetpw it!id it!verified)))
+           (msgpage nil "Password recovery message sent. If you don't see it, you might want to check your spam folder."))
+    (inputs (acct username 20 (arg "acct") 'plain 'autofocus))
+    (br)
+    (submit "Send reset email")))
 
 ; Scrubrules
 

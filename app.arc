@@ -224,6 +224,7 @@
     (when (in switch 'login 'both)
       (login-form "Login" switch login-handler afterward)
       (hook 'login-form afterward)
+      (link "Forgot your password?" "/forgot")
       (br2))
     (when (in switch 'register 'both)
       (login-form "Create Account" switch create-handler afterward))))
