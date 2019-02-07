@@ -406,14 +406,11 @@
     (adjust-rank (ranked-stories* (rand (min 50 (len ranked-stories*)))))))
 
 (def subs (i)
-  (let acc nil
-    (push (if (private i) '/l/private '/l/all) acc)
-    (each k i!keys
-      (when (begins (string k) "/")
-        (pushnew k acc)))
-    (rev acc)))
+  (if (mem '/l/private i!keys)
+      i!keys
+      (cons '/l/all i!keys)))
 
-(def match-subs ((o x))
+(defmemo match-subs (x)
   (let x (or x "all")
     (apply orf
       (each x (tokens (str x) #\|)
