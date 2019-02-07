@@ -259,9 +259,17 @@
       (do (prn)
           (afterward user ip))))
 
+(def merge-args (args (o req (the-req*)))
+  (let args1 req!args
+    (each (k v) args
+      (pull [caris _ k] args1)
+      (push (list k v) args1))
+    (= req!args args1)))
+
 (def failed-login (switch msg afterward)
   (if (acons afterward)
-      (flink (fn ignore (login-page switch msg afterward)))
+      (let args (copy ((the-req*) 'args))
+        (flink (fn ignore (merge-args args) (login-page switch msg afterward))))
       (do (prn)
           (login-page switch msg afterward))))
 
@@ -273,11 +281,11 @@
 
 (def pwfields ((o label "login"))
   (if (headmatch "create" label)
-      (inputs (acct  username 20 nil 'plain)
-              (pw    password 20 nil)
-              (email email?   20 nil 'plain))
-      (inputs (acct  username 20 nil 'plain 'autofocus)
-              (pw    password 20 nil)))
+      (inputs (acct  username 20 (arg "acct") 'plain)
+              (pw    password 20 (arg "pw"))
+              (email email?   20 (arg "email") 'plain))
+      (inputs (acct  username 20 (arg "acct") 'plain 'autofocus)
+              (pw    password 20 (arg "pw"))))
   (br)
   (submit label))
 
