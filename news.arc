@@ -405,6 +405,11 @@
   (when ranked-stories*
     (adjust-rank (ranked-stories* (rand (min 50 (len ranked-stories*)))))))
 
+(def rerank-stories ()
+  (atomic (= ranked-stories*
+             (sort (compare > (memo frontpage-rank))
+                   (latest-items metastory)))))
+
 (def subs (i)
   (if (mem '/l/private i!keys)
       i!keys
