@@ -488,7 +488,7 @@
                  title 'RSS       href (rss-url label))
 
     (tag script (pr votejs*))
-    (tag title (pr title))))
+    (tag title (pr:eschtml title))))
 
 (mac npage (title label . body)
   `(tag html 
@@ -695,7 +695,7 @@ function vote(node) {
     (toplink "show" "/l/show" (if (is label "/l/show") "show" label))
     (link "submit" "/submit")
     (unless (mem label toplabels*)
-      (fontcolor white (pr label)))))
+      (fontcolor white (pr:eschtml label)))))
 
 (def toplink (name dest label)
   (tag-if (is name label) (span class 'topsel)
