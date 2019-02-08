@@ -2702,7 +2702,7 @@ function suggestTitle() {
 (newsop rss () (rsspage nil))
 
 (newscache rsspage user 90
-  (rss-stories (retrieve perpage* ~private&live ranked-stories*)))
+  (rss-stories (retrieve (len ranked-stories*) ~private&live ranked-stories*)))
 
 (def rss-stories (stories)
   (tag (rss version "2.0")
@@ -2724,10 +2724,10 @@ function suggestTitle() {
 
 (= static-header*!rsscomments "application/rss+xml; charset=utf-8")
 
-(newsop rsscomments () (rsscommentspage nil))
+(newsop rsscomments () (rsscpage nil))
 
-(newscache rsscommentspage user 10
-  (rss-comments (retrieve perpage* ~private&live comments*)))
+(newscache rsscpage user 90
+  (rss-comments (retrieve (len comments*) ~private&live comments*)))
 
 (def rss-comment-title (c)
   (tostring
@@ -2758,6 +2758,20 @@ function suggestTitle() {
                 (pr "on: ")
                 (let s (superparent c)
                   (link (ellipsize s!title 50) (+ site-url* (item-url s!id))))))))))))
+
+; memoize RSS pages
+
+(defbg memoize-rss 30 (memoize-rss))
+
+(def memoize-rss ()
+  (tostring:rsscpage nil)
+  (tostring:rsspage nil)
+  ; memoize item dates too.
+  (each i ranked-stories*
+    (aand i!time (moment-secs i!time)))
+  (each c comments*
+    (aand c!time (moment-secs c!time)))
+  nil)
 
 ; User Stats
 
