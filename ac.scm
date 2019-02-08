@@ -148,9 +148,9 @@
 ; (complement (andf foo bar)).
 
 (define (expand-ssyntax sym)
-  ((cond ((or (insym? #\: sym) (insym? #\~ sym)) expand-compose)
+  ((cond ((insym? #\& sym) expand-and)
+         ((or (insym? #\: sym) (insym? #\~ sym)) expand-compose)
          ((or (insym? #\. sym) (insym? #\! sym)) expand-sexpr)
-         ((insym? #\& sym) expand-and)
      ;   ((insym? #\_ sym) expand-curry)
          (#t (error "Unknown ssyntax" sym)))
    sym))
