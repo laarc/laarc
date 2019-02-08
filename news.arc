@@ -2937,7 +2937,9 @@ first asterisk isn't whitespace.
       (do (set-pw subject newpw)
           (newspage nil))))
 
-(defop forgot req
+(defop forgot req (forgot-page))
+
+(def forgot-page ((o subject (arg "acct")))
   (prbold "Reset your password")
   (br2)
   (aform (fn (req)
@@ -2946,9 +2948,15 @@ first asterisk isn't whitespace.
                  (unless (blank it!verified)
                    (send-resetpw it!id it!verified)))
            (msgpage nil "Password recovery message sent. If you don't see it, you might want to check your spam folder."))
-    (inputs (acct username 20 (arg "acct") 'plain 'autofocus))
+    (inputs (acct username 20 subject 'plain 'autofocus))
     (br)
     (submit "Send reset email")))
+
+(def forgot-url ((o subject (arg "acct")))
+  (if subject (+ "/forgot?acct=" (eschtml subject)) "/forgot"))
+
+(defhook login-form args
+  (link "Forgot your password?" (forgot-url)))
 
 ; Scrubrules
 
