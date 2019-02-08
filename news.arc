@@ -275,16 +275,18 @@
 (def arg->item (req key)
   (safe-item:saferead (arg req key)))
 
-(def live (i) (nor i!dead i!deleted))
+(def live (i) (nor i!dead i!deleted (flagged i)))
 
 (def save-item (i) (save-table i (+ storydir* i!id)) (hook 'save-item i))
 
 (def kill (i how)
-  (unless i!dead
+  (when (nor i!dead (mem how i!keys))
     (log-kill i how)
     (wipe (comment-cache* i!id))
-    (set i!dead)
-    (save-item i)))
+    (set i!dead))
+  (when (in how 'flagged 'dupe)
+    (pushnew how i!keys))
+  (save-item i))
 
 (or= kill-log* nil)
 
@@ -1259,11 +1261,17 @@ function vote(node) {
 (defmemo vacuumize (url)
   (and (or (endmatch ".pdf" url) (endmatch ".PDF" url))
        (+ "http://www.scribd.com/vacuum?url=" url)))
-      
+
 (def pseudo-text (i)
-  (if i!deleted "[deleted]" "[dead]"))
+  (if i!deleted "[deleted]" (flagged i) "[flagged]" "[dead]"))
 
 (def deadmark (i user)
+  (when (mem 'dupe i!keys)
+    (pr " [dupe] "))
+  (when (private i)
+    (pr " [private] "))
+  (when (flagged i)
+    (pr " [flagged] "))
   (when (and i!dead (seesdead user))
     (pr " [dead] "))
   (when (and i!deleted (admin user))
@@ -1462,30 +1470,36 @@ function vote(node) {
 
 ; reset later
 
-(= flag-threshold* 30 flag-kill-threshold* 7 many-flags* 1)
+(= flag-threshold* 30 flag-kill-threshold* 1 many-flags* 0)
 
 ; Un-flagging something doesn't unkill it, if it's now no longer
 ; over flag-kill-threshold.  Ok, since arbitrary threshold anyway.
 
 (def flaglink (i user whence)
   (when (and user
-             (isnt user i!by)
-             (or (admin user) (> (karma user) flag-threshold*)))
-    (pr bar*)
-    (w/rlink (do (togglemem user i!flags)
-                 (when (and (~mem 'nokill i!keys)
-                            (len> i!flags flag-kill-threshold*)
-                            (< (realscore i) 10)
-                            (~find admin:!2 i!vote))
-                   (kill i 'flags))
-                 whence)
-      (pr "@(if (mem user i!flags) 'un)flag"))
-    (when (and (admin user) (len> i!flags many-flags*))
-      (pr bar* (plural (len i!flags) "flag") " ")
-      (w/rlink (do (togglemem 'nokill i!keys)
-                   (save-item i)
+             (or (legit-user user)
+                 (> (karma user) flag-threshold*)))
+    (when (isnt user i!by)
+      (pr bar*)
+      (w/rlink (do (togglemem user i!flags)
+                   (when (and (~mem 'nokill i!keys)
+                              (len> i!flags flag-kill-threshold*))
+                     (kill i 'flagged))
+                   (when (admin user)
+                     (if (mem user i!flags)
+                         (kill i 'flagged)
+                         (do (pull 'flagged i!keys)
+                             (save-item i))))
                    whence)
-        (pr (if (mem 'nokill i!keys) "un-notice" "noted"))))))
+        (pr "@(if (mem user i!flags) 'un)flag")))
+    (let label "notice"
+      (when (and (admin user) (or (flagged i) (len> i!flags many-flags*)))
+        (pr bar* (plural (len i!flags) "flag") " ")
+        (w/rlink (do (togglemem 'nokill i!keys)
+                     (if (mem 'nokill i!keys) (wipe i!dead))
+                     (save-item i)
+                     whence)
+          (pr (if (mem 'nokill i!keys) "un-notice" "noted")))))))
 
 (def favlink (i user whence)
   (when (and user (cansee user i))
@@ -1598,7 +1612,7 @@ function vote(node) {
 
 (def legit-user (user) 
   (or (editor user)
-      (> (karma user) legit-threshold*)))
+      (mem 'legit (uvar user keys))))
 
 (def possible-sockpuppet (user)
   (or (ignored user)
@@ -1626,7 +1640,8 @@ function vote(node) {
                            (> (downvote-ratio user) downvote-ratio-limit*)
                            ; prevention of karma-bombing
                            (just-downvoted user i!by)))
-                  (and (~legit-user user)
+                  (and (nor (legit-user user)
+                            (> (karma user) legit-threshold*))
                        (isnt user i!by)
                        (find [is (cadr _) ip] i!votes))
                   (and (isnt i!type 'pollopt)
@@ -2402,13 +2417,21 @@ function suggestTitle() {
        (atlet c (create-comment parent (md-from-form text) user ip)
          (comment-ban-test user c ip text comment-kill* comment-ignore*)
          (if (bad-user user) (kill c 'ignored/karma))
+         (if (dupe-reply c) (kill c 'dupe))
          (submit-item user c)
          (process-reply parent!by c)
-         (+ whence "#" c!id))))
+         (+ whence "#" (aif (dupe-reply c) it!id c!id)))))
+
+(def dupe-reply (c)
+  (find [and (live _)
+             (is _!text c!text)
+             (is _!by c!by)]
+        (siblings c)))
 
 (def process-reply (user c)
   (aand user
         (isnt user c!by)
+        (live c)
         (uvar user notify)
         (uvar user email)
         (if (is it (uvar user verified)) it)
@@ -2627,6 +2650,9 @@ function suggestTitle() {
 
 (def ancestors (i)
   (accum a (trav i!parent a:item self:!parent:item)))
+
+(def siblings (i)
+  (map item (aand (item i!parent) (rem i!id it!kids))))
 
 (def favorites-url (user) (+ "/favorites?id=" user))
 
@@ -3250,10 +3276,9 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
   (display-selected-items user [retrieve maxend* flagged _] "flagged"))
 
 (def flagged (i) 
-  (and (live i)
-       (~mem 'nokill i!keys)
-       (len> i!flags many-flags*)))
-
+  (and (~mem 'nokill i!keys)
+       (or (mem 'flagged i!keys)
+           (len> i!flags flag-kill-threshold*))))
 
 (edop killed ()
   (display-selected-items user [retrieve maxend* !dead _] "killed"))
