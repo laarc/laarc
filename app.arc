@@ -794,6 +794,9 @@
 (def moment-secs ((o secs (seconds)))
   (moment (* 1000 secs)))
 
+(defmemo rss-date ((o secs (seconds)))
+  (trim:shell "date" "-ur" secs "+%a, %d %b %Y %H:%M:%S GMT"))
+
 (def send-email (from to subject message)
   (tostring:shell "python2" "../sendmail.py" from to subject message))
 

@@ -2697,9 +2697,6 @@ function suggestTitle() {
 
 ; RSS
 
-(def rss-date (sec)
-  (moment (* 1000 sec)))
-
 (= static-header*!rss "application/rss+xml; charset=utf-8")
 
 (newsop rss () (rsspage nil))
