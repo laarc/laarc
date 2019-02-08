@@ -3270,7 +3270,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
 
 
 (edop flagged ()
-  (display-selected-items user [retrieve maxend* flagged _] "flagged"))
+  (display-selected-items user [retrieve maxend* [len> _!flags 0]  _] "flagged"))
 
 (def flagged (i) 
   (and (~mem 'nokill i!keys)
