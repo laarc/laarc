@@ -3500,6 +3500,8 @@ RNBQKBNR
                        "background-color: #@(hexrep bgcol);")))))
 
 (def place-board ((o user) (o from) (o to) (o board place-board*))
+  (pr "Click the tiles. The first click selects a color. The second click sets the tile.")
+  (br2)
   (tag (table id "place" style "table-layout: fixed; width: 100%; overflow: hidden;")
     (tag (tbody style "display: block; max-width: 100vw; overflow: scroll;")
       (withs (j -1 from (or from "") to (or to "")
