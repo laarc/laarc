@@ -549,6 +549,10 @@
     (vspace 10)
     (center
       (chess-board user)))
+  (when (in whence "/l/place")
+    (vspace 10)
+    (center
+      (place-board user)))
   (when (in whence "/l/templeos")
     (terry))
   (vspace 10)
@@ -780,6 +784,10 @@ function vote(node) {
 (mac newsop args
   `(do (pushnew ',(car args) newsop-names*)
        (opexpand defop ,@args)))
+
+(mac newsopr args
+  `(do (pushnew ',(car args) newsop-names*)
+       (opexpand defopr ,@args)))
 
 (mac adop (name parms . body)
   (w/uniq g
@@ -3459,6 +3467,64 @@ RNBQKBNR
   (if (blank from) (wipe to))
   (chess-page user from to))
 
+(def place-encode (x)
+  (case x
+#\K (color 189   8  28)
+#\Q (color 252 126  40)
+#\R (color 255 178  54)
+#\B (color  40 173 146)
+#\N (color  96 154  51)
+#\P (color  31 143 240)
+#\k (color  24 173 241)
+#\q (color 112  52 142)
+#\r (color 245  54  92)
+#\b (color 238 100  92)
+#\n (color   0   0   0)
+#\p (color  54  54  54)
+#\X (color 173 181 189)
+#\Y (color 233 236 239)
+#\Z site-color*
+#\W (color 139  69  19)
+#\space white black))
+
+(def place-piece (text (o a) (o b) (o from) (o to) (o bgcol (color 0 255 0)))
+  (withs (op (if (~blank from) (+ "from=" from "&to=") "from=")
+          url (if (~blank from) "/placeop" "/place")
+          whence (if (~blank from) (string "#" from) (string "#" a "," b)))
+    (tag (form method 'post action (string url "?" op a "," b whence) style "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px;")
+      (gentag input type 'submit value2 text style "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; width: 1.5em; border: 0px; text-shadow: #000 1px 0 10px; color: white; background-color: #@(hexrep bgcol);"))))
+
+(def place-board ((o user) (o from) (o to) (o board place-board*))
+  (tag (table id "place" style "table-layout: fixed; width: 100%;")
+    (withs (j -1 from (or from "") to (or to "")
+            (((o a -1) (o b -1))) (map [map int (tokens _ #\,)] (list from)))
+      (each y (lines board)
+        (++ j)
+        (tag     (tr style "display:        block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; overflow-wrap: normal;")
+          (forlen i y
+            (tag (td id (string i "," j) style "display: inline-block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px;") 
+              (place-piece (if (and (is i a) (is j b)) "x" "") i j from to (place-encode (y i))))))))))
+
+(def place-page (user (o from) (o to) (o board place-board*))
+  (longpage user (now) nil "place" "place" "place"
+    (center
+      (place-board user from to board))))
+
+(def place-at (x y (o width (or (pos #\return place-board*) (pos #\newline place-board*))))
+  (+ (* y (+ width 1)) x))
+
+(newsopr placeop (from to)
+  (let ((a b) (x y)) (map [map int (tokens _ #\,)] (list from to))
+    (= (place-board* (place-at x y))
+       (place-board* (place-at a b)))
+    (todisk place-board*)
+    (wipe (lncache* "place")))
+  (string "/place#" to))
+
+(newsop place (from to)
+  (if (blank from) (wipe to))
+  (place-page user from to))
+
 (def lorem ()
   ; https://news.ycombinator.com/item?id=15609972
   (trim:shell "@(if (macos?) 'gshuf 'shuf) -n 32 /usr/share/dict/words | tr '\\n' ' '"))
@@ -3504,5 +3570,201 @@ RNBQKBNR
 (def start-resaving-items ((o throttle resave-items-throttle*))
   (stop-resaving-items)
   (= resave-items-thread* (thread (resave-items-thread throttle))))
+
+
+(diskfile place-board* (+ newsdir* "place.txt") (trim (rem #\return "
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ XXX        XXX  XXX        XXX 
+ YYY        YYY  YYY        YYY 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ XXX        XXX  XXX        XXX 
+ YYY        YYY  YYY        YYY 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ ZZZ        ZZZ  ZZZ        ZZZ 
+ WWW        WWW  WWW        WWW 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+pppppppppppppppppppppppppppppppp
+                                
+ XXX        XXX  XXX        XXX 
+ YYY        YYY  YYY        YYY 
+                                
+PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
+")))
 
 run-news

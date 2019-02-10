@@ -205,6 +205,7 @@
       '()
       (let ((opt val) . rest) options
         (let meth (if (is opt 'style) opstring
+                      (is opt 'id)    opsym
                       (is opt 'value2) (do (= opt 'value) opstring)
                       (opmeth spec opt))
           (if meth
