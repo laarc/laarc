@@ -4,3 +4,4 @@ arc/
 /src/bcrypt/.idea
 *.csv
 *.png
+static/place.txt

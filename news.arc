@@ -3469,25 +3469,40 @@ RNBQKBNR
   (if (blank from) (wipe to))
   (chess-page user from to))
 
+(defmemo gamma-gray (percent)
+  (withs (n (expt (/ percent 1.0) (/ 1.0 2.2))
+          n (trunc (* n 256)))
+    (color n n n)))
+
 (def place-encode (x)
   (case x
-#\K (color 189   8  28)
-#\Q (color 252 126  40)
-#\R (color 255 178  54)
-#\B (color  40 173 146)
-#\N (color  96 154  51)
-#\P (color  31 143 240)
-#\k (color  24 173 241)
-#\q (color 112  52 142)
-#\r (color 245  54  92)
-#\b (color 238 100  92)
-#\n (color   0   0   0)
-#\p (color  54  54  54)
-#\X (color 173 181 189)
-#\Y (color 233 236 239)
-#\Z site-color*
-#\W (color 139  69  19)
-#\space white black))
+    #\K (color 189   8  28)
+    #\Q (color 252 126  40)
+    #\R (color 255 178  54)
+    #\B (color  40 173 146)
+    #\N (color  96 154  51)
+    #\P (color  31 143 240)
+    #\k (color  24 173 241)
+    #\q (color 112  52 142)
+    #\r (color 245  54  92)
+    #\b (color 238 100  92)
+    #\n (color   0   0   0)
+    #\p (color  54  54  54)
+    #\X (color 173 181 189)
+    #\Y (color 233 236 239)
+    #\Z site-color*
+    #\W (color 139  69  19)
+    #\0 (gamma-gray 0.0)
+    #\1 (gamma-gray 0.1)
+    #\2 (gamma-gray 0.2)
+    #\3 (gamma-gray 0.3)
+    #\4 (gamma-gray 0.4)
+    #\5 (gamma-gray 0.5)
+    #\6 (gamma-gray 0.6)
+    #\7 (gamma-gray 0.7)
+    #\8 (gamma-gray 0.8)
+    #\9 (gamma-gray 0.9)
+    #\space white black))
 
 (def place-piece (text (o a) (o b) (o from) (o to) (o bgcol (color 0 255 0)))
   (withs (op (if (~blank from) (+ "from=" from "&to=") "from=")
@@ -3501,11 +3516,15 @@ RNBQKBNR
                        "border: 0px; text-shadow: #000 1px 0 10px; color: white; "
                        "background-color: #@(hexrep bgcol);")))))
 
+(= submit-place-url* "/submitlink?l=ask%20place&t=Ask%20laarc:%20what%20should%20we%20draw%20next%3F")
+
 (def place-board ((o user) (o from) (o to) (o board place-board*))
-  (pr "Click the tiles. The first click selects a color. The second click sets the tile.")
-  (br2)
   (tag (table id "place" style "table-layout: fixed; width: 100%; overflow: hidden;")
     (tag (tbody style "display: block; max-width: 100vw; overflow: scroll;")
+      (row "Click the tiles. The first click selects a color (the tile will be marked with an x).")
+      (row "To select a different color, click the x again, or click here: @(tostring:underlink 'clear '/place)")
+      (row "If you want to coordinate, come into our @(tostring:underlink 'discord discord-url*), or @(tostring:underlink 'submit submit-place-url*) to @(tostring:underlink '/l/place).")
+      (row "")
       (withs (j -1 from (or from "") to (or to "")
               (((o a -1) (o b -1))) (map [map int (tokens _ #\,)] (list from)))
         (each y (lines board)
@@ -3528,13 +3547,17 @@ RNBQKBNR
 (def place-at (x y (o width (or (pos #\return place-board*) (pos #\newline place-board*))))
   (+ (* y (+ width 1)) x))
 
+(def copy-place ()
+  (shell "cp" (+ newsdir* "place.txt") "static/place.txt"))
+
 (newsopr placeop (from to)
   (let ((a b) (x y)) (map [map int (tokens _ #\,)] (list from to))
     (= (place-board* (place-at x y))
        (place-board* (place-at a b)))
     (todisk place-board*)
+    (copy-place)
     (wipe (lncache* "place")))
-  (string "/place"))
+  (if (is from to) "/place" (string "/place?from=" from)))
 
 (newsop place (from to)
   (if (blank from) (wipe to))
@@ -3586,109 +3609,108 @@ RNBQKBNR
   (stop-resaving-items)
   (= resave-items-thread* (thread (resave-items-thread throttle))))
 
-
 (diskfile place-board* (+ newsdir* "place.txt") (trim (rem #\return "
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
- ZZZ        ZZZ  ZZZ        ZZZ
- WWW        WWW  WWW        WWW
+                 ZZZ        ZZZ 
+                 WWW        WWW 
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
