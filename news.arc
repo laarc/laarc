@@ -3544,8 +3544,12 @@ RNBQKBNR
     (center
       (place-board user from to board))))
 
-(def place-at (x y (o width (or (pos #\return place-board*) (pos #\newline place-board*))))
-  (+ (* y (+ width 1)) x))
+(def place-at (x y (o board place-board*))
+  (let i -1
+    (while (> y 0)
+      (= i (pos #\newline board (+ i 1)))
+      (-- y))
+    (+ i x 1)))
 
 (def copy-place ()
   (shell "cp" (+ newsdir* "place.txt") "static/place.txt"))
