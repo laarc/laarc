@@ -28,5 +28,5 @@
     }, 10000);
   }
 
-  window.addEventListener('load', start);
+  //window.addEventListener('load', start);
 })();
