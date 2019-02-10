@@ -512,9 +512,8 @@
     (gentag link rel   'alternate type 'application/rss+xml
                  title 'RSS       href (rss-url label))
 
-    (gentag script src "/place.js")
-
-    (tag script (pr votejs*))
+    (tag (script) (pr votejs*))
+    (tag (script src "/place.js"))
     (tag title (pr:eschtml title))))
 
 (mac npage (title label . body)
@@ -3544,6 +3543,9 @@ RNBQKBNR
     (center
       (place-board user from to board))))
 
+(def copy-place ()
+  (shell "cp" (+ newsdir* "place.txt") "static/place.txt"))
+
 (def place-at (x y (o board place-board*))
   (let i -1
     (while (> y 0)
@@ -3551,17 +3553,41 @@ RNBQKBNR
       (-- y))
     (+ i x 1)))
 
-(def copy-place ()
-  (shell "cp" (+ newsdir* "place.txt") "static/place.txt"))
+(or= place-events* (queue))
+
+(def place-update (x y (o board place-board*))
+  (enq-limit
+    (obj id (str:now) path (string x "," y) data (obj style (obj backgroundColor "#@(hexrep (place-encode (board (place-at x y board))))")))
+    place-events*
+    10))
 
 (newsopr placeop (from to)
   (let ((a b) (x y)) (map [map int (tokens _ #\,)] (list from to))
     (= (place-board* (place-at x y))
        (place-board* (place-at a b)))
+    (place-update x y)
     (todisk place-board*)
     (copy-place)
     (wipe (lncache* "place")))
   (if (is from to) "/place" (string "/place?from=" from)))
+
+(= (static-header* 'place.events) "text/event-stream;
+Access-Control-Allow-Origin: *
+Cache-Control: no-cache;
+X-Accel-Buffering: no")
+
+(defop place.events ()
+  (let seen (obj)
+    (while t
+      (each x (qlist place-events*)
+        (unless (seen x!id)
+          (= (seen x!id) t)
+          (pr "event: put\n")
+          (pr "data: ") (write-json x)
+          (prn)
+          (prn)
+          (flushout)))
+      (sleep 1))))
 
 (newsop place (from to)
   (if (blank from) (wipe to))
