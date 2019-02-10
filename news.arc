@@ -3494,7 +3494,8 @@ RNBQKBNR
     (tag (form method 'post action (string url "?" op a "," b)
                style "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px;")
       (gentag input type 'submit value2 text
-              style (+ "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; width: 1.5em; "
+              style (+ "-webkit-appearance: none; border-radius: 0; "
+                       "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; width: 1.5em; "
                        "border: 0px; text-shadow: #000 1px 0 10px; color: white; "
                        "background-color: #@(hexrep bgcol);")))))
 
@@ -3505,11 +3506,13 @@ RNBQKBNR
               (((o a -1) (o b -1))) (map [map int (tokens _ #\,)] (list from)))
         (each y (lines board)
           (++ j)
-          (tag     (tr style (+ "display: flex !important; border-collapse: unset; border: 0px; "
+          (tag     (tr style (+ "-webkit-appearance: none; border-radius: 0; "
+                                "display: flex !important; border-collapse: unset; border: 0px; "
                                 "outline: none; padding: 0px; margin: 0px; overflow-wrap: normal; "))
             (forlen i y
               (tag (td id (string i "," j)
-                       style (+ "display: inline-block; border-collapse: unset; "
+                       style (+ "-webkit-appearance: none; border-radius: 0; "
+                                "display: inline-block; border-collapse: unset; "
                                 "border: 0px; outline: none; padding: 0px; margin: 0px;"))
                 (place-piece (if (and (is i a) (is j b)) "x" "") i j from to (place-encode (y i)))))))))))
 
