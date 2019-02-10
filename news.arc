@@ -3609,8 +3609,8 @@ RNBQKBNR
   (stop-resaving-items)
   (= resave-items-thread* (thread (resave-items-thread throttle))))
 
-(diskfile place-board* (+ newsdir* "place.txt") (trim (rem #\return "
-rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
+(diskfile place-board* (+ newsdir* "place.txt")
+"rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
                  ZZZ        ZZZ 
@@ -3801,7 +3801,6 @@ pppppppppppppppppppppppppppppppp
  YYY        YYY  YYY        YYY
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
-RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
-")))
+RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR")
 
 run-news
