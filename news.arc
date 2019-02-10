@@ -3495,15 +3495,16 @@ RNBQKBNR
       (gentag input type 'submit value2 text style "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; width: 1.5em; border: 0px; text-shadow: #000 1px 0 10px; color: white; background-color: #@(hexrep bgcol);"))))
 
 (def place-board ((o user) (o from) (o to) (o board place-board*))
-  (tag (table id "place" style "table-layout: fixed; width: 100%;")
-    (withs (j -1 from (or from "") to (or to "")
-            (((o a -1) (o b -1))) (map [map int (tokens _ #\,)] (list from)))
-      (each y (lines board)
-        (++ j)
-        (tag     (tr style "display:        block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; overflow-wrap: normal;")
-          (forlen i y
-            (tag (td id (string i "," j) style "display: inline-block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px;") 
-              (place-piece (if (and (is i a) (is j b)) "x" "") i j from to (place-encode (y i))))))))))
+  (tag (table id "place" style "table-layout: fixed; width: 100%; overflow: hidden;")
+    (tag (tbody style "display: block; max-width: 100vw; overflow: scroll;")
+      (withs (j -1 from (or from "") to (or to "")
+              (((o a -1) (o b -1))) (map [map int (tokens _ #\,)] (list from)))
+        (each y (lines board)
+          (++ j)
+          (tag     (tr style "display: flex !important; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; overflow-wrap: normal;")
+            (forlen i y
+              (tag (td id (string i "," j) style "display: inline-block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px;") 
+                (place-piece (if (and (is i a) (is j b)) "x" "") i j from to (place-encode (y i)))))))))))
 
 (def place-page (user (o from) (o to) (o board place-board*))
   (longpage user (now) nil "place" "place" "place"
@@ -3519,7 +3520,7 @@ RNBQKBNR
        (place-board* (place-at a b)))
     (todisk place-board*)
     (wipe (lncache* "place")))
-  (string "/place#" to))
+  (string "/l/place#" to))
 
 (newsop place (from to)
   (if (blank from) (wipe to))
