@@ -1,6 +1,7 @@
 (function() {
   const markValue = String.fromCharCode(215);
   let placeQuery;
+  let selectedBgColor;
 
   function sendRequest(url, options = {}, data) {
     const fetchOptions = Object.assign({}, options);
@@ -26,6 +27,7 @@
 
       if (inputVal === markValue) {
         placeQuery = undefined;
+        selectedBgColor = undefined;
         evt.target.setAttribute('value', '');
       } else {
         const urlPath = makePathString(placeQuery, cell.id);
@@ -33,15 +35,17 @@
         sendRequest(urlObj.href, {
           method: 'POST',
         });
+        evt.target.style.backgroundColor = selectedBgColor;
       }
     } else {
       placeQuery = makeFromQuery(cell.id);
       evt.target.setAttribute('value', markValue);
+      selectedBgColor = evt.target.style.backgroundColor;
     }
   }
 
   function listenForSubmit() {
-    const buttons = document.querySelectorAll('#place tr td input');
+    const buttons = document.querySelectorAll('#place input');
     buttons.forEach((b) => {
       b.addEventListener('click', handleClick);
     });

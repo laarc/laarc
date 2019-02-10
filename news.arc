@@ -513,7 +513,7 @@
                  title 'RSS       href (rss-url label))
 
     (tag (script) (pr votejs*))
-    (tag (script src "/place.js"))
+    ;(tag (script src "/place.js"))
     (tag title (pr:eschtml title))))
 
 (mac npage (title label . body)
@@ -3511,7 +3511,7 @@ RNBQKBNR
                style "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px;")
       (gentag input type 'submit value2 text
               style (+ "-webkit-appearance: none; border-radius: 0; "
-                       "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; height: 0.75em; width: 0.75em; "
+                       "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; height: 1.0em; width: 1.0em; "
                        "border: 0px; text-shadow: #000 1px 0 10px; color: white; "
                        "background-color: #@(hexrep bgcol);")))))
 
