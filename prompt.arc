@@ -90,6 +90,8 @@
 
 (or= repl-history* nil)
 
+(= repl-history-max* 10000)
+
 (defop repl req
   (if (admin (get-user req))
       (replpage req)
@@ -111,7 +113,7 @@
       (sp) 
       (submit))
     (tag xmp
-      (each (expr val err) (firstn 20 repl-history*)
+      (each (expr val err) (firstn repl-history-max* repl-history*)
         (pr "> ")
         (ppr expr)
         (prn)
