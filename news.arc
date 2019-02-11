@@ -512,9 +512,11 @@
     (gentag link rel   'alternate type 'application/rss+xml
                  title 'RSS       href (rss-url label))
 
+    (tag title (pr:eschtml title))
     (tag (script) (pr votejs*))
-    ;(tag (script src "/place.js"))
-    (tag title (pr:eschtml title))))
+    (when (is label "place")
+      ;(tag (script src "/place.js"))
+      (tag (style) (pr "body { background-color: #@(hexrep sand); }")))))
 
 (mac npage (title label . body)
   `(tag html
