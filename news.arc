@@ -3555,6 +3555,14 @@ RNBQKBNR
       (-- y))
     (+ i x 1)))
 
+(def place-blit (text x y (o board place-board*))
+  (let j -1
+    (each line (lines text)
+      (++ j)
+      (forlen i line
+        (= (board (place-at (+ x i) (+ y j)))
+           (line i))))))
+
 (or= place-events* (queue))
 
 (def place-update (x y (o board place-board*))
