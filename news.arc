@@ -2374,9 +2374,10 @@ function suggestTitle() {
       (hook 'edit user i))))
 
 (def ignore-edit (user i name val)
-  (case name title (len> val title-limit*)
-             dead  (and (mem 'nokill i!keys) (~admin user))))
-
+  (and (~admin user)
+       (case name
+         title (len> val title-limit*)
+         dead (mem 'nokill i!keys))))
 
 ; Comment Submission
 
