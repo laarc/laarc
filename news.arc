@@ -546,6 +546,9 @@
          (trtd (longfoot ,gu (- (now) ,gt) ,whence))))))
 
 (def longfoot (user elapsed whence)
+  (when (in whence "/l/teapots" "/l/teapot" "/l/418")
+    (vspace 10)
+    (center (tag (img src "/teapot.jpg"))))
   (when (in whence "/l/chess")
     (vspace 10)
     (center
