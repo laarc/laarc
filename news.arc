@@ -711,7 +711,8 @@ function vote(node) {
       (tag (img src logo-url* width 18 height 18
                 style "border:1px #@(hexrep border-color*) solid;")))))
 
-(= toplabels* '(nil "welcome" "new" "threads" "comments" "discord" "show" "ask" "/l/show" "/l/ask" "*"))
+(= toplabels* '(nil "welcome" "new" "threads" "comments" "discord"
+                    "/l/show" "show" "/l/ask" "ask" "/l/place" "place" "*"))
 
 ; redefined later
 
@@ -726,6 +727,7 @@ function vote(node) {
     (link "tags" "/l")
     (toplink "ask" "/l/ask" (if (is label "/l/ask") "ask" label))
     (toplink "show" "/l/show" (if (is label "/l/show") "show" label))
+    (toplink "place" "/l/place" (if (is label "/l/place") "place" label))
     (link "submit" "/submit")
     (unless (mem label toplabels*)
       (fontcolor white (pr:eschtml label)))))
@@ -3515,22 +3517,28 @@ RNBQKBNR
     (tag (form method 'post action (string url "?" op a "," b))
       (gentag input type 'submit value2 text style "background-color: #@(hexrep bgcol);"))))
 
-
-(= submit-place-url* "/submitlink?l=ask%20place&t=Ask%20laarc:%20what%20should%20we%20draw%20next%3F")
+(= place-submit-url* "/submitlink?l=ask%20place&t=Ask%20laarc:%20what%20should%20we%20draw%20next%3F"
+   place-css* "
+#place tr    { -webkit-appearance: none; border-radius: 0; display: flex !important; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; overflow-wrap: normal; }
+#place td    { -webkit-appearance: none; border-radius: 0; display:    inline-block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; }
+#place form  { outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; }
+#place input { -webkit-appearance: none; border-radius: 0; outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; height: 1.0em; width: 1.25em; border: 0px; text-shadow: #000 1px 0 10px; color: white; }
+"
+   place-info* "
+If you want to coordinate, come into our @(tostring:underlink 'discord discord-url*), or @(tostring:underlink 'submit place-submit-url*) to @(tostring:underlink '/l/place).
+&nbsp;
+Click the tiles. The first click selects a color (the tile will be marked with an x).
+To clear the selection, click the x again, or click here: @(tostring:underlink 'clear '/place)
+")
 
 (def place-board ((o user) (o from) (o to) (o board place-board*))
   (pr:tostring
-    (tag (style)
-      (prn "#place tr { -webkit-appearance: none; border-radius: 0; display: flex !important; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; overflow-wrap: normal; }")
-      (prn "#place td { -webkit-appearance: none; border-radius: 0; display: inline-block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; }")
-      (prn "#place form { outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; }")
-      (prn "#place input { -webkit-appearance: none; border-radius: 0; outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; height: 1.0em; width: 1.0em; border: 0px; text-shadow: #000 1px 0 10px; color: white; }"))
+    (tag (style) (pr place-css*))
     (tag (table id "place" style "table-layout: fixed; width: 100%; overflow: hidden;")
       (tag (tbody style "display: block; max-width: 100vw; overflow: scroll;")
-        (row "Click the tiles. The first click selects a color (the tile will be marked with an x).")
-        (row "To select a different color, click the x again, or click here: @(tostring:underlink 'clear '/place)")
-        (row "If you want to coordinate, come into our @(tostring:underlink 'discord discord-url*), or @(tostring:underlink 'submit submit-place-url*) to @(tostring:underlink '/l/place).")
-        (row "")
+        (each line (lines:trim place-info*)
+          (row line))
+        (spacerow 10)
         (withs (j -1 from (or from "") to (or to "")
                 (((o a -1) (o b -1))) (map [map int (tokens _ #\,)] (list from)))
           (each y (lines board)
@@ -3540,7 +3548,8 @@ RNBQKBNR
               (forlen i y
                 (tag (td id (string i "," j))
                   (place-piece (if (and (is i a) (is j b)) "x" "") i j from to (place-encode (y i))))))
-            (when (is j 0) (row (sp)))
+            (when (is j 0)
+              (spacerow 4))
             )))))
   (flushout))
 
@@ -3657,7 +3666,9 @@ X-Accel-Buffering: no")
   (stop-resaving-items)
   (= resave-items-thread* (thread (resave-items-thread throttle))))
 
-(diskfile place-board* (+ newsdir* "place.txt")
+(= place-file* (+ newsdir* "place.txt"))
+
+(diskfile place-board* place-file*
 "rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 
@@ -3851,12 +3862,14 @@ pppppppppppppppppppppppppppppppp
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR")
 
+
 (defbg save-place 15 (save-place))
 
-(let was (copy place-board*)
-  (def save-place ((o force))
-    (when (or force (isnt place-board* was))
-      (todisk place-board*)
-      (= was (copy place-board*)))))
+(def save-place () (todisk place-board*))
+
+(def load-place ()
+  (let was (copy place-board*)
+    (= place-board* (filechars place-file*))
+    was))
 
 run-news
