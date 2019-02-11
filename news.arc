@@ -3511,44 +3511,42 @@ RNBQKBNR
   (withs (op (if (~blank from) (+ "from=" from "&to=") "from=")
           url (if (~blank from) "/placeop" "/place")
           whence (if (~blank from) (string "#" from) (string "#" a "," b)))
-    (tag (form method 'post action (string url "?" op a "," b)
-               style "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px;")
-      (gentag input type 'submit value2 text
-              style (+ "-webkit-appearance: none; border-radius: 0; "
-                       "outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; height: 1.0em; width: 1.0em; "
-                       "border: 0px; text-shadow: #000 1px 0 10px; color: white; "
-                       "background-color: #@(hexrep bgcol);")))))
+    (tag (form method 'post action (string url "?" op a "," b))
+      (gentag input type 'submit value2 text style "background-color: #@(hexrep bgcol);"))))
+
 
 (= submit-place-url* "/submitlink?l=ask%20place&t=Ask%20laarc:%20what%20should%20we%20draw%20next%3F")
 
 (def place-board ((o user) (o from) (o to) (o board place-board*))
-  (tag (table id "place" style "table-layout: fixed; width: 100%; overflow: hidden;")
-    (tag (tbody style "display: block; max-width: 100vw; overflow: scroll;")
-      (row "Click the tiles. The first click selects a color (the tile will be marked with an x).")
-      (row "To select a different color, click the x again, or click here: @(tostring:underlink 'clear '/place)")
-      (row "If you want to coordinate, come into our @(tostring:underlink 'discord discord-url*), or @(tostring:underlink 'submit submit-place-url*) to @(tostring:underlink '/l/place).")
-      (row "")
-      (withs (j -1 from (or from "") to (or to "")
-              (((o a -1) (o b -1))) (map [map int (tokens _ #\,)] (list from)))
-        (each y (lines board)
-          (++ j)
-          (tag     (tr style (+ "-webkit-appearance: none; border-radius: 0; "
-                                "display: flex !important; border-collapse: unset; border: 0px; "
-                                "outline: none; padding: 0px; margin: 0px; overflow-wrap: normal; "))
-            (forlen i y
-              (tag (td id (string i "," j)
-                       style (+ "-webkit-appearance: none; border-radius: 0; "
-                                "display: inline-block; border-collapse: unset; "
-                                "border: 0px; outline: none; padding: 0px; margin: 0px;"))
-                (place-piece (if (and (is i a) (is j b)) "x" "") i j from to (place-encode (y i)))))))))))
+  (pr:tostring
+    (tag (style)
+      (prn "#place tr { -webkit-appearance: none; border-radius: 0; display: flex !important; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; overflow-wrap: normal; }")
+      (prn "#place td { -webkit-appearance: none; border-radius: 0; display: inline-block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; }")
+      (prn "#place form { outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; }")
+      (prn "#place input { -webkit-appearance: none; border-radius: 0; outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; height: 1.0em; width: 1.0em; border: 0px; text-shadow: #000 1px 0 10px; color: white; }"))
+    (tag (table id "place" style "table-layout: fixed; width: 100%; overflow: hidden;")
+      (tag (tbody style "display: block; max-width: 100vw; overflow: scroll;")
+        (row "Click the tiles. The first click selects a color (the tile will be marked with an x).")
+        (row "To select a different color, click the x again, or click here: @(tostring:underlink 'clear '/place)")
+        (row "If you want to coordinate, come into our @(tostring:underlink 'discord discord-url*), or @(tostring:underlink 'submit submit-place-url*) to @(tostring:underlink '/l/place).")
+        (row "")
+        (withs (j -1 from (or from "") to (or to "")
+                (((o a -1) (o b -1))) (map [map int (tokens _ #\,)] (list from)))
+          (each y (lines board)
+            (++ j)
+            (tag tr
+              (when (is j 0) (td "palette:"))
+              (forlen i y
+                (tag (td id (string i "," j))
+                  (place-piece (if (and (is i a) (is j b)) "x" "") i j from to (place-encode (y i))))))
+            (when (is j 0) (row (sp)))
+            )))))
+  (flushout))
 
 (def place-page (user (o from) (o to) (o board place-board*))
   (longpage user (now) nil "place" "place" "place"
     (center
       (place-board user from to board))))
-
-(def copy-place ()
-  (shell "cp" (+ newsdir* "place.txt") "static/place.txt"))
 
 (def place-at (x y (o board place-board*))
   (let i -1
@@ -3565,15 +3563,22 @@ RNBQKBNR
     place-events*
     10))
 
-(newsopr placeop (from to)
+(newsopr placeop (from to) (placeop from to))
+
+(def placeop (from to)
   (let ((a b) (x y)) (map [map int (tokens _ #\,)] (list from to))
-    (= (place-board* (place-at x y))
-       (place-board* (place-at a b)))
-    (place-update x y)
-    (todisk place-board*)
-    (copy-place)
-    (wipe (lncache* "place")))
-  (if (is from to) "/place" (string "/place?from=" from)))
+    (when (errsafe (> y 0))
+      (= (place-board* (place-at x y))
+         (place-board* (place-at a b)))
+      (place-update x y)
+      (wipe (lncache* "place")))
+    (if (is from to) "/place" (string "/place?from=" (if (is y 0) to from)))))
+
+(= (static-header* 'place.txt) "text/plain")
+
+(defop place.txt req
+  (pr place-board*)
+  (flushout))
 
 (= (static-header* 'place.events) "text/event-stream;
 Access-Control-Allow-Origin: *
@@ -3836,5 +3841,13 @@ pppppppppppppppppppppppppppppppp
 
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR")
+
+(defbg save-place 15 (save-place))
+
+(let was (copy place-board*)
+  (def save-place ((o force))
+    (when (or force (isnt place-board* was))
+      (todisk place-board*)
+      (= was (copy place-board*)))))
 
 run-news
