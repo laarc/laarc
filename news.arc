@@ -515,7 +515,7 @@
     (tag title (pr:eschtml title))
     (tag (script) (pr votejs*))
     (when (is label "place")
-      ;(tag (script src "/place.js"))
+      (tag (script src "/place.js"))
       (tag (style) (pr "body { background-color: #@(hexrep sand); }")))))
 
 (mac npage (title label . body)
@@ -3516,7 +3516,7 @@ RNBQKBNR
   (withs (op (if (~blank from) (+ "from=" from "&to=") "from=")
           url (if (~blank from) "/placeop" "/place")
           whence (if (~blank from) (string "#" from) (string "#" a "," b)))
-    (tag (form method 'post action (string url "?" op a "," b))
+    (tag (form method 'post action (string url "?" op a "," b) onsubmit "return placeSubmit(this);")
       (gentag input type 'submit value2 text style "background-color: #@(hexrep bgcol);"))))
 
 (= place-submit-url* "/submitlink?l=ask%20place&t=Ask%20laarc:%20what%20should%20we%20draw%20next%3F"
@@ -3577,13 +3577,16 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
 
 (or= place-events* (queue))
 
+(= place-event-limit* 100)
+
 (def place-update (x y (o board place-board*))
   (enq-limit
     (obj id (str:now) path (string x "," y) data (obj style (obj backgroundColor "#@(hexrep (place-encode (board (place-at x y board))))")))
     place-events*
-    10))
+    place-event-limit*))
 
 (newsopr placeop (from to) (placeop from to))
+(newsop placeset (from to) (placeop from to))
 
 (def placeop (from to)
   (let ((a b) (x y)) (map [map int (tokens _ #\,)] (list from to))
@@ -3607,7 +3610,7 @@ X-Accel-Buffering: no")
 
 (defop place.events ()
   (let seen (obj)
-    (while t
+    (repeat 10
       (each x (qlist place-events*)
         (unless (seen x!id)
           (= (seen x!id) t)

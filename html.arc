@@ -104,6 +104,7 @@
 (attribute font       size           opnum)
 (attribute form       action         opstring)
 (attribute form       method         opsym)
+(attribute form       onsubmit       opstring)
 (attribute img        align          opsym)
 (attribute img        border         opnum)
 (attribute img        height         opnum)
