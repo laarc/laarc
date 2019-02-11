@@ -295,7 +295,8 @@
 
 ;(def spacerow (h) (tr (td (vspace h))))
 
-(def spacerow (h) (pr "<tr style=\"height:" h "px\"></tr>"))
+(def spacerow (h (o units "px")) (pr "<tr style=\"height:" h units "\"></tr>"))
+(def spacecol (w (o units "px")) (pr "<td style=\"width:" w units "\"></td>"))
 
 ; For use as nested table.
 
