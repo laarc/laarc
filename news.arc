@@ -3577,13 +3577,24 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
 
 (or= place-events* (queue))
 
-(= place-event-limit* 100)
+(= place-event-limit* 20
+   place-event-lasts* 25
+   place-event-sleep* 0.5)
 
 (def place-update (x y (o board place-board*))
   (enq-limit
-    (obj id (str:now) path (string x "," y) data (obj style (obj backgroundColor "#@(hexrep (place-encode (board (place-at x y board))))")))
+    (obj id (str:now) type "put" path (string x "," y) data (obj style (obj backgroundColor "#@(hexrep (place-encode (board (place-at x y board))))")))
     place-events*
     place-event-limit*))
+
+(def place-reset ()
+  (= place-events* (queue)))
+
+(def place-kill ((o reset))
+  (when reset (place-reset))
+  (enq-limit
+    (obj id (str:now) type "kill")
+    place-events*))
 
 (newsopr placeop (from to) (placeop from to))
 (newsop placeset (from to) (placeop from to))
@@ -3609,17 +3620,17 @@ Cache-Control: no-cache;
 X-Accel-Buffering: no")
 
 (defop place.events ()
-  (let seen (obj)
-    (repeat 10
+  (with (seen (obj) ts (now))
+    (while (< (since ts t) place-event-lasts*)
       (each x (qlist place-events*)
         (unless (seen x!id)
           (= (seen x!id) t)
-          (pr "event: put\n")
+          (prn "event: " (or x!type "put"))
           (pr "data: ") (write-json x)
           (prn)
           (prn)
           (flushout)))
-      (sleep 1))))
+      (sleep place-event-sleep*))))
 
 (newsop place (from to)
   (if (blank from) (wipe to))
