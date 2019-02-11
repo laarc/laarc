@@ -106,13 +106,13 @@
   (load-news)
   (asv port))
 
-(def run-news ()
-  (prn "srv-port* " (= srv-port* (readenv "PORT" 8080)))
+(def run-news ((o port srv-port*))
+  (prn "srv-port* " (= srv-port* port))
   (prn "srv-noisy* " (= srv-noisy* (readenv "NOISY" nil)))
   (prn "caching* " (= caching* (readenv "CACHING" 1)))
   (prn "explicit-flush " (declare 'explicit-flush (readenv "FLUSH" t)))
   (flushout)
-  (nsv srv-port*))
+  (nsv port))
 
 (def load-users ()
   (pr "load users: ")
