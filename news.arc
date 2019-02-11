@@ -3472,9 +3472,10 @@ RNBQKBNR
   (chess-page user from to))
 
 (defmemo gamma-gray (percent)
-  (withs (n (expt (/ percent 1.0) (/ 1.0 2.2))
-          n (trunc (* n 256)))
-    (color n n n)))
+  (withs (x (expt (/ percent 1.0) (/ 1.0 2.2))
+          n (min 255 (trunc (* x 256)))
+          m (min 255 (trunc (* x 300))))
+    (color n n m)))
 
 (def place-encode (x)
   (case x
