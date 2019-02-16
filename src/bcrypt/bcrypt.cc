@@ -171,7 +171,7 @@ bcrypt_gensalt(char minor, u_int8_t log_rounds, u_int8_t *seed, char *gsalt)
 #define DllExport
 #endif
 
-DllExport extern "C" void
+extern "C" DllExport void
 bcrypt(const char *key, const char *salt, char *encrypted)
 {
 	blf_ctx state;
