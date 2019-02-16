@@ -300,10 +300,6 @@
         (do (enq-limit record bad-logins*)
             nil))))
 
-(def shash (str)
-  (w/stdin (instring str)
-    (clean-hash:shell "openssl" 'dgst '-sha1)))
-
 (or= dc-usernames* (table))
 
 (def username-taken (user)

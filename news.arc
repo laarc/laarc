@@ -500,22 +500,22 @@
     (gentag meta name 'theme-color             content "#@(hexrep sand)")
     (gentag meta name 'msapplication-TileColor content "#@(hexrep orangered)")
 
-    (gentag link rel  'manifest                  href "/site.webmanifest")
-    (gentag link rel  'stylesheet type 'text/css href "/news.css")
-    (gentag link rel  'mask-icon  href "/safari-pinned-tab.svg" color teal)
+    (gentag link rel  'manifest                  href (static-src "site.webmanifest"))
+    (gentag link rel  'stylesheet type 'text/css href (static-src "news.css"))
+    (gentag link rel  'mask-icon                 href (static-src "safari-pinned-tab.svg") color teal)
     (gentag link rel  "shortcut icon"   href "")
 
-    (gentag link rel  'apple-touch-icon     sizes '180x180 href "/apple-touch-icon.png")
-    (gentag link rel  'icon type 'image/png sizes '32x32   href "/favicon-32x32.png")
-    (gentag link rel  'icon type 'image/png sizes '16x16   href "/favicon-16x16.png")
+    (gentag link rel  'apple-touch-icon     sizes '180x180 href (static-src "apple-touch-icon.png"))
+    (gentag link rel  'icon type 'image/png sizes '32x32   href (static-src "favicon-32x32.png"))
+    (gentag link rel  'icon type 'image/png sizes '16x16   href (static-src "favicon-16x16.png"))
 
     (gentag link rel   'alternate type 'application/rss+xml
                  title 'RSS       href (rss-url label))
 
     (tag title (pr:eschtml title))
     (tag (script) (pr votejs*))
-    (when (is label "place")
-      (tag (script src "/place.js"))
+    (when (in label "place" "/l/place")
+      (tag (script src (static-src "place.js")))
       (tag (style) (pr "body { background-color: #@(hexrep sand); }")))))
 
 (mac npage (title label . body)
