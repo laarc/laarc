@@ -294,7 +294,7 @@
 (def good-login (user pw ip)
   (let record (list (seconds) ip user)
     (if (check-pw user pw)
-        (do (unless (user->cookie* user) (cook-user! user))
+        (do (cook-user! user)
             (enq-limit record good-logins*)
             user)
         (do (enq-limit record bad-logins*)
