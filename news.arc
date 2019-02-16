@@ -517,7 +517,8 @@
     (tag title (pr:eschtml title))
     (tag (script) (pr votejs*))
     (when (in label "place" "/l/place")
-      (tag (script src (static-src "place.js")))
+      (tag (script src (static-src "infinite-canvas.js")))
+      (tag (script src (static-src "place-canvas.js")))
       (tag (style) (pr "body { background-color: #@(hexrep sand); }")))))
 
 (mac npage (title label . body)
@@ -3875,104 +3876,104 @@ X-Accel-Buffering: no")
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
 rnbqkbnrrnbqkbnrrnbqkbnrrnbqkbnr
 pppppppppppppppppppppppppppppppp
 99999999999999999999999999999999
-                 ZZZ        ZZZ 
-                 WWW        WWW 
+                 ZZZ        ZZZ
+                 WWW        WWW
 99999999999999999999999999999999
 PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP
 RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR
