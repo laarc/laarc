@@ -3602,26 +3602,35 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
         (= (board (place-at (+ x i) (+ y j)))
            (line i))))))
 
-(or= place-events* (queue))
+(or= place-events* (queue)
+     place-event-id* 0)
 
 (= place-event-limit* 20
    place-event-lasts* 25
    place-event-sleep* 0.5)
 
+(def place-event! (type evt)
+  (let e (copy evt)
+    (= e!time (str (/ (now) 1000))
+       e!type type)
+    (atomic
+      (= e!id (str (++ place-event-id*)))
+      (enq-limit e place-events* place-event-limit*))
+    e))
+
 (def place-update (x y (o board place-board*))
-  (enq-limit
-    (obj id (str:now) type "put" path (string x "," y) data (obj style (obj backgroundColor "#@(hexrep (place-encode (board (place-at x y board))))")))
-    place-events*
-    place-event-limit*))
+  (place-event! "put"
+    (obj path (string x "," y)
+         data (obj style (obj backgroundColor
+                              "#@(hexrep (place-encode (board (place-at x y board))))")))))
 
 (def place-reset ()
   (= place-events* (queue)))
 
 (def place-kill ((o reset))
-  (when reset (place-reset))
-  (enq-limit
-    (obj id (str:now) type "kill")
-    place-events*))
+  (atomic
+    (when reset (place-reset))
+    (place-event! "kill")))
 
 (newsopr placeop (from to) (placeop from to))
 (newsop placeset (from to) (placeop from to))
@@ -3629,9 +3638,10 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
 (def placeop (from to)
   (let ((a b) (x y)) (map [map int (tokens _ #\,)] (list from to))
     (when (errsafe (> y 0))
-      (= (place-board* (place-at x y))
-         (place-board* (place-at a b)))
-      (place-update x y)
+      (atomic
+        (= (place-board* (place-at x y))
+           (place-board* (place-at a b)))
+        (place-update x y))
       (wipe (lncache* "place")))
     (if (is from to) "/place" (string "/place?from=" (if (is y 0) to from)))))
 
