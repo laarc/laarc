@@ -3933,7 +3933,9 @@ RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR")
 
 (defbg save-place 15 (save-place))
 
-(def save-place () (todisk place-board*))
+(def save-place ()
+  (todisk place-board*)
+  (todisk place-colors*))
 
 (def load-place ()
   (let was (copy place-board*)
