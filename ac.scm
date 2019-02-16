@@ -1736,7 +1736,7 @@
   (require (lib "foreign.ss"))
   (unsafe!)
   (provide bcrypt)
-  (define bcrypt* (get-ffi-obj "bcrypt" (if (eqv? (system-type) 'windows) (ffi-lib "src\\bcrypt\\build\\bcrypt") (ffi-lib "src/bcrypt/build/libbcrypt"))
+  (define bcrypt* (get-ffi-obj "bcrypt" (if (eqv? (system-type) 'windows) (ffi-lib "src\\bcrypt\\bcrypt") (ffi-lib "src/bcrypt/build/libbcrypt"))
                    (_fun _string _string _pointer -> _void)))
 
   (define bcrypt ; (passwd salt) see BSD manual crypt(3)
