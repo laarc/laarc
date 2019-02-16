@@ -35,7 +35,7 @@ function getBoard() {
 function replaceTable() {
   const hnMain = document.getElementById('hnmain');
   const mainRect = hnMain.getBoundingClientRect();
-  const { width, height } = mainRect;
+  const { width } = mainRect;
   const oldPlace = document.getElementById('place');
   const parent = oldPlace.parentElement;
   parent.removeChild(oldPlace);
@@ -45,7 +45,7 @@ function replaceTable() {
   canvas = document.createElement('canvas');
   canvas.id = 'canvas';
   canvas.width = width.toString();
-  canvas.height = height.toString();
+  canvas.height = window.innerHeight.toString();
   place.appendChild(canvas);
   ctx = canvas.getContext('2d');
   inf = infiniteCanvas.initialize(ctx);

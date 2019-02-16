@@ -3699,7 +3699,7 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
   (pr:tostring
     (tag (style) (pr place-css*))
     (tag (table id "place" style "table-layout: fixed; width: 100%; overflow: hidden;")
-      (tag (tbody style "display: block; max-width: 100vw; overflow: scroll;")
+      ''(tag (tbody style "display: block; max-width: 100vw; overflow: scroll;")
         (each line (lines:trim place-info*)
           (row line))
         (spacerow 10)
