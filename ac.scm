@@ -1180,28 +1180,6 @@
 
 (xdef ensure-dir (wrapnil make-directory*))
 
-(xdef pipe-from (lambda (cmd)
-                   (let ((tf (ar-tmpname)))
-                     (system (string-append cmd " > " tf))
-                     (let ((str (open-input-file tf)))
-                       (system (string-append "rm -f " tf))
-                       str))))
-
-(define (ar-tmpname)
-  (call-with-input-file "/dev/urandom"
-    (lambda (rstr)
-      (do ((s "/tmp/")
-           (c (read-char rstr) (read-char rstr))
-           (i 0 (+ i 1)))
-          ((>= i 16) s)
-        (set! s (string-append s
-                               (string
-                                 (integer->char
-                                   (+ (char->integer #\a)
-                                      (modulo
-                                        (char->integer (read-char rstr))
-                                        26))))))))))
-
 ; PLT scheme provides only eq? and equal? hash tables,
 ; we need the latter for strings.
 
