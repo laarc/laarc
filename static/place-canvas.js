@@ -13,13 +13,13 @@ let mouseIsDown = false;
 let isPanning = false;
 let previousMousePosition;
 
-function windowKeydown(evt) {
+function place_windowKeydown(evt) {
   if (evt.which === 68) {
     isPanning = !isPanning;
   }
 }
 
-function canvasMousedown(event) {
+function place_canvasMousedown(event) {
   if (event.which === 1) {
     mouseIsDown = true;
   } else {
@@ -27,7 +27,7 @@ function canvasMousedown(event) {
   }
 }
 
-function windowMouseup(event) {
+function place_windowMouseup(event) {
   if (event.which === 1) {
     mouseIsDown = false;
     inf.updateChunks();
@@ -36,7 +36,7 @@ function windowMouseup(event) {
   }
 }
 
-function windowMousemove(event) {
+function place_windowMousemove(event) {
   var newMousePosition = {x: event.offsetX, y: event.offsetY};
   if (mouseIsDown && isPanning) {
     // pan the canvas whenever dragging with the middle or right mouse button
@@ -57,14 +57,14 @@ function windowMousemove(event) {
   previousMousePosition = newMousePosition;
 }
 
-function addListeners() {
-  window.addEventListener('keydown', windowKeydown);
-  canvas.addEventListener('mousedown', canvasMousedown);
-  window.addEventListener("mouseup", windowMouseup);
-  window.addEventListener("mousemove", windowMousemove);
+function place_addListeners() {
+  window.addEventListener('keydown', place_windowKeydown);
+  canvas.addEventListener('mousedown', place_canvasMousedown);
+  window.addEventListener("mouseup", place_windowMouseup);
+  window.addEventListener("mousemove", place_windowMousemove);
 }
 
-function replaceTable() {
+function place_replaceTable() {
   const hnMain = document.getElementById('hnmain');
   const mainRect = hnMain.getBoundingClientRect();
   const { width } = mainRect;
@@ -81,10 +81,10 @@ function replaceTable() {
   place.appendChild(canvas);
   ctx = canvas.getContext('2d');
   inf = infiniteCanvas.initialize(ctx);
-  addListeners();
+  place_addListeners();
 }
 
-function drawBoard() {
+function place_drawBoard() {
   board.forEach((row, rowIndex) => {
     row.forEach((pixel, pixIndex) => {
       var color = colors[pixel] || { hex: 'black' };
@@ -94,13 +94,13 @@ function drawBoard() {
   });
 }
 
-function getBoard() {
-  replaceTable();
+function place_getBoard() {
+  place_replaceTable();
   fetch(placeUrl).then(resp => resp.json()).then(json => {
     colors = json.colors;
     board = json.board;
-    drawBoard();
+    place_drawBoard();
   });
 }
 
-window.addEventListener('load', getBoard);
+window.addEventListener('load', place_getBoard);
