@@ -1174,6 +1174,8 @@
 
 (xdef system (wrapnil system))
 
+(xdef ensure-dir (wrapnil make-directory*))
+
 (xdef pipe-from (lambda (cmd)
                    (let ((tf (ar-tmpname)))
                      (system (string-append cmd " > " tf))

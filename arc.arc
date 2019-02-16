@@ -1357,10 +1357,6 @@
   (or (errsafe:load-table filename)
       (table)))
 
-(def ensure-dir (path)
-  (unless (dir-exists path)
-    (system (string "mkdir -p " path))))
-
 (def date ((o s (seconds)))
   (rev (nthcdr 3 (timedate s))))
 
