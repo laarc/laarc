@@ -3191,9 +3191,10 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
 (def tags-page ()
   (minipage "Tags"
     (sptab
-      (row "tag" "count")
-      (each (site count) (lambdas)
-        (tr (td (pr (link site))) (td count))))))
+      (row (underlink "tag" "/l?sort") (underlink "count" "/l"))
+      (let tags (lambdas)
+        (each (site count) (if (arg "sort") (sort (fn (a b) (< a.0 b.0)) tags) tags)
+          (tr (td (pr (link site))) (td count)))))))
 
 ; Abuse Analysis
 
