@@ -1,8 +1,7 @@
 #!/usr/bin/gnuplot
 # gnuplot script file for plotting traffic over time
 reset
-set terminal png font verdana 20 size 3600,2070
-
+set terminal png font verdana 30 size 3600,2070
 
 # set tmargin at screen 0.01
 # set bmargin at screen 0.99
