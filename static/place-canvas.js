@@ -13,25 +13,6 @@ let mouseIsDown = false;
 let isPanning = false;
 let previousMousePosition;
 
-function drawBoard() {
-  board.forEach((row, rowIndex) => {
-    row.forEach((pixel, pixIndex) => {
-      var color = colors[pixel] || { hex: 'black' };
-      ctx.fillStyle = color.hex;
-      ctx.fillRect(size * pixIndex, size * rowIndex, size, size);
-    });
-  });
-}
-
-function getBoard() {
-  replaceTable();
-  fetch(placeUrl).then(resp => resp.json()).then(json => {
-    colors = json.colors;
-    board = json.board;
-    drawBoard();
-  });
-}
-
 function windowKeydown(evt) {
   if (evt.which === 68) {
     isPanning = !isPanning;
@@ -101,6 +82,25 @@ function replaceTable() {
   ctx = canvas.getContext('2d');
   inf = infiniteCanvas.initialize(ctx);
   addListeners();
+}
+
+function drawBoard() {
+  board.forEach((row, rowIndex) => {
+    row.forEach((pixel, pixIndex) => {
+      var color = colors[pixel] || { hex: 'black' };
+      ctx.fillStyle = color.hex;
+      ctx.fillRect(size * pixIndex, size * rowIndex, size, size);
+    });
+  });
+}
+
+function getBoard() {
+  replaceTable();
+  fetch(placeUrl).then(resp => resp.json()).then(json => {
+    colors = json.colors;
+    board = json.board;
+    drawBoard();
+  });
 }
 
 window.addEventListener('load', getBoard);
