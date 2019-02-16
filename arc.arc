@@ -923,15 +923,17 @@
 ; rejects bytes >= 248 lest digits be overrepresented
 
 (def rand-string (n)
-  (let c "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    (with (nc 62 s (newstring n) i 0)
-      (w/infile str "/dev/urandom"
-        (while (< i n)
-          (let x (readb str)
-             (unless (> x 247)
-               (= (s i) (c (mod x nc)))
-               (++ i)))))
-      s)))
+  (with
+    (c "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+     nc 62
+     s (newstring n)
+     i 0)
+    (while (< i n)
+      (let x (seval!bytes-ref (seval!crypto-random-bytes 1) 0)
+        (unless (> x 247)
+          (= (s i) (c (mod x nc)))
+          (++ i))))
+    s))
 
 (mac forlen (var s . body)
   `(for ,var 0 (- (len ,s) 1) ,@body))
