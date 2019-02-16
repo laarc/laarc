@@ -2,6 +2,10 @@ const placeUrl = '/place.json';
 let colors = {};
 let board = {};
 let inf;
+let canvas;
+let ctx;
+
+const size = 12;
 
 // Prepare some variables for the dragging gestures logic
 var mouseIsDown = false;
@@ -9,7 +13,14 @@ var middleOrRightIsDown = false;
 var previousMousePosition;
 
 function drawBoard() {
-  console.log(board, colors);
+  console.log(board);
+  board.forEach((row, rowIndex) => {
+    row.forEach((pixel, pixIndex) => {
+      var color = colors[pixel] || { hex: 'black' };
+      ctx.fillStyle = color.hex;
+      ctx.fillRect(size * pixIndex, size * rowIndex, size, size);
+    });
+  });
 }
 
 function getBoard() {
@@ -22,18 +33,21 @@ function getBoard() {
 }
 
 function replaceTable() {
+  const hnMain = document.getElementById('hnmain');
+  const mainRect = hnMain.getBoundingClientRect();
+  const { width, height } = mainRect;
   const oldPlace = document.getElementById('place');
   const parent = oldPlace.parentElement;
   parent.removeChild(oldPlace);
   const place = document.createElement('div');
   place.id = 'place';
   parent.append(place);
-  const canvas = document.createElement('canvas');
+  canvas = document.createElement('canvas');
   canvas.id = 'canvas';
-  canvas.width = '500';
-  canvas.height = '500';
+  canvas.width = width.toString();
+  canvas.height = height.toString();
   place.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
+  ctx = canvas.getContext('2d');
   inf = infiniteCanvas.initialize(ctx);
   window.addEventListener('keydown', function (evt) {
     if (evt.which === 68) {
