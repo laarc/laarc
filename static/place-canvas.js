@@ -1,65 +1,65 @@
-const placeUrl = '/place.json';
+const place_url = '/place.json';
 
-let colors = {};
-let board = {};
-let inf;
-let canvas;
-let ctx;
+let place_colors = {};
+let place_board = {};
+let place_inf;
+let place_canvas;
+let place_ctx;
 
-const size = 12;
+const place_size = 12;
 
 // Prepare some variables for the dragging gestures logic
-let mouseIsDown = false;
-let isPanning = false;
-let previousMousePosition;
+let place_mouseIsDown = false;
+let place_isPanning = false;
+let place_previousMousePosition;
 
 function place_windowKeydown(evt) {
   if (evt.which === 68) {
-    isPanning = !isPanning;
+    place_isPanning = !place_isPanning;
   }
 }
 
 function place_canvasMousedown(event) {
   if (event.which === 1) {
-    mouseIsDown = true;
+    place_mouseIsDown = true;
   } else {
-    isPanning = true;
+    place_isPanning = true;
   }
 }
 
 function place_windowMouseup(event) {
   if (event.which === 1) {
-    mouseIsDown = false;
-    inf.updateChunks();
+    place_mouseIsDown = false;
+    place_inf.updateChunks();
   } else {
-    isPanning = false;
+    place_isPanning = false;
   }
 }
 
 function place_windowMousemove(event) {
-  var newMousePosition = {x: event.offsetX, y: event.offsetY};
-  if (mouseIsDown && isPanning) {
+  var newMousePosition = { x: event.offsetX, y: event.offsetY };
+  if (place_mouseIsDown && place_isPanning) {
     // pan the canvas whenever dragging with the middle or right mouse button
-    var dx = previousMousePosition.x - newMousePosition.x;
-    var dy = previousMousePosition.y - newMousePosition.y;
+    var dx = place_previousMousePosition.x - newMousePosition.x;
+    var dy = place_previousMousePosition.y - newMousePosition.y;
     // Canvas gets really messy if you do not clear it up :)
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    inf.moveBy(dx, dy);
-  } else if (mouseIsDown) {
+    place_ctx.clearRect(0, 0, place_canvas.width, place_canvas.height);
+    place_inf.moveBy(dx, dy);
+  } else if (place_mouseIsDown) {
     // draw lines when dragging with the left mouse button
-    if (previousMousePosition) {
-      ctx.beginPath();
-      ctx.moveTo(previousMousePosition.x, previousMousePosition.y);
-      ctx.lineTo(newMousePosition.x     , newMousePosition.y);
-      ctx.stroke();
+    if (place_previousMousePosition) {
+      place_ctx.beginPath();
+      place_ctx.moveTo(place_previousMousePosition.x, place_previousMousePosition.y);
+      place_ctx.lineTo(newMousePosition.x, newMousePosition.y);
+      place_ctx.stroke();
     }
   }
-  previousMousePosition = newMousePosition;
+  place_previousMousePosition = newMousePosition;
 }
 
 function place_addListeners() {
   window.addEventListener('keydown', place_windowKeydown);
-  canvas.addEventListener('mousedown', place_canvasMousedown);
+  place_canvas.addEventListener('mousedown', place_canvasMousedown);
   window.addEventListener("mouseup", place_windowMouseup);
   window.addEventListener("mousemove", place_windowMousemove);
 }
@@ -74,31 +74,36 @@ function place_replaceTable() {
   const place = document.createElement('div');
   place.id = 'place';
   parent.append(place);
-  canvas = document.createElement('canvas');
-  canvas.id = 'canvas';
-  canvas.width = width.toString();
-  canvas.height = window.innerHeight.toString();
-  place.appendChild(canvas);
-  ctx = canvas.getContext('2d');
-  inf = infiniteCanvas.initialize(ctx);
+  place_canvas = document.createElement('canvas');
+  place_canvas.id = 'canvas';
+  place_canvas.width = width.toString();
+  place_canvas.height = window.innerHeight.toString();
+  place.appendChild(place_canvas);
+  place_ctx = place_canvas.getContext('2d');
+  place_inf = infiniteCanvas.initialize(place_ctx);
   place_addListeners();
 }
 
 function place_drawBoard() {
-  board.forEach((row, rowIndex) => {
+  place_board.forEach((row, rowIndex) => {
     row.forEach((pixel, pixIndex) => {
-      var color = colors[pixel] || { hex: 'black' };
-      ctx.fillStyle = color.hex;
-      ctx.fillRect(size * pixIndex, size * rowIndex, size, size);
+      var color = place_colors[pixel] || { hex: 'black' };
+      place_ctx.fillStyle = color.hex;
+      place_ctx.fillRect(
+        place_size * pixIndex,
+        place_size * rowIndex,
+        place_size,
+        place_size,
+      );
     });
   });
 }
 
 function place_getBoard() {
   place_replaceTable();
-  fetch(placeUrl).then(resp => resp.json()).then(json => {
-    colors = json.colors;
-    board = json.board;
+  fetch(place_url).then(resp => resp.json()).then(json => {
+    place_colors = json.colors;
+    place_board = json.board;
     place_drawBoard();
   });
 }
