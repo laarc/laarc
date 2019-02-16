@@ -5,4 +5,4 @@ arc/
 *.csv
 *.png
 static/place.txt
-static/traffic/
+static/traffic*

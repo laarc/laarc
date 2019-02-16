@@ -38,9 +38,9 @@ set origin 0.0,0.5
 if ( exists("dateupto")) set xrange [ "2018-12-13" : dateupto ]
 if (!exists("dateupto")) set xrange [ "2018-12-13" : * ]
 
-plot "static/traffic/traffic.csv" using 1:2 with linespoints ls 1 title ""
+plot "static/traffic-requests.csv" using 1:2 with linespoints ls 1 title ""
 
 set origin 0.0,0.0
 set ylabel "Unique IPs"
 
-plot "static/traffic/uniques.csv" using 1:2 with linespoints ls 1 title ""
+plot "static/traffic-uniques.csv" using 1:2 with linespoints ls 1 title ""
