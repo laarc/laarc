@@ -6,6 +6,8 @@ let place_inf;
 let place_canvas;
 let place_ctx;
 
+let place_offsetY = 0;
+
 const place_size = 12;
 
 // Prepare some variables for the dragging gestures logic
@@ -20,6 +22,7 @@ function place_windowKeydown(evt) {
 }
 
 function place_canvasMousedown(event) {
+  console.log(event);
   if (event.which === 1) {
     place_mouseIsDown = true;
   } else {
@@ -28,6 +31,7 @@ function place_canvasMousedown(event) {
 }
 
 function place_windowMouseup(event) {
+  console.log(event);
   if (event.which === 1) {
     place_mouseIsDown = false;
     place_inf.updateChunks();
@@ -57,11 +61,25 @@ function place_windowMousemove(event) {
   place_previousMousePosition = newMousePosition;
 }
 
+function place_windowTouchmove(event) {
+  event.preventDefault();
+  const touch = event.touches[0];
+  const newPos = { x: touch.clientX, y: touch.clientY - place_offsetY };
+  if (place_previousMousePosition) {
+    place_ctx.beginPath();
+    place_ctx.moveTo(place_previousMousePosition.x, place_previousMousePosition.y);
+    place_ctx.lineTo(newPos.x, newPos.y);
+    place_ctx.stroke();
+  }
+  place_previousMousePosition = newPos;
+}
+
 function place_addListeners() {
   window.addEventListener('keydown', place_windowKeydown);
   place_canvas.addEventListener('mousedown', place_canvasMousedown);
   window.addEventListener("mouseup", place_windowMouseup);
   window.addEventListener("mousemove", place_windowMousemove);
+  place_canvas.addEventListener("touchmove", place_windowTouchmove);
 }
 
 function place_replaceTable() {
@@ -81,6 +99,7 @@ function place_replaceTable() {
   place.appendChild(place_canvas);
   place_ctx = place_canvas.getContext('2d');
   place_inf = infiniteCanvas.initialize(place_ctx);
+  place_offsetY = place_canvas.getBoundingClientRect().top;
   place_addListeners();
 }
 
