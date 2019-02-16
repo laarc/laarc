@@ -61,7 +61,12 @@ function place_windowMousemove(event) {
   place_previousMousePosition = newMousePosition;
 }
 
-function place_windowTouchmove(event) {
+function place_canvasTouchstart(event) {
+  const touch = event.touches[0];
+  place_previousMousePosition = { x: touch.clientX, y: touch.clientY - place_offsetY };
+}
+
+function place_canvasTouchmove(event) {
   event.preventDefault();
   const touch = event.touches[0];
   const newPos = { x: touch.clientX, y: touch.clientY - place_offsetY };
@@ -74,12 +79,18 @@ function place_windowTouchmove(event) {
   place_previousMousePosition = newPos;
 }
 
+function place_canvasTouchend(event) {
+  place_previousMousePosition = undefined;
+}
+
 function place_addListeners() {
   window.addEventListener('keydown', place_windowKeydown);
   place_canvas.addEventListener('mousedown', place_canvasMousedown);
   window.addEventListener("mouseup", place_windowMouseup);
   window.addEventListener("mousemove", place_windowMousemove);
-  place_canvas.addEventListener("touchmove", place_windowTouchmove);
+  place_canvas.addEventListener("touchmove", place_canvasTouchmove);
+  place_canvas.addEventListener("touchstart", place_canvasTouchstart);
+  place_canvas.addEventListener("touchend", place_canvasTouchend);
 }
 
 function place_replaceTable() {
