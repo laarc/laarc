@@ -3551,7 +3551,7 @@ RNBQKBNR
 #place tr    { -webkit-appearance: none; border-radius: 0; display: flex !important; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; overflow-wrap: normal; }
 #place td    { -webkit-appearance: none; border-radius: 0; display:    inline-block; border-collapse: unset; border: 0px; outline: none; padding: 0px; margin: 0px; }
 #place form  { outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; }
-#place input { -webkit-appearance: none; border-radius: 0; outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; height: 1.0em; width: 1.25em; border: 0px; text-shadow: #000 1px 0 10px; color: white; }
+#place input { -webkit-appearance: none; border-radius: 0; outline: none; margin-block-end: 0px; margin: 0px; padding: 0px; height: 1.0em; width: 1.0em; border: 0px; text-shadow: #000 1px 0 10px; color: white; }
 "
    place-info* "
 If you want to coordinate, come into our @(tostring:underlink 'discord discord-url*), or @(tostring:underlink 'submit place-submit-url*) to @(tostring:underlink '/l/place).
