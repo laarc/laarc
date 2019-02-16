@@ -1178,6 +1178,17 @@
   (delete-directory/files	path #:must-exist? #f))
 (xdef rmrf rmrf)
 
+(define (mkdir path)
+  (let ((parts (string-split path #px"[/\\\\]")))
+    (let loop ((i 1)
+               (n (length parts)))
+      (if (> i n) ar-t
+          (let ((p (string-join (take parts i) "/")))
+            (unless (directory-exists? p)
+              (make-directory p))
+            (loop (+ i 1) n))))))
+(xdef mkdir mkdir)
+
 (xdef pipe-from (lambda (cmd)
                    (let ((tf (ar-tmpname)))
                      (system (string-append cmd " > " tf))

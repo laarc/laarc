@@ -1359,7 +1359,7 @@
 
 (def ensure-dir (path)
   (unless (dir-exists path)
-    (system (string "mkdir -p " path))))
+    (mkdir path)))
 
 (def date ((o s (seconds)))
   (rev (nthcdr 3 (timedate s))))
