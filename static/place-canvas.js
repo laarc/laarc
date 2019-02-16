@@ -100,7 +100,6 @@ function place_drawBoard() {
 }
 
 function place_getBoard() {
-  place_replaceTable();
   fetch(place_url).then(resp => resp.json()).then(json => {
     place_colors = json.colors;
     place_board = json.board;
@@ -108,4 +107,9 @@ function place_getBoard() {
   });
 }
 
-window.addEventListener('load', place_getBoard);
+function place_start() {
+  place_replaceTable();
+  place_getBoard();
+}
+
+window.addEventListener('load', place_start);
