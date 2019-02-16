@@ -1705,7 +1705,7 @@
   (require (lib "foreign.ss"))
   (unsafe!)
   (provide bcrypt)
-  (define bcrypt* (get-ffi-obj "bcrypt" (ffi-lib "src/bcrypt/build/libbcrypt")
+  (define bcrypt* (get-ffi-obj "bcrypt" (if (eqv? (system-type) 'windows) (ffi-lib "src\\bcrypt\\bcrypt") (ffi-lib "src/bcrypt/build/libbcrypt"))
                    (_fun _string _string _pointer -> _void)))
 
   (define bcrypt ; (passwd salt) see BSD manual crypt(3)
@@ -1739,12 +1739,14 @@
   (provide uuid-generate)
 
   (define uuid-generate
-    (get-ffi-obj "uuid_generate" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
-      (_fun (out : _bytes = (make-bytes 16)) -> _void -> (uuid-unparse out))))
+    (unless (eqv? (system-type) 'windows)
+      (get-ffi-obj "uuid_generate" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
+        (_fun (out : _bytes = (make-bytes 16)) -> _void -> (uuid-unparse out)))))
 
   (define uuid-unparse
-    (get-ffi-obj "uuid_unparse" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
-      (_fun (uuid : _bytes) (out : _bytes = (make-bytes 32)) -> _void -> (cast out _bytes _string/utf-8))))
+    (unless (eqv? (system-type) 'windows)
+      (get-ffi-obj "uuid_unparse" (ffi-lib (if (eqv? (system-type 'os) 'macosx) "libSystem" "libuuid") '("1" ""))
+        (_fun (uuid : _bytes) (out : _bytes = (make-bytes 32)) -> _void -> (cast out _bytes _string/utf-8)))))
   )
 (require 'uuid)
 

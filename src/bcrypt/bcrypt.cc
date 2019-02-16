@@ -165,7 +165,7 @@ bcrypt_gensalt(char minor, u_int8_t log_rounds, u_int8_t *seed, char *gsalt)
 /* We handle $Vers$log2(NumRounds)$salt+passwd$
    i.e. $2$04$iwouldntknowwhattosayetKdJ6iFtacBqJdKe6aW7ou */
 
-extern "C" void
+extern "C" DllExport void
 bcrypt(const char *key, const char *salt, char *encrypted)
 {
 	blf_ctx state;
