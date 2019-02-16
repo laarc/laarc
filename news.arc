@@ -3651,6 +3651,21 @@ To clear the selection, click the x again, or click here: @(tostring:underlink '
   (pr place-board*)
   (flushout))
 
+(= (static-header* 'place.json) "application/json")
+
+(defop place.json req (pr:place-json))
+
+(defcache place-json 5
+  (tostring:write-json
+    (obj board
+         (map [map str (chars _)]
+              (lines place-board*))
+         colors
+         (listtab
+           (each (c col) place-colors*
+             (out (sym:string c)
+                  (obj r col!r g col!g b col!b hex "#@(hexrep col)")))))))
+
 (= (static-header* 'place.events) "text/event-stream;
 Access-Control-Allow-Origin: *
 Cache-Control: no-cache;
