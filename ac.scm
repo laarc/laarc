@@ -1174,6 +1174,10 @@
 
 (xdef system (wrapnil system))
 
+(define (rmrf path)
+  (delete-directory/files path #:must-exist? #f))
+(xdef rmrf rmrf)
+
 (xdef ensure-dir (wrapnil make-directory*))
 
 (xdef pipe-from (lambda (cmd)
