@@ -530,10 +530,7 @@
                (< end 0)  (+ (len seq) end) 
                           end)
     (if (isa seq 'string)
-        (let s2 (newstring (- end start))
-          (for i 0 (- end start 1)
-            (= (s2 i) (seq (+ start i))))
-          s2)
+        (seval!substring seq start end)
         (firstn (- end start) (nthcdr start seq)))))
       
 (mac whilet (var test . body)
