@@ -1586,10 +1586,11 @@
 (def qlist (q) (car q))
 
 (def enq-limit (val q (o limit 1000))
-  (atomic
-     (unless (< (qlen q) limit)
-       (deq q))
-     (enq val q)))
+ (atwiths (limit (if (< limit 1) 1 limit)
+           n (- (qlen q) limit))
+   (for i 0 n
+     (deq q))
+   (enq val q)))
 
 (def median (ns)
   ((sort > ns) (trunc (/ (len ns) 2))))
