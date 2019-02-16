@@ -105,7 +105,10 @@ function theArg(key, ifUnset) {
 
 
 function placeFromDefault() {
-  placeAnchor = ((typeof placeAnchor === "undefined") ? theArg("anchor") : placeAnchor);
+  if (typeof placeAnchor === "undefined") {
+    placeSet(theArg("from"), null, "value");
+  }
+  placeAnchor = ((typeof placeAnchor === "undefined") ? undefined : placeAnchor);
   return placeAnchor;
 }
 
