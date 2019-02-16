@@ -1763,6 +1763,9 @@
             default
             (in it 'y 'yes 'Y 'YES))))
 
+(def unzip (xs) (apply map list xs))
+
+(def zip ls (unzip ls))
 
 ; any logical reason I can't say (push x (if foo y z)) ?
 ;   eval would have to always ret 2 things, the val and where it came from

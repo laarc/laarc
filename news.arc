@@ -547,6 +547,28 @@
          (trtd ,@body)
          (trtd (longfoot ,gu (- (now) ,gt) ,whence))))))
 
+(defcache plot-traffic 3600
+  (lines:trim:shell 'sh "bin/plot-traffic.sh"))
+
+(defcache traffic-page 180
+  (unless (readenv "DEV" nil)
+    (minipage "traffic"
+      (center
+        (each x (plot-traffic)
+          (let src (+ "/" (last:tokens x #\/))
+            (tag (a href src) (gentag img src src width 900)))
+          (br2))
+        (pr:strftime "+%Y-%m-%d %H:%M:%S")
+        (br2)
+      (sptab
+        (row "date" "requests" "uniques")
+        (each ((d0 r) (d1 u)) (rev:zip (map tokens (lines:trim:filechars "static/traffic-requests.csv"))
+                                       (map tokens (lines:trim:filechars "static/traffic-uniques.csv")))
+          (tr (td d0) (td r) (td u))))))))
+
+(defop traffic req
+  (traffic-page))
+
 (def longfoot (user elapsed whence)
   (when (in whence "/l/teapots" "/l/teapot" "/l/418")
     (vspace 10)
@@ -1143,6 +1165,7 @@ function vote(node) {
       (row (link "/bestcomments") "Highest voted recent comments.")
       (row (link "/noobstories")  "Submissions from new accounts.")
       (row (link "/noobcomments") "Comments from new accounts.")
+      (row (link "/traffic")      "Site traffic statistics.")
       (when (admin user)
         (map row:link
              '(optimes noobs topips flagged killed badguys badlogins goodlogins)))
