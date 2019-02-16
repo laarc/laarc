@@ -1135,21 +1135,66 @@ function vote(node) {
 (def bestcomments (user n)
   (bestn n (compare > realscore) (visible user comments*)))
 
-(defcache plot-traffic 1800
+(def stats-from-log (filename)
+  (each x (lines:filechars filename)
+    (let (s h) (halve x)
+      (awhen (aand (saferead s) (if (isa it 'int) it))
+        (out it (car:halve (cut h 1)))))))
+
+(def stats-day ((o ymd (date)))
+  (let (y m d) ymd
+    (let file (string "arc/logs/srv-" y "-" (leftpad m 2) "-" (leftpad d 2))
+      (stats-from-log file))))
+
+(def stats-hour (H (o ymd (date)) (o day (stats-day ymd)))
+  (withs ((Y m d) ymd
+          from (date-seconds (list Y m d H))
+          upto (+ from 3600))
+    (keep [let (ts) _ (and (>= ts from) (< ts upto))]
+          day)))
+
+(def traffic-hour (H (o ymd (date)) (o day (stats-day ymd)))
+  (let xs (stats-hour H ymd day)
+    (list (len xs) (len:dedup (map cadr xs)))))
+
+(or= traffic* (obj))
+
+(def traffic-day ((o ymd (date)))
+  (if (is 24 (len (traffic* ymd)))
+      (traffic* ymd)
+      (= (traffic* ymd)
+         (let (y m d) ymd
+           (let day (stats-day ymd)
+             (aand (accum a (for i 0 23
+                              (let x (traffic-hour i ymd day)
+                                (let (requests uniques) x
+                                  (when (or (> requests 0) (> uniques 0))
+                                    (apply a (strftime "%Y-%m-%d %H:%M GMT" (date-seconds (+ ymd (list i)))) x))))))
+                   (rev it)))))))
+
+(defcache plot-traffic 60
   (lines:trim:shell 'sh "bin/plot-traffic.sh"))
 
-(defcache traffic-page 180
-  (tostring:minipage "traffic"
-    (let secs (seconds)
+(defcache traffic-page 30
+  (withs (secs (seconds)
+          ymd0 (date secs)
+          ymd1 (date (- (date-seconds ymd0) (* 24 60 60)))
+          ts (strftime "+%Y-%m-%d %H:%M:%S GMT" secs))
+    (tostring:minipage "traffic @ts"
       (center
         (each x (plot-traffic)
           (let src (+ "/" (last:tokens x #\/))
             (tag (a href src) (gentag img src src width 900)))
           (br2))
-        (pr (strftime "+%Y-%m-%d %H:%M:%S" secs))
+        (pr ts)
         (br2)
       (sptab
-        (row "date" "requests" "uniques")
+        (row "hourly" "requests" "uniques")
+        (each (d r u) (+ (traffic-day ymd0)
+                         (traffic-day ymd1))
+          (row d (pr:num r) (pr:num u))))
+      (sptab
+        (row "daily" "requests" "uniques")
         (let predicted nil
           (each ((d0 r) (d1 u)) (rev:zip (map tokens (lines:trim:filechars "static/traffic-requests.csv"))
                                          (map tokens (lines:trim:filechars "static/traffic-uniques.csv")))
@@ -1166,7 +1211,14 @@ function vote(node) {
                   (= predicted t)))))))))))
 
 (defop traffic req
-  (pr:traffic-page))
+  (aif (arg "on")
+      (minipage "traffic on @it"
+        (center
+          (sptab
+            (row "hourly" "requests" "uniques")
+            (each (d r u) (traffic-day (map int (tokens it #\-)))
+              (row d (pr:num r) (pr:num u))))))
+      (pr:traffic-page)))
 
 (newsop lists ()
   (longpage user (now) nil "lists" "Lists" "lists"

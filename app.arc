@@ -782,11 +782,20 @@
 
 (seval '(require racket/date))
 
-(defmemo date-yearday ((y m d))
-  (seval!date-year-day:seval!seconds->date:seval!find-seconds 0 0 0 d m y #f))
+(def mindate ((o secs (seconds)))
+  (cut (rev:timedate secs) 0 5))
 
-(defmemo date-weekday ((y m d))
-  (seval!date-week-day:seval!seconds->date:seval!find-seconds 0 0 0 d m y #f))
+(def hourdate ((o secs (seconds)))
+  (cut (rev:timedate secs) 0 4))
+
+(defmemo date-seconds ((Y m d (o H 0) (o M 0) (o S 0)))
+  (seval!find-seconds S M H d m Y #f))
+
+(defmemo date-yearday (ymd)
+  (seval!date-year-day:seval!seconds->date:date-seconds ymd))
+
+(defmemo date-weekday (ymd)
+  (seval!date-week-day:seval!seconds->date:date-seconds ymd))
 
 (defmemo date-weekday-name (ymd (o short t))
   (let s (days* (date-weekday ymd))
