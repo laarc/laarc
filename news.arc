@@ -547,28 +547,6 @@
          (trtd ,@body)
          (trtd (longfoot ,gu (- (now) ,gt) ,whence))))))
 
-(defcache plot-traffic 3600
-  (lines:trim:shell 'sh "bin/plot-traffic.sh"))
-
-(defcache traffic-page 180
-  (unless (readenv "DEV" nil)
-    (minipage "traffic"
-      (center
-        (each x (plot-traffic)
-          (let src (+ "/" (last:tokens x #\/))
-            (tag (a href src) (gentag img src src width 900)))
-          (br2))
-        (pr:strftime "+%Y-%m-%d %H:%M:%S")
-        (br2)
-      (sptab
-        (row "date" "requests" "uniques")
-        (each ((d0 r) (d1 u)) (rev:zip (map tokens (lines:trim:filechars "static/traffic-requests.csv"))
-                                       (map tokens (lines:trim:filechars "static/traffic-uniques.csv")))
-          (tr (td d0) (td r) (td u))))))))
-
-(defop traffic req
-  (traffic-page))
-
 (def longfoot (user elapsed whence)
   (when (in whence "/l/teapots" "/l/teapot" "/l/418")
     (vspace 10)
@@ -1155,6 +1133,35 @@ function vote(node) {
 (def bestcomments (user n)
   (bestn n (compare > realscore) (visible user comments*)))
 
+(defcache plot-traffic 1800
+  (lines:trim:shell 'sh "bin/plot-traffic.sh"))
+
+(defcache traffic-page 180
+  (tostring:minipage "traffic"
+    (let secs (seconds)
+      (center
+        (each x (plot-traffic)
+          (let src (+ "/" (last:tokens x #\/))
+            (tag (a href src) (gentag img src src width 900)))
+          (br2))
+        (pr (strftime "+%Y-%m-%d %H:%M:%S" secs))
+        (br2)
+      (sptab
+        (row "date" "requests" "uniques")
+        (let predicted nil
+          (each ((d0 r) (d1 u)) (rev:zip (map tokens (lines:trim:filechars "static/traffic-requests.csv"))
+                                         (map tokens (lines:trim:filechars "static/traffic-uniques.csv")))
+            (if predicted (row d0 r u)
+              (let m (aand (+ (* 60 (or (saferead (strftime "%H" secs)) 0))
+                              (or (saferead (strftime "%M" secs)) 0))
+                           (/ (* 60 24) it))
+                (row (pr d0 " (predicted)")
+                     (pr:trunc:* (or (saferead r) 0) m)
+                     (pr:trunc:* (or (saferead u) 0) m))
+                (= predicted t))))))))))
+
+(defop traffic req
+  (pr:traffic-page))
 
 (newsop lists ()
   (longpage user (now) nil "lists" "Lists" "lists"
