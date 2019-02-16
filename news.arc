@@ -1260,6 +1260,12 @@ function vote(node) {
               (row d (pr:num r) (pr:num u))))))
       (pr:traffic-page)))
 
+(seval '(require racket/os))
+
+(defop uptime req
+  (let ((o s "00") (o m "00") (o h "00") (o d "00")) (rev:tokens (trim:shell "ps -o etime= -p" (seval!getpid)) [in _ #\- #\:])
+    (pr:string d "d " h "h " m "m " s "s")))
+
 (newsop lists ()
   (longpage user (now) nil "lists" "Lists" "lists"
     (sptab
@@ -1269,7 +1275,8 @@ function vote(node) {
       (row (link "/bestcomments") "Highest voted recent comments.")
       (row (link "/noobstories")  "Submissions from new accounts.")
       (row (link "/noobcomments") "Comments from new accounts.")
-      (row (link "/traffic")      "Site traffic statistics.")
+      (row (link "/traffic")      "Hourly, daily, and weekly traffic statistics.")
+      (row (link "/uptime")       "How long has racket been running?")
       (when (admin user)
         (map row:link
              '(optimes noobs topips flagged killed badguys badlogins goodlogins)))
