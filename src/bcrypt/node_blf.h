@@ -124,9 +124,16 @@ void blf_cbc_decrypt(blf_ctx *, u_int8_t *, u_int8_t *, u_int32_t);
 /* Converts u_int8_t to u_int32_t */
 u_int32_t Blowfish_stream2word(const u_int8_t *, u_int16_t , u_int16_t *);
 
+
+#ifdef _MSC_VER
+#define DllExport   __declspec( dllexport )
+#else
+#define DllExport
+#endif
+
 /* bcrypt functions*/
 void bcrypt_gensalt(char, u_int8_t, u_int8_t*, char *);
-extern "C" void bcrypt(const char *, const char *, char *);
+extern "C" DllExport void bcrypt(const char *, const char *, char *);
 void encode_salt(char *, u_int8_t *, char, u_int16_t, u_int8_t);
 u_int32_t bcrypt_get_rounds(const char *);
 
