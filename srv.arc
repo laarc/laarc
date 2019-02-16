@@ -176,6 +176,7 @@ Strict-Transport-Security: max-age=31556900
        (text/html "text/html; charset=utf-8")
        (text/css  "text/css")
        (text/xml  "text/xml")
+       (text/csv  "text/csv")
        (application/json        "application/json")
        (application/javascript  "application/javascript")
        (application/manifest    "application/manifest+json")
@@ -280,6 +281,7 @@ Strict-Transport-Security: max-age=31556900
            "htm"  'text/html
            "html" 'text/html
            "arc"  'text/plain
+           "csv"  'text/csv
            "xml"  'text/xml
            "js"           'application/javascript
            "json"         'application/json
