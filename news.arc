@@ -486,7 +486,9 @@
 
 ; Page Layout
 
-(= up-url* "/grayarrow.gif" down-url* "/graydown.gif" logo-url* "/ln.png")
+(= up-url* (static-src "grayarrow.gif")
+   down-url* (static-src "graydown.gif")
+   logo-url* (static-src "ln.png"))
 
 ; redefined later
 
