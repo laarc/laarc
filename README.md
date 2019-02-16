@@ -45,6 +45,10 @@ change the variables at the top of news.arc
 # some prereqs
 sudo pkg install racket shuf rlwrap
 
+# prereqs for plotting traffic graphs
+sudo pkg install moreutils # sponge
+sudo pkg install gnuplot
+
 # for email
 sudo pkg install python # then install pip
 sudo pip install --upgrade google-api-python-client oauth2client
