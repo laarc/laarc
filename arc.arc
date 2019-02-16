@@ -1693,7 +1693,7 @@
 
 (mac fromdisk (var file init load save)
   (w/uniq (gf gv)
-    `(unless (bound ',var)
+    `(unless (and (bound ',var) ,var)
        (do1 (= ,var (iflet ,gf (file-exists ,file)
                                (,load ,gf)
                                ,init))
