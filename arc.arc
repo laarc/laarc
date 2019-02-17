@@ -917,17 +917,24 @@
        (repeat ,n (push ,expr ,ga))
        (rev ,ga))))
 
+(seval '(require racket/random))
+
+(withs (n 1024 s (seval!crypto-random-bytes n) bytes-ref seval!bytes-ref)
+  (def randb ()
+    (atomic
+      (if (<= n 0) (= n 1024 s (seval!crypto-random-bytes 1024)))
+      (bytes-ref s (-- n)))))
+
 ; rejects bytes >= 248 lest digits be overrepresented
 
 (def rand-string (n)
   (let c "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     (with (nc 62 s (newstring n) i 0)
-      (w/infile str "/dev/urandom"
-        (while (< i n)
-          (let x (readb str)
-             (unless (> x 247)
-               (= (s i) (c (mod x nc)))
-               (++ i)))))
+      (while (< i n)
+        (let x (randb)
+           (unless (> x 247)
+             (= (s i) (c (mod x nc)))
+             (++ i))))
       s)))
 
 (mac forlen (var s . body)
