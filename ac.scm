@@ -1172,7 +1172,7 @@
 ; Will system "execute" a half-finished string if thread killed
 ; in the middle of generating it?
 
-(xdef system (wrapnil system))
+(xdef system (if (eqv? (system-type) 'windows) (lambda args ar-nil) (wrapnil system)))
 
 (define (rmrf path)
   (delete-directory/files path #:must-exist? #f))
