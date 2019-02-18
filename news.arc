@@ -573,6 +573,7 @@
       (link "Guidelines" "/guidelines.html")
       (link "Bookmarklet" "/bookmarklet.html")
       (link "Feature Requests" "/item?id=230")
+      (link "Source" "https://github.com/laarc/laarc")
       (link "Contact" "mailto:@site-email*")
       (link "Twitter" "https://twitter.com/@site-twitter*")
       (link "Lists" "/lists"))
