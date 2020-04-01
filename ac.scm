@@ -1139,7 +1139,7 @@
                         (call-with-values
                          (lambda () (tcp-accept s))
                          (lambda (in out)
-                           (let ((in1 (make-limited-input-port in 100000 #t)))
+                           (let ((in1 (make-limited-input-port in 10000000 #t)))
                              (current-custodian oc)
                              (associate-custodian nc in1 out)
                              (list in1
