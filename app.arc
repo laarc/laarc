@@ -767,8 +767,26 @@
 (def shellquote (str)
   (+ "'" (multisubst (list (list "'" "'\"'\"'")) str) "'"))
 
+(def shellargs (cmd . args)
+  (list (string cmd)
+        (map shellquote:string (rem nil args))))
+
+(def shellstring (cmd . args)
+  (withs ((cmd args) (apply shellargs cmd args))
+    (+ cmd " " (string:intersperse #\space args))))
+  
 (def shell (cmd . args)
-  (tostring:system (+ (string cmd) " " (string:intersperse #\space (map shellquote:string (rem nil args))))))
+  (w/outstring o
+    (w/stderr o
+      (w/stdout o
+        (system (apply shellstring cmd args))
+        (inside o)))))
+
+(def shelllog args
+  (withs (ip (get-ip) u (get-user) c (tostring:ppr args))
+    (srvlog 'shell ip u c)
+    (w/stderr (stdout)
+      (system:apply shellstring args))))
 
 (def GET (url)
   (shell "curl" "-fsSL" (clean-url url)))
