@@ -339,7 +339,7 @@
       h)))
 
 (def escape (x)
-  (trim:tostring:seval!pretty-print x))
+  (tostring:write-json x))
 
 (def zip ls
   (if (no (car ls)) ()
