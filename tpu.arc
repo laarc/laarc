@@ -275,7 +275,7 @@
 (def tpu-recreate-all-pods ((o ps (tpus)))
   (map tpu-recreate (map !id (keep tpu-pod? (map cadr (tablist ps))))))
 
-(adop tpulog ()
+(edop tpulog ()
   (prn "<pre><code>")
   (prn:filechars:logfile-name 'shell)
   (prn "</pre></code>"))
