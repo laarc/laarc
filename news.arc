@@ -4332,4 +4332,48 @@ RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR")
     (= place-board* (filechars place-file*))
     was))
 
+(diskfile experiments-file* "/disk/experiments-dynamic.txt")
+
+(def good-model-dir (path)
+  (aand (headmatch "gs://" path)
+        (cadr:splitby "gs://" path)
+        (rstrip it "/")
+        (splitby "/" it)
+        (all goodname it)
+        (+ (rstrip path "/") "/")))
+
+(def list-experiments ()
+  (each line (map car:tokens:trim (lines experiments-file*))
+    (aand (good-model-dir line)
+          (out it))))
+
+(def add-experiment (name)
+  (awhen (good-model-dir name)
+    (unless (mem it (list-experiments))
+      (= experiments-file*
+         (+ (trim experiments-file* 'end) "\n"
+            it "\n"))
+      (todisk experiments-file*)
+      it)))
+
+(edop ops ()
+  (w/bars
+    (underline:w/link
+      (aform (fn (req)
+               (minipage "Message"
+                 (aif (add-experiment (arg "path"))
+                      (pr "Added " it)
+                      (pr "Bad name or already added"))))
+        (minipage "Add experiment"
+          (single-input "Enter model dir:" 'path 20 "add")))
+      (pr "add experiment"))
+
+    (underline:w/link
+      (minipage "Experiments"
+        (tab
+          (each x (list-experiments)
+            (row (td x)))))
+      (pr "list experiments"))))
+
+
 run-news
