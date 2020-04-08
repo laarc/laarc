@@ -116,6 +116,7 @@
       (char? x)
       (string? x)
       (number? x)
+      (bytes? x)
       (ar-nil? x)))
 
 (define (ssyntax? x)
