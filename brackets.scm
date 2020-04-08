@@ -11,14 +11,21 @@
 ; recursive read starts with default readtable's [ parser,
 ; but nested reads still use the curent readtable:
 
+; (define (read-square-brackets ch port src line col pos)
+;   `(fn (_)
+;      ,(read/recursive port #\[ #f)))
+
 (define (read-square-brackets ch port src line col pos)
-  `(fn (_)
-     ,(read/recursive port #\[ #f)))
+  `(%brackets ,@(read/recursive port #\[ #f)))
+
+(define (read-curly-braces ch port src line col pos)
+  `(%braces ,@(read/recursive port #\{ #f)))
   
 ; a readtable that is just like the builtin except for []s
 
 (define bracket-readtable
-  (make-readtable #f #\[ 'terminating-macro read-square-brackets))
+  (make-readtable #f #\[ 'terminating-macro read-square-brackets
+                     #\{ 'terminating-macro read-curly-braces))
   
 ; call this to set the global readtable
 
