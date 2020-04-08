@@ -384,7 +384,7 @@
            (tag (font size -2)
              (link "help" formatdoc-url* (gray 175)))))
       (caris typ 'choice)
-       (menu id (cddr typ) val)
+       (menu id (cdr typ) val)
       (is typ 'yesno)
        (menu id '("yes" "no") (if val "yes" "no"))
       (is typ 'hexcol)
