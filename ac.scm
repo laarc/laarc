@@ -1643,7 +1643,16 @@
                   val)))
 
 (xdef get-environment-variable getenv)
-(xdef set-environment-variable putenv)
+
+(define (ar-unsetenv k)
+  (environment-variables-set! (current-environment-variables) (string->bytes/utf-8 k) #f))
+
+(define (ar-putenv k v)
+  (if (ar-false? v)
+      (ar-unsetenv k)
+    (putenv k v)))
+
+(xdef set-environment-variable ar-putenv)
 
 (void (putenv "TZ" ":GMT"))
 
