@@ -9,7 +9,7 @@
 (def serve ((o port 8080))
   (wipe quitsrv*)
   (ensure-srvdirs)
-  (map [apply new-bgthread _] pending-bgthreads*)
+  (ensure-bgthreads)
   (w/socket s port
     (setuid 2) ; XXX switch from root to pg
     (prn "ready to serve port " port)
@@ -690,6 +690,9 @@ Strict-Transport-Security: max-age=31556900
 ; Background Threads
 
 (or= bgthreads* (table) pending-bgthreads* nil)
+
+(def ensure-bgthreads ()
+  (map [aif (apply new-bgthread _) (list _ it)] pending-bgthreads*))
 
 (def new-bgthread (id f sec)
   (aif (bgthreads* id) (break-thread it))
