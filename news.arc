@@ -4356,6 +4356,20 @@ RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR")
       (todisk experiments-file*)
       it)))
 
+(def remove-experiment (name)
+  (awhen (good-model-dir name)
+    (when (mem it (list-experiments))
+      (= experiments-file*
+         (+ (apply string
+                   (intersperse #\newline
+                                (each line (lines experiments-file*)
+                                  (if (is (good-model-dir line) it)
+                                      (out (+ "#" line))
+                                      (out line)))))
+            #\newline))
+      (todisk experiments-file*)
+      it)))
+
 (edop ops ()
   (w/bars
     (underline:w/link
@@ -4371,9 +4385,19 @@ RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR")
     (underline:w/link
       (minipage "Experiments"
         (tab
-          (each x (list-experiments)
-            (row (td x)))))
+          (each id (list-experiments)
+            (row (td (underline:w/link
+                       (minipage "Remove experiment?"
+                         (tab
+                           (tr (td)
+                               (td (urform user req
+                                     (do (when (is (arg req "b") "Yes")
+                                           (remove-experiment id))
+                                         "/ops")
+                                     (prn (+ "Do you want experiment " id " to be removed?"))
+                                     (br2)
+                                     (but "Yes" "b") (sp) (but "No" "b"))))))
+                       (pr id)))))))
       (pr "list experiments"))))
-
 
 run-news
