@@ -3712,7 +3712,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
         (tpu-recreate-pods-link user))
       (br2))
     (sptab
-      (tr (td "") (td "") (td "") (td "type") (td "name") (td "status") (td "cpu") (td "mem") (td "ips") (td "range"))
+      (tr (td "") (td "") (td "") (td "type") (td "name") (td "status") (td "cpu") (td "mem") (td "net") (td "ips") (td "range"))
       (spacerow 10)
       (let i 0
         (each p (sorted-tpus)
@@ -3725,8 +3725,8 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                              (msgpage user (tostring
                                              (pr "Memory usage for " p!id ":")
                                              (pr "<p><pre><code>")
-                                             (each (secs v) (tpu-memory p!id p!zone)
-                                               (prn (num (/ v (* 1024.0 1024.0 1024.0))) " GB " (text-age:minutes-since secs)))
+                                             (each (ts v) (tpu-request-pretty 'mem p!id p!zone)
+                                               (prn ts " " v))
                                              (pr "</code></pre>")))
                              (pr "mem"))
                   cpu 0.0 ; (last:last:tpu-cpu-usage p!id)
@@ -3734,10 +3734,18 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                         (msgpage user (tostring
                                         (pr "CPU usage for " p!id ":")
                                         (pr "<p><pre><code>")
-                                        (each (secs v) (tpu-cpu-usage p!id p!zone)
-                                          (prn (+ (num v 2 nil t) "%") " " (text-age:minutes-since secs)))
+                                        (each (ts v) (tpu-request-pretty 'cpu p!id p!zone)
+                                          (prn ts " " v))
                                         (pr "</code></pre>")))
                         (pr "cpu"))
+                  net (tostring:w/link
+                        (msgpage user (tostring
+                                        (pr "Network usage for " p!id ":")
+                                        (pr "<p><pre><code>")
+                                        (each (ts v) (tpu-request-pretty 'net p!id p!zone)
+                                          (prn ts " " v))
+                                        (pr "</code></pre>")))
+                        (pr "net"))
                   ;used (>= cpu 1.0)
                   used nil
                   ;cpuusage (+ (num cpu 2 nil t) "%")
@@ -3757,7 +3765,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                                            (pr "</code></pre>")))
                            (pr p!status))
                   name p!id)
-            (row delete recreate persist p!type name status cpu memusage ips p!range)))))))
+            (row delete recreate persist p!type name status cpu memusage net ips p!range)))))))
 
 (newsop tpus () (tpus-page user))
 
