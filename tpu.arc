@@ -364,7 +364,7 @@
                    ("interval.startTime" ,start-time)
                    ("interval.endTime" ,end-time)
                    ("filter" ,(apply string (intersperse " AND " (map (fn ((k v)) (string k '= (escape v))) filters)))))
-            token (trim:filechars "bearer.txt")
+            token (oauth-get-token)
             endpoint "https://monitoring.clients6.google.com/v3/projects/gpt-2-15b-poetry/timeSeries"
             url (apply string endpoint "?" (intersperse '& (map (fn ((k v)) (string (urlencode k) '= (urlencode v))) (tablist args))))
             h (fromstring (shell 'curl '-s url
