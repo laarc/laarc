@@ -532,13 +532,19 @@ Strict-Transport-Security: max-age=31556900
   
 ; Since it's just an expr, gensym a parm for (ignored) args.
 
-(mac w/link (expr . body)
-  `(tag (a href (flink (fn (,(uniq)) ,expr)))
+(mac w/lexkey (expr . body)
+  `(let w/lexkey--expr ,expr
      ,@body))
 
+(mac w/link (expr . body)
+  `(w/lexkey '(,expr ,@body)
+     (tag (a href (flink (fn (,(uniq)) ,expr)))
+        ,@body)))
+
 (mac w/rlink (expr . body)
-  `(tag (a href (rflink (fn (,(uniq)) ,expr)))
-     ,@body))
+  `(w/lexkey '(,expr ,@body)
+     (tag (a href (rflink (fn (,(uniq)) ,expr)))
+        ,@body)))
 
 (mac onlink (text . body)
   `(w/link (do ,@body) (pr ,text)))
@@ -549,25 +555,28 @@ Strict-Transport-Security: max-age=31556900
 ; bad to have both flink and linkf; rename flink something like fnid-link
 
 (mac linkf (text parms . body)
-  `(tag (a href (flink (fn ,parms ,@body))) (pr ,text)))
+  `(w/lexkey '(,text ,parms ,@body)
+     (tag (a href (flink (fn ,parms ,@body))) (pr ,text))))
 
 (mac rlinkf (text parms . body)
-  `(tag (a href (rflink (fn ,parms ,@body))) (pr ,text)))
+  `(w/lexkey '(,text ,parms ,@body)
+     (tag (a href (rflink (fn ,parms ,@body))) (pr ,text))))
 
 ;(defop top req (linkf 'whoami? (req) (pr "I am " (get-user req))))
 
 ;(defop testf req (w/link (pr "ha ha ha") (pr "laugh")))
 
 (mac w/link-if (test expr . body)
-  `(tag-if ,test (a href (flink (fn (,(uniq)) ,expr)))
-     ,@body))
+  `(w/lexkey '(,text ,expr ,@body)
+     (tag-if ,test (a href (flink (fn (,(uniq)) ,expr)))
+       ,@body)))
 
 (def fnid-field (id)
   (gentag input type 'hidden name 'fnid value id))
 
 ; f should be a fn of one arg, which will be http request args.
 
-(def fnformf (f bodyfn (o redir) (o k))
+(def fnformf (f bodyfn (o redir) (o k '(lexkey)))
   (tag (form method 'post action (if redir rfnurl2* fnurl*))
     (fnid-field (fnid f k))
     (bodyfn)))
@@ -579,12 +588,13 @@ Strict-Transport-Security: max-age=31556900
 ; Is there a way to ensure user doesn't use "fnid" as a key?
 
 (mac aform (f . body)
-  (w/uniq ga
-    `(tag (form method 'post action fnurl*)
-       (fnid-field (fnid (fn (,ga)
-                           (prn)
-                           (,f ,ga))))
-       ,@body)))
+  (w/uniq (ga ge)
+    `(w/lexkey '(,f ,@body)
+       (tag (form method 'post action fnurl*)
+         (fnid-field (fnid (fn (,ga)
+                             (prn)
+                             (,f ,ga))))
+         ,@body))))
 
 ;(defop test1 req
 ;  (fnform (fn (req) (prn) (pr req))
@@ -607,9 +617,10 @@ Strict-Transport-Security: max-age=31556900
          ,@body))))
 
 (mac arform (f . body)
-  `(tag (form method 'post action rfnurl*)
-     (fnid-field (fnid ,f))
-     ,@body))
+  `(w/lexkey '(,f ,@body)
+     (tag (form method 'post action rfnurl*)
+        (fnid-field (fnid ,f))
+        ,@body)))
 
 ; overlong
 
@@ -621,14 +632,16 @@ Strict-Transport-Security: max-age=31556900
          ,@body))))
 
 (mac aformh (f . body)
-  `(tag (form method 'post action fnurl*)
-     (fnid-field (fnid ,f))
-     ,@body))
+  `(w/lexkey '(,f ,@body)
+     (tag (form method 'post action fnurl*)
+       (fnid-field (fnid ,f))
+       ,@body)))
 
 (mac arformh (f . body)
-  `(tag (form method 'post action rfnurl2*)
-     (fnid-field (fnid ,f))
-     ,@body))
+  `(w/lexkey '(,f ,@body)
+     (tag (form method 'post action rfnurl2*)
+       (fnid-field (fnid ,f))
+       ,@body)))
 
 ; only unique per server invocation
 
