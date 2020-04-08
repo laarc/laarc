@@ -717,12 +717,13 @@ function vote(node) {
                 style "border:1px #@(hexrep border-color*) solid;")))))
 
 (= toplabels* '(nil "welcome" "new" "threads" "comments" "discord"
-                    "/l/show" "show" "/l/ask" "ask" "/l/place" "place" "*"))
+                    "/l/show" "show" "/l/ask" "ask" "/l/place" "place" "tpus" "*"))
 
 ; redefined later
 
 (def toprow (user label)
   (w/bars
+    (toplink "tpus"  "/tpus" label)
     (toplink "new" "/newest" label)
     (when user
       (toplink "threads" (threads-url user) label))
@@ -3182,42 +3183,104 @@ first asterisk isn't whitespace.
 
 ; Site pages
 
-(def pages-url ((o anchor nil)) (+ "/pages" (aand anchor "#@it")))
+(do
+
+(def pages-url ((o anchor nil)) (+ "/pages" (aand anchor (+ "#" it))))
 
 (defopa pages req
   (edit-pages-page (get-user req) (arg req "msg")))
 
+(def edit-welcome-page (user)
+  (urform user req
+         (do (todisk welcome-page* (md-from-form (arg req "welcome") nil t))
+             "/welcome.html")
+    (idtab "welcome"
+      (row (underlink "/welcome.html"))
+      (row (textarea "welcome" 80 60
+             (pr:esc-tags:unmarkdown welcome-page* t)))
+      (row (submit "update /welcome.html")))))
+
+(def edit-guidelines-page (user)
+  (urform user req
+         (do (todisk guidelines-page* (md-from-form (arg req "guidelines") nil t))
+             "/guidelines.html")
+    (idtab "guidelines"
+      (row (underlink "/guidelines.html"))
+      (row (textarea "guidelines" 80 60
+             (pr:esc-tags:unmarkdown guidelines-page* t)))
+      (row (submit "update /guidelines.html")))))
+
+(def edit-bookmarklet-page (user)
+  (urform user req
+         (do (todisk bookmarklet-page* (arg req "bookmarklet"))
+             "/bookmarklet.html")
+    (idtab "bookmarklet"
+      (row (underlink "/bookmarklet.html"))
+      (row (textarea "bookmarklet" 80 60
+             (pr:esc-tags bookmarklet-page*)))
+      (row (submit "update /bookmarklet.html")))))
+
+; Member Pages
+
 (def edit-pages-page (user (o msg nil))
   (minipage "Edit Pages"
     (when msg (pr msg) (br2))
+    (edit-arfa-page user)
+    (edit-aydao-page user)
+    (edit-gwern-page user)
+    (edit-welcome-page user)
+    (edit-guidelines-page user)
+    (edit-bookmarklet-page user)))
 
-    (urform user req
-           (do (todisk guidelines-page* (md-from-form (arg req "guidelines") nil t))
-               "/guidelines.html")
-      (idtab "guidelines"
-        (row (underlink "/guidelines.html"))
-        (row (textarea "guidelines" 80 60
-               (pr:esc-tags:unmarkdown guidelines-page* t)))
-        (row (submit "update /guidelines.html"))))
+(def github-markdown (md)
+  (fromstring md (shell 'github-markdown "/dev/stdin" '-h)))
 
-    (urform user req
-           (do (todisk welcome-page* (md-from-form (arg req "welcome") nil t))
-               "/welcome.html")
-      (idtab "welcome"
-        (row (underlink "/welcome.html"))
-        (row (textarea "welcome" 80 60
-               (pr:esc-tags:unmarkdown welcome-page* t)))
-        (row (submit "update /welcome.html"))))
+(diskfile arfa-page* (+ newsdir* "arfa.html") (md-from-form "" nil t))
 
-    (urform user req
-           (do (todisk bookmarklet-page* (arg req "bookmarklet"))
-               "/bookmarklet.html")
-      (idtab "bookmarklet"
-        (row (underlink "/bookmarklet.html"))
-        (row (textarea "bookmarklet" 80 60
-               (pr:esc-tags bookmarklet-page*)))
-        (row (submit "update /bookmarklet.html"))))))
+(newsop arfa ()
+  (msgpage user (unesc-tags:github-markdown arfa-page*) "arfa" (pages-url "arfa")))
 
+(def edit-arfa-page (user)
+  (urform user req
+         (do (todisk arfa-page* (arg req "arfa"))
+             "/arfa")
+    (idtab "arfa"
+      (row (underlink "/arfa"))
+      (row (tag (textarea name "arfa" cols bigformwid* rows (needrows arfa-page* bigformwid* 4))
+             (pr:esc-tags arfa-page*)))
+      (row (submit "update /arfa")))))
+
+(diskfile aydao-page* (+ newsdir* "aydao.html") (md-from-form "" nil t))
+
+(newsop aydao ()
+  (msgpage user (unesc-tags:github-markdown aydao-page*) "aydao" (pages-url "aydao")))
+
+(def edit-aydao-page (user)
+  (urform user req
+         (do (todisk aydao-page* (arg req "aydao"))
+             "/aydao")
+    (idtab "aydao"
+      (row (underlink "/aydao"))
+      (row (tag (textarea name "aydao" cols bigformwid* rows (needrows aydao-page* bigformwid* 4))
+             (pr:esc-tags aydao-page*)))
+      (row (submit "update /aydao")))))
+
+(diskfile gwern-page* (+ newsdir* "gwern.html") (md-from-form "" nil t))
+
+(newsop gwern ()
+  (msgpage user (unesc-tags:github-markdown gwern-page*) "gwern" (pages-url "gwern")))
+
+(def edit-gwern-page (user)
+  (urform user req
+         (do (todisk gwern-page* (arg req "gwern"))
+             "/gwern")
+    (idtab "gwern"
+      (row (underlink "/gwern"))
+      (row (tag (textarea name "gwern" cols bigformwid* rows (needrows gwern-page* bigformwid* 4))
+             (pr:esc-tags gwern-page*)))
+      (row (submit "update /gwern")))))
+
+)
 
 ; Bookmarklet
 
@@ -3513,6 +3576,193 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                    (tag (span) (itemlink item.id (multisubst '(("<p>" " ")) title))))
               (spacerow 10))))))))
 
+(do
+
+(seval '(require gregor))
+
+(def isotime (s)
+  (* 1.0
+     (seval!->posix
+       (seval!iso8601->moment s))))
+
+(load "tpu.arc")
+
+(deftem tpu
+  id nil
+  zone nil
+  type nil
+  ips (list)
+  network nil
+  range nil
+  status nil)
+
+(def parse-tpus ()
+  (let tpus (table)
+    (each tpu (map tpu-parse (cdr:lines:shell 'tpu-status))
+      (unless (is tpu!id 'Listed)
+        (= (tpus tpu!id) tpu)))
+    tpus))
+
+(defcache get-tpus 5
+  (parse-tpus))
+
+(def tpu-parse (line)
+  (let (name zone type ips network range status) (if (acons line) line (tokens line))
+    (inst 'tpu
+          'id (sym name)
+          'zone (sym zone)
+          'type (sym type)
+          'ips (tokens ips #\,)
+          'network network
+          'range range
+          'status status)))
+
+(= tpu-suffixes*
+   (obj v3-2048 23
+        v3-1024 24
+        v3-512 25
+        v3-256 26
+        v3-128 27
+        v3-64 28
+        v3-32 29
+        v2-512 25
+        v2-256 26
+        v2-128 27
+        v2-64 28
+        v2-32 29
+        ))
+
+(def tpus ((o id nil))
+  (aand (get-tpus)
+        (if (no id) it (it id))))
+
+(def tpu-pod? (x)
+  (let kind (if (isa x 'table) x!type ((tpu-parse-info:sym x) 'type))
+    (yes (tpu-suffixes* kind))))
+
+(def tpu-create-pod (idx type)
+  (assert idx (isa 'int))
+  (withs (cidr (assert (tpu-suffixes* (sym type)) yes)
+          id (sym (+ "tpu-" type "-euw4a-" (assert idx (isa 'int)))))
+    (each (i p) (tpus)
+      (when (and (tpu-pod? p)
+                 (or (is (tpu-index p) idx)
+                     (is i id)))
+        (err "tpu-create-pod: tpu exists: @id")))
+    (shell 'tpu-create-eu-pod idx type cidr)
+    id))
+
+(def tpu-recreate-pod (idx type (o cidr nil) (o delay 300.0))
+  (let cidr (or cidr (tpu-suffixes* (sym type)))
+    (shell 'tpu-recreate-pod idx type cidr delay)))
+
+(def <bool (a b) (if (no a) t nil))
+
+(def sorted-tpus ((o ps (tpus)))
+  (sort (compare ~<bool tpu-pod?) (sort (compare ~< tpu-index) (map cadr (tablist ps)))))
+
+(def tpu-memory (id (o zone 'europe-west4-a))
+  (let s (multisubst `(("${TPU_ID}" ,(str id)) ("${TPU_ZONE}" ,zone)) tpu-memory-query-template*)
+    (w/instring i (tostring:system s)
+      (let h (read-json i)
+        (accum a
+          (each pt h!timeSeries.0!points
+            (a (list (isotime pt!interval!startTime) pt!value!doubleValue))))))))
+
+(def tpu-cpu-usage (id (o zone 'europe-west4-a))
+  (let s (multisubst `(("${TPU_ID}" ,(str id)) ("${TPU_ZONE}" ,zone)) tpu-cpu-query-template*)
+    (w/instring i (tostring:system s)
+      (let h (read-json i)
+        (accum a
+          (each pt h!timeSeries.0!points
+            (a (list (isotime pt!interval!startTime) pt!value!doubleValue))))))))
+
+(def tpu-v8s ((o ps (tpus)))
+  (listtab (keep (fn ((id p)) (~tpu-pod? p))
+                 (tablist ps))))
+
+(def is-preempted ((id p))
+  (is p!status "PREEMPTED"))
+
+(def tpus-preempted ((o ps (tpus)))
+  (keep ~is-preempted (tablist ps)))
+
+(def tpu-v8s-preempted ((o ps (tpu-v8s)))
+  (keep (fn ((id p))
+          (~is p!status "PREEMPTED"))
+        (tablist ps)))
+
+(newscache tpus-page user 90
+  (longpage user (now) nil "tpus" "TPUs" "tpus"
+    (hspace 10)
+    (pr "swarm: " (len:tpu-v8s-preempted) " / " (len:tpu-v8s) " alive")
+    (br2)
+    (when tpu-recreate*
+      (hspace 10)
+      (apply prs "recreating:"
+             (each name (map car tpu-recreate*)
+               (if (candelete-tpu user name)
+                   (out:tostring:tpu-delete-link name user name)
+                   (out name))))
+      (br2))
+    (when (tpu-editor user)
+      (hspace 10)
+      (w/bars
+        (underlink "Create TPU" "/newtpu")
+        (tpu-recreate-pods-link user))
+      (br2))
+    (sptab
+      (tr (td "") (td "") (td "") (td "type") (td "name") (td "status") (td "cpu") (td "mem") (td "ips") (td "range"))
+      (spacerow 10)
+      (let i 0
+        (each p (sorted-tpus)
+          (++ i)
+          (withs (ips (tostring:w/link
+                        (msgpage user p!ips)
+                        (prn:ellipsize (tostring (ppr p!ips)) 50))
+                  memusage 0.0 ; (+ (num (/ (last:last:tpu-memory p!id) (* 1024 1024 1024))) " GB")
+                  memusage (tostring:w/link
+                             (msgpage user (tostring
+                                             (pr "Memory usage for " p!id ":")
+                                             (pr "<p><pre><code>")
+                                             (each (secs v) (tpu-memory p!id p!zone)
+                                               (prn (num (/ v (* 1024.0 1024.0 1024.0))) " GB " (text-age:minutes-since secs)))
+                                             (pr "</code></pre>")))
+                             (pr "mem"))
+                  cpu 0.0 ; (last:last:tpu-cpu-usage p!id)
+                  cpu (tostring:w/link
+                        (msgpage user (tostring
+                                        (pr "CPU usage for " p!id ":")
+                                        (pr "<p><pre><code>")
+                                        (each (secs v) (tpu-cpu-usage p!id p!zone)
+                                          (prn (+ (num v 2 nil t) "%") " " (text-age:minutes-since secs)))
+                                        (pr "</code></pre>")))
+                        (pr "cpu"))
+                  ;used (>= cpu 1.0)
+                  used nil
+                  ;cpuusage (+ (num cpu 2 nil t) "%")
+                  delete (if (candelete-tpu user p!id)
+                             (tostring:tpu-delete-link p!id user)
+                             "")
+                  recreate (if (canrecreate-tpu user p!id)
+                               (tostring:tpu-recreate-link p!id user)
+                               "")
+                  persist (if (and (tpu-editor user) (tpu-pod? p))
+                              (tostring:tpu-persist-link user p!id)
+                              "")
+                  status (tostring:w/link
+                           (msgpage user (tostring
+                                           (pr "<p><pre><code>")
+                                           (pr:shell 'tpu-describe p!id '--zone p!zone)
+                                           (pr "</code></pre>")))
+                           (pr p!status))
+                  name p!id)
+            (row delete recreate persist p!type name status cpu memusage ips p!range)))))))
+
+(newsop tpus () (tpus-page user))
+
+)
+
 (adop noobs ()
   (sptab
     (tr (td "") (td "age") (td "id") (td "email") (td "score") (td "votes"))
@@ -3562,11 +3812,6 @@ RNBQKBNR
       ("p" "&#9823;")
       (" " "&nbsp;"))
     (string x)))
-
-(def chars (x)
-  (accum a
-    (each c x
-      (a c))))
 
 (def chess ((o board chess-board*))
   (accum a

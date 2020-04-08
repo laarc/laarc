@@ -155,6 +155,41 @@
           start
           (findsubseq pat seq (+ start 1)))))
 
+(def chars (x)
+  (accum a
+    (each c x
+      (a c))))
+
+(def splitby (pat seq (o start 0))
+  (aif (empty pat)
+        (if (isa seq 'string) (map string (chars seq)) seq)
+       (findsubseq pat seq start)
+        (cons (cut seq 0 it) (splitby pat (cut seq (+ it (len pat)))))
+        (list seq)))
+
+(def splitsby (pats seq)
+  (let parts (list seq)
+    (each pat pats
+      (= parts (accum a
+                 (each part parts
+                   (each x (splitby pat part)
+                     (a x))))))
+    parts))
+
+(def lstrip (str x)
+  (if (headmatch x str) (cut str (len x)) str))
+
+(def revs (str)
+  (apply string (rev:chars str)))
+
+(def rstrip (str x)
+  (if (headmatch (revs x) (revs str))
+      (revs (cut (revs str) (len x)))
+    str))
+
+(def strip (str x)
+  (lstrip (rstrip str x) x))
+
 (def blank (s) (~find ~whitec s))
 
 (def nonblank (s) (unless (blank s) s))
