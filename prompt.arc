@@ -5,14 +5,20 @@
 (defop prompt req 
   (let user (get-user req)
     (if (admin user)
-        (prompt-page user)
+        (aif (arg req "msg")
+             (prompt-page user it)
+             (prompt-page user))
         (pr "Sorry."))))
+
+(def promptlink msg
+  (if msg
+      (+ "/prompt?msg=" (urlencode:tostring:apply pr msg))
+      "/prompt"))
 
 (def prompt-page (user . msg)
   (ensure-dir appdir*)
   (ensure-dir (string appdir* user))
-  (whitepage
-    (prbold "Prompt")
+  (minipage "Prompt"
     (hspace 20)
     (pr user " | ")
     (link "logout")
@@ -22,9 +28,9 @@
       (each app (dir (+ appdir* user))
         (tr (td app)
             (td (ulink user 'edit   (edit-app user app)))
-            (td (ulink user 'run    (run-app  user app)))
+            (td (ulink user 'run    (run-app user app)))
             (td (hspace 40)
-                (ulink user 'delete (rem-app  user app))))))
+                (ulink user 'delete (rem-app-confirm-page user app))))))
     (br2)
     (aform (fn (req)
              (when-umatch user req
@@ -46,25 +52,41 @@
     (w/outfile o it 
       (each e exprs (write e o)))))
 
+(def rem-app-confirm-page (user app)
+  (minipage "Confirm"
+    (tab
+      (tr (td)
+          (td (urform user req
+                      (if (is (arg req "b") "Yes")
+                          (rem-app user app)
+                          (promptlink))
+                 (prn (+ "Do you want app " app " to be deleted?"))
+                 (br2)
+                 (but "Yes" "b") (sp) (but "No" "b")))))))
+
 (def rem-app (user app)
   (let file (app-path user app)
     (if (file-exists file)
         (do (rmfile (app-path user app))
-            (prompt-page user "Program " app " deleted."))
-        (prompt-page user "No such app."))))
+            (promptlink "Program " app " deleted."))
+        (promptlink "No such app."))))
 
 (def edit-app (user app)
-  (whitepage
-    (pr "user: " user " app: " app)
+  (minipage app
     (br2)
-    (aform (fn (req)
-             (let u2 (get-user req)
-               (if (is u2 user)
-                   (do (when (is (arg req "cmd") "save")
-                         (write-app user app (readall (arg req "exprs"))))
-                       (prompt-page user))
-                   (login-page 'both nil
-                               (fn (u ip) (prompt-page u))))))
+    (urform user req
+            (aif (goodname (arg req "name"))
+                 (if (file-exists (app-path user it))
+                     (promptlink "App already exists")
+                     (do (write-app user it (read-app user app))
+                         (rmfile (app-path user app))
+                         (promptlink)))
+                 (promptlink "Bad name."))
+      (single-input "Rename app:" 'name 20 "submit" nil app))
+    (urform user req
+            (do (when (is (arg req "cmd") "save")
+                  (write-app user app (readall (arg req "exprs"))))
+                (promptlink))
       (textarea "exprs" 10 82
         (pprcode (read-app user app)))
       (br2)
@@ -76,8 +98,7 @@
     (pr "\n\n")))
 
 (def view-app (user app)
-  (whitepage
-    (pr "user: " user " app: " app)
+  (minipage (+ "user: " user " app: " app)
     (br2)
     (tag xmp (pprcode (read-app user app)))))
 
@@ -90,7 +111,7 @@
 
 (or= repl-history* nil)
 
-(= repl-history-max* 10000)
+(= repl-history-max* 100000)
 
 (defop repl req
   (if (admin (get-user req))
