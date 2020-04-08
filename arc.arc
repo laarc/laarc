@@ -850,14 +850,26 @@
 (mac w/stdout (str . body)
   `(call-w/stdout ,str (fn () ,@body)))
 
+(mac w/stderr (str . body)
+  `(call-w/stderr ,str (fn () ,@body)))
+
 (mac w/stdin (str . body)
   `(call-w/stdin ,str (fn () ,@body)))
 
 (mac tostring body
   (w/uniq gv
    `(w/outstring ,gv
-      (w/stdout ,gv ,@body)
+      (w/stdout ,gv (w/stderr ,gv ,@body))
       (inside ,gv))))
+
+(mac tostrings body
+  (w/uniq (ge go)
+   `(w/outstring ,ge
+      (w/outstring ,go
+        (w/stderr ,ge
+          (w/stdout ,go
+            ,@body))
+        (list (inside ,go) (inside ,ge))))))
 
 (mac fromstring (str . body)
   (w/uniq gv

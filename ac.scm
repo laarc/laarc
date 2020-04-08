@@ -988,6 +988,10 @@
       (lambda (port thunk)
         (parameterize ((current-output-port port)) (thunk))))
 
+(xdef call-w/stderr
+      (lambda (port thunk)
+        (parameterize ((current-error-port port)) (thunk))))
+
 (xdef call-w/stdin
       (lambda (port thunk)
         (parameterize ((current-input-port port)) (thunk))))
