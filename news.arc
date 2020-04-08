@@ -10,17 +10,17 @@
 (load "firebase.arc")
 (load "algolia.arc")
 
-(= site-name*    "laarc"
-   site-abbrev*  "LN"
-   site-email*   "hi@@laarc.io"
+(= site-name*    "tensorfork"
+   site-abbrev*  "TFK"
+   site-email*   "shawnpresser@@gmail.com"
    site-twitter* "theshawwn"
    site-discord* "shawwn#3694"
-   discord-url*  "https://discord.gg/qaqkc9z"
-   site-url*     "https://www.laarc.io"
-   parent-url*   "https://www.laarc.io"
+   discord-url*  "https://discord.gg/x52Xz3y"
+   site-url*     "https://fork.shawwn.com"
+   parent-url*   "https://fork.shawwn.com"
    welcome-url*  "/welcome.html"
    favicon-url*  ""
-   site-desc*    "Links for the curious"     ; for rss feed
+   site-desc*    "TPU Podcast"     ; for rss feed
    site-color*   (color 154 186 170)
    border-color* (color 154 186 170)
    prefer-url*   t)
@@ -572,7 +572,7 @@
       (link "Welcome" welcome-url*)
       (link "Guidelines" "/guidelines.html")
       (link "Bookmarklet" "/bookmarklet.html")
-      (link "Feature Requests" "/item?id=230")
+      ;(link "Feature Requests" "/item?id=230")
       (link "Source" "https://github.com/laarc/laarc")
       (link "Contact" "mailto:@site-email*")
       (link "Twitter" "https://twitter.com/@site-twitter*")
@@ -581,7 +581,7 @@
     (w/bars
       (link "RSS (stories)" "/rss")
       (link "RSS (comments)" "/rsscomments"))
-    (search-bar user elapsed whence)
+    ;(search-bar user elapsed whence)
     (admin-bar user elapsed whence)))
 
 (def search-bar (user elapsed whence)
@@ -729,7 +729,7 @@ function vote(node) {
     (toplink "comments" "/newcomments" label)
     (toplink "discord"  discord-url* label)
     (hook 'toprow user label)
-    (link "tags" "/l")
+    ;(link "tags" "/l")
     (toplink "ask" "/l/ask" (if (is label "/l/ask") "ask" label))
     (toplink "show" "/l/show" (if (is label "/l/show") "show" label))
     (toplink "place" "/l/place" (if (is label "/l/place") "place" label))
@@ -2027,6 +2027,7 @@ function suggestTitle() {
 (= long-domains* '("blogspot" "wordpress" "livejournal" "blogs" "typepad"
                    "weebly" "posterous" "blog-city" "supersized" "dreamhosters"
                    ; "sampasite"  "multiply" "wetpaint" ; all spam, just ban
+                   "shawwn" "google"
                    "eurekster" "blogsome" "edogo" "blog" "com"
                    "ycombinator"))
 
