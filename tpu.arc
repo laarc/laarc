@@ -64,6 +64,16 @@
                (and preemptible '--preemptible)
                (and async '--async))))))
 
+(def tpu-reimage (id version (o async t))
+  (withs (p (tpu-parse-info id)
+          zone-name (p 'zone))
+    (aif (no zone-name) (err "Bad zone name")
+      (let id p!id
+        (shelllog 'gcloud 'compute 'tpus 'reimage id
+               '--zone zone-name
+               '--version version
+               (and async '--async))))))
+
 (def tpu-parse-zone-name (name)
   (let name (string name)
     (if (posmatch "-usc1a-" name) 'us-central1-a
@@ -200,6 +210,32 @@
           (yesno preemptible t t t)))
       (br2)
       (submit "create"))))
+
+(defope reimagetpu req
+  (let user (get-user req)
+    (tpu-reimage-page user (arg req "msg"))))
+
+(def tpu-choices ((o ps (sorted-tpus)))
+  `(choice ,@(map !id (keep tpu-pod? ps))))
+
+(def tpu-reimage-page (user (o msg nil))
+  (minipage "Reimage TPU"
+    (pagemessage msg)
+    (uform user req
+           (withs (tpu-id (sym:arg req "id")
+                   tpu-version (arg req "version"))
+             (if (aand tpu-id tpu-version)
+                 (do (prn "<pre><code>")
+                     (prn:tpu-reimage tpu-id tpu-version)
+                     (prn "</code></pre>"))
+                 (tpu-reimage-page user (tostring:prn "Invalid TPU info: "
+                                                      'tpu-id tpu-id (arg req "id")
+                                                      'tpu-version tpu-version (arg req "version")))))
+           (tab:showvars
+        `((,(tpu-choices) id nil t t)
+          (string1 version "1.15" t t)))
+      (br2)
+      (submit "reimage"))))
 
 (def tpu-editor (user)
   (editor user))

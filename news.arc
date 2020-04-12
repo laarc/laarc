@@ -3709,6 +3709,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
       (hspace 10)
       (w/bars
         (underlink "Create TPU" "/newtpu")
+        (underlink "Reimage TPU" "/reimagetpu")
         (tpu-recreate-pods-link user))
       (br2))
     (sptab
