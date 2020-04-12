@@ -44,7 +44,7 @@
 (def gcloud-tpu-cidr (accelerator)
   (tpu-cidr* (sym accelerator)))
 
-(def tpu-create (index accelerator zone (o preemptible t) (o async t))
+(def tpu-create (index accelerator zone (o preemptible t) (o async t) (o version))
   (withs (index (gcloud-tpu-index index)
           zone-id (gcloud-zone-id zone)
           zone-name (gcloud-zone-name zone)
@@ -59,7 +59,7 @@
                '--zone zone-name
                '--network (+ "tpu-" zone-id)
                '--range (+ "10." (+ 2 index) ".0.0/" cidr)
-               '--version "1.15"
+               '--version (or version "1.15")
                '--accelerator-type accelerator
                (and preemptible '--preemptible)
                (and async '--async))))))
@@ -111,6 +111,12 @@
        (yes (posmatch "preemptible: true" it))
     (err (string "Bad TPU name " name))))
 
+(def tpu-get-version (name)
+  (aand (lines:tpu-describe name)
+        (find [headmatch "tensorflowVersion:" _] it)
+        (last:splitby ": " it)
+        (strip it "'")))
+
 (def find-tpu (name (o ps (tpus)))
   (let name (sym name)
     (catch
@@ -121,21 +127,21 @@
   (aand (find-tpu name ps)
         (if k (it k) it)))
 
-(def tpu-try-recreate (name preemptible)
+(def tpu-try-recreate (name preemptible version)
   (let status (get-tpu name 'status)
     (if (no status)
         (let p (tpu-parse-info name preemptible)
-          (tpu-create (tpu-index p!id) p!type p!zone p!preemptible 'async))
+          (tpu-create (tpu-index p!id) p!type p!zone p!preemptible 'async version))
         (is status "READY") (tpu-unensure name)
         (is status "PREEMPTED")
         (do (srvlog 'shell status name preemptible)
-            (tpu-recreate name preemptible)))))
+            (tpu-recreate name preemptible (or version (tpu-get-version name)))))))
 
 (or= tpu-recreate* () tpu-persistent* ())
 
 (def tpu-try-recreations ()
-  (each (name preemptible) (+ tpu-recreate* tpu-persistent*)
-    (tpu-try-recreate name preemptible))
+  (each (name preemptible (o version)) (+ tpu-recreate* tpu-persistent*)
+    (tpu-try-recreate name preemptible version))
   (+ tpu-recreate* tpu-persistent*))
 
 (def tpu-unensure (name)
@@ -146,10 +152,10 @@
   (let name (sym name)
     (pull [caris _ name] tpu-persistent*)))
 
-(def tpu-ensure (name (o preemptible (tpu-preemptible? name)))
+(def tpu-ensure (name (o preemptible (tpu-preemptible? name)) (o version (tpu-get-version name)))
   (let name (sym name)
     (tpu-unensure name)
-    (push (list name (if preemptible 'preemptible)) tpu-recreate*)))
+    (push (list name (if preemptible 'preemptible) version) tpu-recreate*)))
 
 (def tpu-persist (name (o preemptible (tpu-preemptible? name)))
   (let name (sym name)
@@ -170,9 +176,9 @@
                    whence)
           (pr (if persist "un-persist" "persist"))))))
 
-(def tpu-recreate (name (o preemptible (tpu-preemptible? name)))
+(def tpu-recreate (name (o preemptible (tpu-preemptible? name)) (o version (tpu-get-version name)))
   (tostring:tpu-delete name)
-  (tpu-ensure name preemptible))
+  (tpu-ensure name preemptible version))
 
 (defbg tpu-keepalive 30 ()
   (tpu-try-recreations))
@@ -276,13 +282,14 @@
             (prn "You can't recreate that."))))))
 
 (def recreate-tpu-confirm-page (user id whence)
-  (let preemptible (tpu-preemptible? id)
+  (with (preemptible (tpu-preemptible? id)
+         version (tpu-get-version id))
     (minipage "Confirm"
       (tab
         (tr (td)
             (td (urform user req
                        (do (when (is (arg req "b") "Yes")
-                             (tpu-recreate id preemptible))
+                             (tpu-recreate id preemptible version))
                            whence)
                    (prn "Do you want " id " to be recreated?" (if preemptible "" " (non-preemptible)"))
                    (br2)
