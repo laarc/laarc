@@ -4400,4 +4400,6 @@ RNBQKBNRRNBQKBNRRNBQKBNRRNBQKBNR")
                        (pr id)))))))
       (pr "list experiments"))))
 
+(load "news-buffers.arc")
+
 run-news

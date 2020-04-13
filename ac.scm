@@ -63,6 +63,7 @@
         ((literal? s) (list 'quote (ac-quoted s)))
         ((ssyntax? s) (ac (expand-ssyntax s) env))
         ((symbol? s) (ac-var-ref s env))
+        ((eq? (xcar s) '%scheme) (cons 'begin (cdr s)))
         ((eq? (xcar s) 'lexenv) (ac-lenv (cdr s) env))
         ((eq? (xcar s) 'syntax) (cadr (syntax-e e)))
         ((eq? (xcar (xcar s)) 'syntax) (stx-map ac e))
@@ -274,10 +275,31 @@
 (define (ac-global-name s)
   (string->symbol (string-append "_" (symbol->string s))))
 
+(define (find-symbol-value symbol (unset (void)))
+  (namespace-variable-value symbol #t (lambda () unset)))
+
+(define (arc-get-global name (unset (void)))
+  (let ((r (find-symbol-value (ac-global-name name) unset)))
+    (if (void? r) (err "Unbound variable" name) r)))
+
+(define (arc-set-global name value)
+  (namespace-set-variable-value! (ac-global-name name) value)
+  value)
+
+(define (arc-get name (unset (void)))
+  (arc-get-global name unset))
+
+(define (arc-set name value)
+  (arc-set-global name value))
+    
+  ; ;(arc-eval (ac-global-name name)))
+  ; (bound? name))
+
 (define (ac-var-ref s env)
   (cond ((ac-boxed? 'get s) (ac-boxed-get s))
         ((lex? s env)       s)
-        (#t                 (ac-global-name s))))
+        (#t                 `(arc-get ',s))))
+        ;(#t                 (ac-global-name s))))
 
 ; quote
 
@@ -489,8 +511,7 @@
                      ((eqv? a 'false) (err "Can't rebind false"))
                      ((ac-boxed? 'set a)  `(begin ,(ac-boxed-set a b) ,(ac-boxed-get a)))
                      ((lex? a env) `(set! ,a ,n))
-                     (#t `(namespace-set-variable-value! ',(ac-global-name a)
-                                                         ,n)))
+                     (#t `(arc-set ',a ,n)))
                n))
       (err "First arg to set must be a symbol" a)))
 
@@ -526,13 +547,13 @@
                             (lambda (,val) (set! ,var ,val)))))
                  (filter (lambda (x) (not (or (ar-false? x) (pair? x)))) env))))
 
-(define boxed* '())
+(define boxed* (make-parameter '()))
 
 (define (ac-boxed? op name)
   (let ((result
     (when (not (ar-false? name))
-      (when (not (ar-false? boxed*))
-        (let ((slot (assoc name boxed*)))
+      (when (not (ar-false? (boxed*)))
+        (let ((slot (assoc name (boxed*))))
           (case op
             ((get) (when (and slot (>= (length slot) 2)) (cadr slot)))
             ((set) (when (and slot (>= (length slot) 3)) (caddr slot)))
@@ -714,6 +735,74 @@
 (define (ar-false? x)
   (or (ar-nil? x) (eq? x #f)))
 
+; (define obarray (make-weak-hash))
+
+; (xdef obarray obarray)
+
+; (define (mapatoms f (obarray obarray))
+;   (hash-for-each l (lambda (k v)
+;                      (f v))))
+
+; (xdef mapatoms mapatoms)
+
+; (define (make-symbol name)
+;   (string->uninterned-symbol name))
+
+; (xdef make-symbol make-symbol)
+
+; (define (symbol-info-soft object (unset-value #f) (obarray obarray))
+;   (if (not (symbol? object))
+;       (err "Not a symbol" object)
+;     (let* ((unset (list))
+;            (result (hash-ref obarray object unset)))
+;       (if (eq? result unset)
+;           unset-value
+;         result))))
+
+; (define (symbol-info object (obarray obarray))
+;   (if (not (symbol? object))
+;       (err "Not a symbol" object)
+;     (let* ((unset (list))
+;            (result (hash-ref obarray object unset)))
+;       (if (eq? result unset)
+;           (begin (hash-set! obarray object (make-hash))
+;                  (symbol-info object))
+;         result))))
+
+; (xdef symbol-info symbol-info)
+
+; (define (intern name (obarray obarray))
+;   (string->symbol name))
+
+(define (symbol-function object)
+  (arc-get object))
+
+(xdef symbol-function symbol-function)
+
+(define (symbol-value object)
+  (arc-get object))
+
+(xdef symbol-value symbol-value)
+
+(define (indirect-function-1 hare tortoise)
+  (if (or (not (symbol? hare))
+          (null? hare))
+      hare
+      (let ((hare (symbol-function hare)))
+        (if (or (not (symbol? hare))
+                (null? hare))
+            hare
+          (let ((hare (symbol-function hare))
+                (tortoise (symbol-function tortoise)))
+            (if (eqv? hare tortoise)
+                (err "cyclic function indirection" hare tortoise)
+              (indirect-function-1 hare tortoise)))))))
+
+(define (indirect-function object)
+  (indirect-function-1 object object))
+
+(xdef indirect-function indirect-function)
+
 ; call a function or perform an array ref, hash ref, &c
 
 ; Non-fn constants in functional position are valuable real estate, so
@@ -731,6 +820,8 @@
 (define (ar-apply fn args)
   (cond ((procedure? fn)
          (apply fn args))
+        ((symbol? fn)
+         (ar-apply (indirect-function fn) args))
         ((pair? fn)
          (list-ref fn (car args)))
         ((ar-nil? fn)
@@ -1254,10 +1345,10 @@
       (apply arc-eval-boxed expr args)))
 
 (define (arc-eval-boxed expr lexenv)
-  (w/restore boxed* (if (or (ar-false? boxed*)
-                            (ar-false? lexenv))
-                      lexenv
-                      (append lexenv boxed*))
+  (parameterize ((boxed* (if (or (ar-false? (boxed*))
+                                 (ar-false? lexenv))
+                             lexenv
+                             (append lexenv (boxed*)))))
     (arc-eval expr)))
 
 

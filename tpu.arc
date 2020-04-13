@@ -341,10 +341,10 @@
 (def escape (x)
   (tostring:write-json x))
 
-(def zip ls
-  (if (no (car ls)) ()
-      (cons (map car ls)
-            (apply zip (map cdr ls)))))
+;(def zip ls
+;  (if (no (car ls)) ()
+;      (cons (map car ls)
+;            (apply zip (map cdr ls)))))
 
 (def tpu-request (metric name (o zone 'europe-west4-a) (o start-time (tpu-moment (- (seconds) (* 24.0 3600.0)))) (o end-time (tpu-moment (seconds))))
   (if (is metric 'net)

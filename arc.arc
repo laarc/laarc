@@ -122,8 +122,43 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
      ,@body)
     ,@(map1 cadr (pair parms))))
 
+(%scheme
+  (define specials* (list))
+
+  (define (special? name)
+    (atomic-invoke
+      (lambda ()
+    (or (member name specials*)
+        (and (symbol? name)
+             (let ((s (symbol->chars name)))
+               (and (> (length s) 1)
+                    ;(eq? (car s) #\*)
+                    (eq? (car (reverse s)) #\*))))))))
+
+  (xdef special special?)
+
+  (define (make-special name)
+    (atomic-invoke
+      (lambda ()
+        (when (not (special? name))
+          (set! specials* (cons name specials*))))))
+
+  (xdef make-special make-special)
+  
+)
+
+(mac let* (var val . body)
+  (with (prev (uniq 'prev))
+    `((fn (,prev)
+        (assign ,var ,val)
+        (protect (fn () ,@body)
+                 (fn () (assign ,var ,prev))))
+      ,var)))
+
 (mac let (var val . body)
-  `(with (,var ,val) ,@body))
+  (if (special var)
+      `(let* ,var ,val ,@body)
+  `(with (,var ,val) ,@body)))
 
 (mac withs (parms . body)
   (if (no parms) 
@@ -191,7 +226,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (and args
        (w/uniq g
          `(let ,g ,(car args)
-            (if ,g ,g (or ,@(cdr args)))))))
+            (if ,g ,g
+              ,(if (cddr args)
+                   `(or ,@(cdr args))
+                   (cadr args)))))))
 
 (def alist (x) (or (no x) (is (type x) 'cons)))
 
@@ -215,7 +253,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (mac unless (test . body)
   `(if (no ,test) (do ,@body)))
 
-(mac point (name . body)
+(mac %point (name . body)
   (w/uniq (g p)
     `(call/ec
        (fn (,g)
@@ -223,11 +261,11 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
            ,@body)))))
 
 (mac catch body
-  `(point throw ,@body))
+  `(%point throw ,@body))
 
 (mac while (test . body)
   (w/uniq (gf gp)
-    `(point break
+    `(%point break
        ((rfn ,gf (,gp)
           (when ,gp ,@body (,gf ,test)))
         ,test))))
@@ -482,6 +520,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
           `(or ,slot (= ,slot ,value))
         `(or (if (bound ',slot) ,slot) (= ,slot ,value)))))
 
+(mac defconst (name value (o doc))
+  `(do (make-special ',name) (= ,name ,value) ',name))
+
+(mac defvar (name value (o doc))
+  `(do (make-special ',name) (or= ,name ,value) ',name))
+
 (mac loop (start test update . body)
   (w/uniq (gfn gparm)
     `(do ,start
@@ -717,7 +761,12 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   `(do ,@(map (fn (a) `(= ,a nil)) args)))
 
 (mac set args
-  `(do ,@(map (fn (a) `(= ,a t)) args)))
+  (case (len args)
+    0 `(do)
+    1 `(= ,(car args) t)
+    2 `(= ,(car args) ,(cadr args))
+    `(do (set ,(car args) ,(cadr args))
+         (set ,@(cddr args)))))
 
 ; Destructuring means ambiguity: are pat vars bound in else? (no)
 
@@ -1789,6 +1838,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def unzip (xs) (apply map list xs))
 
 (def zip ls (unzip ls))
+
+(mac scm body
+  `(seval '(begin ,@body)))
 
 ; any logical reason I can't say (push x (if foo y z)) ?
 ;   eval would have to always ret 2 things, the val and where it came from

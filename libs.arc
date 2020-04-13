@@ -8,4 +8,7 @@
             "git.arc"
             "srv.arc"
             "app.arc"
-            "prompt.arc"))
+            "prompt.arc"
+            "runtime.arc"
+            "reader.arc"
+            "cinfo.arc"))
