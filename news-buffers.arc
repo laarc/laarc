@@ -1,19 +1,4 @@
 
-(edop buffers ()
-  (sptab
-    (each x buffers*
-      (row (bufferline x)))))
-
-(def pretext (text)
-  (pr "<pre><code>" (eschtml text) "</code></pre>"))
-
-(def buffer-status ((o buffer))
-  (with-current-buffer buffer (format-mode-line)))
-
-(def bufferline ((o buffer) (o user (get-user)))
-  (onlink (pretext:buffer-status buffer)
-          (pretext:buffer-string buffer)))
-
 (or= processes* ())
 
 (seval
@@ -42,8 +27,11 @@
 (def process-id (process)
   (seval!subprocess-pid (process 'process)))
 
+(def process-status (process)
+  (seval!subprocess-status (process 'process)))
+
 (def process-live-p (process)
-  (is (seval!subprocess-status (process 'process)) 'running))
+  (is (process-status process) 'running))
 
 (def start-process (name buffer-or-name program . args)
   (let name (unique-name name get-process)
@@ -54,3 +42,33 @@
         (add processes* h)
         h))))
 
+
+(edop buffers ()
+  (sptab
+    (each x buffers*
+      (row (bufferline x))))
+  (sptab
+    (row "name" "command" "pid" "status" "buffer")
+    (each p (process-list)
+      (row p!name process-command.p process-id.p process-status.p (bufferline p!buffer))))
+  (onlink 'run
+          (urform user req
+            (do (apply start-process (arg req "name") (arg req "buffer")
+                       (map string (readvar 'sexpr (arg req "command"))))
+              "/buffers")
+            (tab:editvars
+              `((string1 name)
+                (string1 buffer)
+                (sexpr command)))
+            (br2)
+            (submit "create"))))
+
+(def pretext (text)
+  (pr "<pre><code>" (eschtml text) "</code></pre>"))
+
+(def buffer-status ((o buffer))
+  (with-current-buffer buffer (format-mode-line)))
+
+(def bufferline ((o buffer) (o user (get-user)))
+  (onlink (pretext:buffer-status buffer)
+          (pretext:buffer-string buffer)))

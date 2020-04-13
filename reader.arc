@@ -2,6 +2,7 @@
 (define-global whitespace (set-of " " "\t" "\r" "\n"))
 
 (define-global buffers* ())
+(define-global make-variables-buffer-local* ())
 
 (define-global buffer? (x)
   (and (obj? x)
@@ -26,10 +27,6 @@
 
 (define-global the-buffer* (make-param (get-buffer-create "*scratch*")))
 
-(define-global buffer-local-variables ((o buffer))
-  (let b (or buffer (current-buffer))
-    (b 'locals)))
-
 (%scheme
   (define (arc-get name (unset (void)))
     (atomic-invoke
@@ -53,9 +50,11 @@
     (let* ((buf ((bound? 'the-buffer*)))
            (vs (hash-ref buf 'locals))
            (l (assoc name vs)))
-      (if l
-          (begin (x-set-car! (cdr l) value) value)
-        (arc-set-global name value))))))
+      (cond (l (x-set-car! (cdr l) value) value)
+            ((member name (bound? 'make-variables-buffer-local*))
+             ((bound? 'make-local-variable) name)
+             (arc-set name value))
+            (else (arc-set-global name value)))))))
   )
 
 (define-global assign-buffer (v)

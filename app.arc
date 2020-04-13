@@ -506,6 +506,12 @@
                   (varline  typ id val liveurls))))
       (prn))))
 
+(def editvars (fields (o liveurls))
+  (showvars
+    (each (typ id (o val)) fields
+      (out typ id val t t))
+    liveurls))
+
 ; http://daringfireball.net/projects/markdown/syntax
 
 (def md-from-form (str (o nolinks) (o esc))

@@ -461,7 +461,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
         ; make it also work for uncompressed calls to compose
         (and (acons expr) (metafn (car expr)))
          (setforms (expand-metafn-call (ssexpand (car expr)) (cdr expr)))
-        (and (acons expr) (acons (car expr)) (is (caar expr) 'get))
+        (and (acons expr) (acons (car expr)) (is (caar expr) 'getf))
          (setforms (list (cadr expr) (cadr (car expr))))
          (let f (setter (car expr))
            (if f
@@ -1709,13 +1709,13 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
       sym    (sym (map upc (str x)))
              (err "Can't upcase" x))))
 
-(def inc (x (o n 1))
-  (coerce (+ (coerce x 'int) n) (type x)))
+;(def inc (x (o n 1))
+;  (coerce (+ (coerce x 'int) n) (type x)))
 
 (def range (start end)
   (if (> start end)
       nil
-      (cons start (range (inc start) end))))
+      (cons start (range (+ start 1) end))))
 
 (def mismatch (s1 s2)
   (catch
@@ -1766,7 +1766,7 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 ; if renamed this would be more natural for (map [_ user] pagefns*)
 
-(def get (index) [_ index])
+(def getf (index) [_ index])
 
 (or= savers* (table))
 

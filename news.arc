@@ -480,7 +480,7 @@
 (def editor (u)
   (and u (or (admin u) (> (uvar u auth) 0))))
 
-(def member (u)
+(def amember (u)
   (and u (or (admin u) (uvar u member))))
 
 
@@ -931,7 +931,7 @@ function vote(node) {
           w (is user subject)
           k (and w (> (karma user) topcolor-threshold*))
           u (or a w)
-          m (or a (and (member user) w))
+          m (or a (and (amember user) w))
           p (profile subject)
           s subject)
   (w/accum
@@ -3709,6 +3709,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
       (hspace 10)
       (w/bars
         (underlink "Create TPU" "/newtpu")
+        (underlink "Reimage TPU" "/reimagetpu")
         (tpu-recreate-pods-link user))
       (br2))
     (sptab

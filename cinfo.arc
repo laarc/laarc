@@ -1,14 +1,16 @@
 
 (scm
+  (define (stty x) (system (~a "stty " x)) (void))
+
   (define-syntax-rule (with-raw body ...)
     (let ((saved #f))
-      (define (stty x) (system (~a "stty " x)) (void))
       (dynamic-wind (lambda ()
                       (set! saved (with-output-to-string (lambda () (stty "-g"))))
                       (stty "raw -echo opost"))
                     (lambda () body ...)
-                    (lambda () (stty saved)))))
+                    (lambda () (stty saved))))))
 
+(scm
   (define (flush-stdin)
     (when (char-ready?)
       (begin (read-char)
