@@ -117,6 +117,31 @@
         (last:splitby ": " it)
         (strip it "'")))
 
+(def tpu-get-service-account (name)
+  (aand (lines:tpu-describe name)
+        (find [headmatch "serviceAccount:" _] it)
+        (last:splitby ": " it)))
+
+(defcache tpu-service-account 180 ()
+  (catch
+    (each p (sorted-tpus)
+      (awhen (tpu-get-service-account p!id)
+        (throw it)))))
+
+(= (static-header* 'tpu-service-account.json) "application/json")
+
+(newsop tpu-service-account.json ()
+  (aif (tpu-service-account)
+       (write-json it)
+       (pr "null")))
+
+(= (static-header* 'tpu-service-account) "text/plain")
+
+(newsop tpu-service-account ()
+  (aif (tpu-service-account)
+       (pr it)
+       (pr "unknown")))
+
 (def find-tpu (name (o ps (tpus)))
   (let name (sym name)
     (catch
@@ -338,9 +363,6 @@
           )
     (dbg)
     args))
-
-  ;(apply string (intersperse " -H " (keep [or (posmatch "x-origin" _) (posmatch "authorization:" _) (posmatch "cookie:" _) (posmatch "curl -s " _)] (tokens (multisubst '((" -H " "|") (" --compressed" "") ("curl " "curl -s ")) (trim s)) #\|))))
-  ;(let (cmd . headers) parts (aand  (cut it 1 -1) (withs ((url args) (tokens it #\?) args (parseargs args)) args)))
 
 (def tpu-moment ((o secs (seconds)))
    (multisubst '((".000Z" "Z"))
