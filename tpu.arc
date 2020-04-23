@@ -55,6 +55,7 @@
          (no cidr) (err "Bad accelerator")
       (let id (sym (+ "tpu-" accelerator "-" zone-id "-" index))
         (tpu-ensure id preemptible)
+        (tpu-persist id preemptible)
         (shelllog 'gcloud 'compute 'tpus 'create id
                '--zone zone-name
                '--network (+ "tpu-" zone-id)
