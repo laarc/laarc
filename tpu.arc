@@ -97,7 +97,6 @@
 
 (def tpu-delete (name (o zone (tpu-parse-zone-name name)) (o async t))
   (tpu-unensure (sym name))
-  (tpu-unpersist (sym name))
   (aand (goodname:string name)
         (gcloud-zone-name zone)
         (do (shelllog 'gcloud 'compute 'tpus 'delete name '--zone it '--quiet (and async '--async))
@@ -293,8 +292,8 @@
       (tr (td)
           (td (urform user req
                      (do (when (is (arg req "b") "Yes")
-                           (tostring:tpu-delete id)
-                           (tpu-unpersist id))
+                           (tpu-unpersist id)
+                           (tostring:tpu-delete id))
                          whence)
                  (prn (+ "Do you want " id " to be deleted?"))
                  (br2)
