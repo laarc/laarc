@@ -310,7 +310,7 @@
                                                'tpu-version tpu-version (arg req "version")
                                                ))))
       (tab:showvars
-        `((int index nil t t)
+        `((int index ,(car:tpu-valid-indexes 'europe-west4-a 'pod) t t)
           ((choice ,@(map car tpu-zones*)) zone europe-west4-a t t)
           ((choice v3-32 v3-128 v3-256 v3-512 v3-1024 v3-2048
                    v2-32 v2-128 v2-256 v2-512 v2-1024 v2-2048
