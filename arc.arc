@@ -1312,6 +1312,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
   (+ xs (rem (fn (y) (some [f _ y] xs))
              ys)))
 
+(def intersect (f xs ys)
+  (keep (fn (y) (some [f _ y] xs)) ys))
+
 (or= templates* (table))
 
 (mac deftem (tem . fields)
