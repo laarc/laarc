@@ -3733,7 +3733,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
           (withs (ips (tostring:w/link
                         (msgpage user p!ips)
                         (prn:ellipsize (tostring (ppr p!ips)) 50))
-                  idle (if (mem p!id tpu-unused*) "UNUSED" "")
+                  idle (if (mem p!id tpu-unused*) "idle" "")
                   memusage 0.0 ; (+ (num (/ (last:last:tpu-memory p!id) (* 1024 1024 1024))) " GB")
                   memusage (tostring:w/link
                              (msgpage user (tostring
