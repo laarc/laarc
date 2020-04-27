@@ -533,15 +533,26 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
               (for ,gv 0 (- (len ,gseq) 1)
                 (let ,var (,gseq ,gv) ,@body)))))))
 
+(def clamp (x a b)
+  (if (< x a) a
+      (> x b) b
+    x))
+
 ; (nthcdr x y) = (cut y x).
 
-(def cut (seq (o start 0) (o end))
-  (let end (if (no end)   (len seq)
-               (< end 0)  (+ (len seq) end) 
-                          end)
-    (if (isa seq 'string)
-        (seval!substring seq start end)
-        (firstn (- end start) (nthcdr start seq)))))
+(def cut (seq (o start) (o end))
+  (withs (n (len seq)
+          end (clamp (if (no end)   n
+                         (< end 0)  (+ n end) 
+                         end)
+                     0 n)
+          start (clamp (if (no start)  0
+                           (< start 0) (+ n start)
+                           start)
+                       0 n))
+      (if (isa seq 'string)
+          (seval!substring seq start end)
+          (firstn (- end start) (nthcdr start seq)))))
       
 (mac whilet (var test . body)
   (w/uniq (gf gp)
