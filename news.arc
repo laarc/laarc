@@ -3725,7 +3725,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
         (tpu-recreate-pods-link user))
       (br2))
     (sptab
-      (tr (td "") (td "") (td "") (td "type") (td "name") (td "status") (td "cpu") (td "mem") (td "net") (td "ips") (td "range"))
+      (tr (td "") (td "") (td "") (td "idle") (td "type") (td "name") (td "status") (td "cpu") (td "mem") (td "net") (td "ips") (td "range"))
       (spacerow 10)
       (let i 0
         (each p (sorted-tpus)
@@ -3733,6 +3733,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
           (withs (ips (tostring:w/link
                         (msgpage user p!ips)
                         (prn:ellipsize (tostring (ppr p!ips)) 50))
+                  idle (if (mem p!id tpu-unused*) "UNUSED" "")
                   memusage 0.0 ; (+ (num (/ (last:last:tpu-memory p!id) (* 1024 1024 1024))) " GB")
                   memusage (tostring:w/link
                              (msgpage user (tostring
@@ -3778,7 +3779,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                                            (pr "</code></pre>")))
                            (pr p!status))
                   name p!id)
-            (row delete recreate persist p!type name status cpu memusage net ips p!range)))))
+            (row delete recreate persist idle p!type name status cpu memusage net ips p!range)))))
     (whenlet ps (tpus-recreating nil)
       (br)
       (hspace 10)
@@ -3791,12 +3792,6 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
     ))
 
 (newsop tpus () (tpus-page user))
-  
-(def tpu-ensure-bgthread ()
-  (when (aand bgthreads*!tpu-keepalive
-              (dead it))
-    (ensure-bgthreads 'tpu-keepalive)
-    'recreated))
 
 )
 

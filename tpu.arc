@@ -152,8 +152,9 @@
         (if (headmatch "ERROR: " it) (err it) it)))
 
 (def tpu-preemptible? (name)
-  (aand (errsafe:tpu-describe name)
-        (yes (posmatch "preemptible: true" it))))
+  (aif (errsafe:tpu-describe name)
+       (yes (posmatch "preemptible: true" it))
+       t))
 
 (def tpu-get-version (name (o unknown "1.15"))
   (or (aand (errsafe:tpu-describe name)
@@ -206,7 +207,7 @@
         (do (srvlog 'shell status name preemptible)
             (tpu-recreate name preemptible (or version (tpu-get-version name)))))))
 
-(or= tpu-recreate* () tpu-persistent* ())
+(or= tpu-recreate* () tpu-persistent* () tpu-unused* ())
 
 (def tpu-recreations ()
   (union (fn (x y) (is (car x) (car y)))
@@ -234,6 +235,7 @@
 (def tpu-persist (name (o preemptible (tpu-preemptible? name)))
   (let name (sym name)
     (tpu-unpersist name)
+    (pull name tpu-unused*)
     (push (list name (if preemptible 'preemptible)) tpu-persistent*)))
 
 (def tpu-persists? (name)
@@ -547,7 +549,7 @@
     (and (some [>= (car _) hours] it)
          (keep [< (car _) hours] it))))
 
-(def tpu-bandwidth-since (name (o suffix 'gb) (o hours 18))
+(def tpu-bandwidth-since (name (o hours 18))
   (list (aand (tpu-request-hours-since hours 'sent name) (apply + (map cadr it)))
         (aand (tpu-request-hours-since hours 'recv name) (apply + (map cadr it)))))
 
@@ -574,3 +576,26 @@
             (err "Invalid suffix" suffix))))
 
 ; (each ps (sorted-tpus) (prn ps!id " " (map [only.bytes-to-human _ 'gb] (tpu-bandwidth-since ps!id))))
+
+(def tpus-flag-unused ((o f tpu-persists?) (o ps (sorted-tpus)))
+  (each p ps
+    (when (and ((testify f) p!id)
+               (tpu-unused p!id))
+      (srvlog 'shell "UNUSED" p!id)
+      (pushnew p!id tpu-unused*)
+      (tpu-unpersist p!id)
+      (out p!id))))
+
+(defbg tpu-unalive 3600 ()
+  (tpus-flag-unused))
+
+(def check-bgthreads ids
+  (each id ids
+    (when (aand (bgthreads* id)
+                (dead it))
+      (srvlog 'shell "Restarted background thread" id)
+      (ensure-bgthreads id)
+      (out id))))
+
+(def tpu-ensure-bgthread ()
+  (check-bgthreads 'tpu-keepalive 'tpu-unalive))
