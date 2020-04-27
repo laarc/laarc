@@ -1,33 +1,42 @@
-(= tpu-cidr*
-   (obj v3-2048 23
-        v3-1024 24
-        v3-512 25
-        v3-256 26
-        v3-128 27
-        v3-64 28
-        v3-32 29
-        v2-2048 23
-        v2-1024 24
-        v2-512 25
-        v2-256 26
-        v2-128 27
-        v2-64 28
-        v2-32 29
-        ))
+(= tpu-zones*  '((europe-west4-a euw4a)
+                 (us-central1-a usc1a)
+                 (us-central1-f usc1f))
+   tpu-cidr*    '((v3-2048 23)
+                  (v3-1024 24)
+                  (v3-512 25)
+                  (v3-256 26)
+                  (v3-128 27)
+                  (v3-64 28)
+                  (v3-32 29)
+                  (v3-8 29)
+                  (v2-2048 23)
+                  (v2-1024 24)
+                  (v2-512 25)
+                  (v2-256 26)
+                  (v2-128 27)
+                  (v2-64 28)
+                  (v2-32 29)
+                  (v2-8 29)))
 
-(def gcloud-zone-id (zone)
+(def gcloud-zone-id (zone (o zones tpu-zones*))
   (let zone (sym zone)
-    (if (in zone 'europe-west4-a 'euw4a)
-        'euw4a
-        (in zone 'us-central1-a 'usc1a)
-        'usc1a)))
+    (catch
+      (each (name id) zones
+        (when (in zone name id)
+          (throw id))))))
 
-(def gcloud-zone-name (zone)
+(def gcloud-zone-name (zone (o zones tpu-zones*))
   (let zone (sym zone)
-    (if (in zone 'europe-west4-a 'euw4a)
-        'europe-west4-a
-        (in zone 'us-central1-a 'usc1a)
-        'us-central1-a)))
+    (catch
+      (each (name id) zones
+        (when (in zone name id)
+          (throw name))))))
+
+(def gcloud-parse-zone-name (name)
+  (or (gcloud-zone-name name)
+      (aand (tokens (string name) #\-)
+            (map gcloud-zone-name it)
+            (find [isa _ 'sym] it))))
 
 (def safeint (x)
   (if (isa x 'int) x
@@ -43,40 +52,61 @@
 
 (def tpu-zone (p)
   (aand (if (isa p 'table) p!zone p)
-        (gcloud-zone-name it)))
+        (gcloud-parse-zone-name it)))
 
 (def gcloud-tpu-cidr (accelerator)
-  (tpu-cidr* (sym accelerator)))
+  (alref tpu-cidr* (sym accelerator)))
+
+(def tpu-possible-indexes ((o pod? t))
+  (if pod?
+      (aand (range 0 64)
+            (rem 46 it)) ; 10.46.0.0/16 is reserved for non-TPU pods
+      (range 0 255)))
 
 (def tpu-used-indexes (zone (o pod? t) (o ps (sorted-tpus)))
-  (map tpu-index (keep [and (is pod? (tpu-pod? _))
-                            (is (gcloud-zone-id _!zone)
-                                (gcloud-zone-id zone))]
-                       ps)))
+  (let zone (sym zone)
+    (map tpu-index (keep [and (is (tnil pod?) (tnil:tpu-pod? _))
+                              (is (gcloud-zone-id _!zone)
+                                  (gcloud-zone-id zone))]
+                         ps))))
 
-(def tpu-valid-index (index zone (o pod? t) (o ps (sorted-tpus)))
-  (and (>= index 0)
-       (<= index 64)
-       (isnt index 46) ; regular v8 range
-       (~mem index (tpu-used-indexes zone pod? ps))
-       index))
+(def tpu-valid-indexes (zone (o pod? t) (o ps (sorted-tpus)))
+  (difference is
+              (tpu-possible-indexes pod?)
+              (tpu-used-indexes zone pod? ps)))
 
-(def tpu-create (index accelerator zone (o preemptible t) (o async t) (o version))
+(def tpu-pod-type? (accelerator)
+  (~in (sym accelerator) 'v1-8 'v2-8 'v3-8))
+
+(def tpu-valid-index (index accelerator zone (o pod? (tpu-pod-type? accelerator)) (o ps (sorted-tpus)))
+  (find index (tpu-valid-indexes zone pod? ps)))
+
+(def tpu-ip-range (accelerator index)
+  (let cidr (gcloud-tpu-cidr accelerator)
+    (if (no cidr) (err "Bad accelerator")
+        (in (sym accelerator) 'v1-8 'v2-8 'v3-8)
+        (cat "10.48." index ".0/" cidr)
+        (cat "10." (+ 2 index) ".0.0/" cidr))))
+
+(def tpu-create (index accelerator zone (o preemptible t) (o async t) (o version) (o name))
   (withs (zone-id (gcloud-zone-id zone)
           zone-name (gcloud-zone-name zone)
-          index (tpu-valid-index (gcloud-tpu-index index) zone-id)
-          cidr (gcloud-tpu-cidr accelerator))
-    (aif (no index) (err "Bad TPU index. (Is it already in use, or outside the valid range?)")
+          tpu-index (tpu-valid-index (gcloud-tpu-index index) accelerator zone-id)
+          cidr (gcloud-tpu-cidr accelerator)
+          ip-range (tpu-ip-range accelerator index))
+    (aif (no tpu-index) (err "Bad TPU index. (Is it already in use, or outside the valid range?)" index)
          (no zone-id) (err "Bad zone id")
          (no zone-name) (err "Bad zone name")
          (no cidr) (err "Bad accelerator")
-      (let id (sym (+ "tpu-" accelerator "-" zone-id "-" index))
+         (no ip-range) (err "Failed to map IP range")
+      (let id (sym (or name (+ "tpu-" accelerator "-" zone-id "-" tpu-index)))
         (tpu-ensure id preemptible)
-        (tpu-persist id preemptible)
+        (when (tpu-pod? id)
+          (tpu-persist id preemptible))
         (shelllog 'gcloud 'compute 'tpus 'create id
                '--zone zone-name
                '--network (+ "tpu-" zone-id)
-               '--range (+ "10." (+ 2 index) ".0.0/" cidr)
+               '--range ip-range
                '--version (or version "1.15")
                '--accelerator-type accelerator
                (and preemptible '--preemptible)
@@ -92,15 +122,11 @@
                '--version version
                (and async '--async))))))
 
-(def tpu-parse-zone-name (name)
-  (let name (string name)
-    (if (posmatch "-usc1a-" name) 'us-central1-a
-        (posmatch "-euw4a-" name) 'europe-west4-a
-        (in name "us-central1-a" "usc1a") 'us-central1-a
-        (in name "europe-west4-a" "euw4a") 'europe-west4-a)))
-
 (def tpu-parse-info (id (o preemptible t))
-  (withs ((prefix type cores zoneid index) (tokens (string id) #\-)
+  (withs ((prefix type cores zoneid index) (aand (tokens (string id) #\-)
+                                                 (if (<= (len it) 3)
+                                                     (join (cut it 0 -2) (list "v3" "8") (cut it -2))
+                                                     it))
           zone (gcloud-zone-name zoneid)
           zoneid (gcloud-zone-id zoneid)
           index (gcloud-tpu-index index)
@@ -108,35 +134,38 @@
           cidr (gcloud-tpu-cidr accelerator))
     (and zone index accelerator cidr
          (obj zone zone
-              id (sym:string 'tpu- accelerator '- zoneid '- index)
+              id id
               type accelerator
               preemptible preemptible))))
 
-(def tpu-delete (name (o zone (tpu-parse-zone-name name)) (o async t))
+(def tpu-delete (name (o zone (gcloud-parse-zone-name name)) (o async t))
   (tpu-unensure (sym name))
   (aand (goodname:string name)
         (gcloud-zone-name zone)
         (do (shelllog 'gcloud 'compute 'tpus 'delete name '--zone it '--quiet (and async '--async))
             t)))
 
-(def tpu-describe (name (o zone (tpu-parse-zone-name name)))
+(def tpu-describe (name (o zone (gcloud-parse-zone-name name)))
   (aand (goodname:string name)
         (gcloud-zone-name zone)
-        (shell 'tpu-describe name '--zone it)))
+        (shell 'tpu-describe name '--zone it)
+        (if (headmatch "ERROR: " it) (err it) it)))
 
 (def tpu-preemptible? (name)
-  (aif (tpu-describe name)
-       (yes (posmatch "preemptible: true" it))
-    (err (string "Bad TPU name " name))))
+  (aand (errsafe:tpu-describe name)
+        (yes (posmatch "preemptible: true" it))))
 
-(def tpu-get-version (name)
-  (aand (lines:tpu-describe name)
-        (find [headmatch "tensorflowVersion:" _] it)
-        (last:splitby ": " it)
-        (strip it "'")))
+(def tpu-get-version (name (o unknown "1.15"))
+  (or (aand (errsafe:tpu-describe name)
+            (lines it)
+            (find [headmatch "tensorflowVersion:" _] it)
+            (last:splitby ": " it)
+            (strip it "'"))
+      unknown))
 
 (def tpu-get-service-account (name)
-  (aand (lines:tpu-describe name)
+  (aand (errsafe:tpu-describe name)
+        (lines it)
         (find [headmatch "serviceAccount:" _] it)
         (last:splitby ": " it)))
 
@@ -161,10 +190,7 @@
        (pr "unknown")))
 
 (def find-tpu (name (o ps (tpus)))
-  (let name (sym name)
-    (catch
-      (each (i p) ps
-        (if (is i name) (throw p))))))
+  (find [is _!id (sym name)] ps))
 
 (def get-tpu (name (o k) (o ps (tpus)))
   (aand (find-tpu name ps)
@@ -174,7 +200,7 @@
   (let status (get-tpu name 'status)
     (if (no status)
         (let p (tpu-parse-info name preemptible)
-          (tpu-create (tpu-index p!id) p!type p!zone p!preemptible 'async version))
+          (tpu-create (tpu-index p!id) p!type p!zone p!preemptible 'async version p!id))
         (is status "READY") (tpu-unensure name)
         (is status "PREEMPTED")
         (do (srvlog 'shell status name preemptible)
@@ -182,10 +208,15 @@
 
 (or= tpu-recreate* () tpu-persistent* ())
 
+(def tpu-recreations ()
+  (union (fn (x y) (is (car x) (car y)))
+         tpu-recreate*
+         tpu-persistent*))
+
 (def tpu-try-recreations ()
-  (each (name preemptible (o version)) (+ tpu-recreate* tpu-persistent*)
+  (each (name preemptible (o version)) (tpu-recreations)
     (tpu-try-recreate name preemptible version))
-  (+ tpu-recreate* tpu-persistent*))
+  (tpu-recreations))
 
 (def tpu-unensure (name)
   (let name (sym name)
@@ -232,10 +263,29 @@
     (tpu-create-page user (arg req "msg"))))
 
 (def call-w/tostring (f)
-  (on-err details (fn () (tostring (f)))))
+  (if (readenv "DEV")
+      (tostring (f))
+      (on-err details (fn () (tostring (f))))))
 
 (mac w/tostring body
   `(call-w/tostring (fn () ,@body)))
+
+(def ranges (ls)
+  (when ls
+    (withs (start (car ls)
+            prev (- start 1))
+      (+ (each x ls
+           (unless (is x (+ prev 1))
+             (out start prev)
+             (= start x))
+           (= prev x))
+         (list (list start prev))))))
+      
+(def pretty-ranges (ls)
+  (aand (map (fn ((a b))
+               (if (is a b) a (cat a " to " b)))
+             (ranges ls))
+        (apply cat (intersperse ", " it))))
 
 (def tpu-create-page (user (o msg nil))
   (minipage "Create TPU"
@@ -259,13 +309,25 @@
                                                ))))
       (tab:showvars
         `((int index nil t t)
-          ((choice europe-west4-a us-central1-a) zone europe-west4-a t t)
+          ((choice ,@(map car tpu-zones*)) zone europe-west4-a t t)
           ((choice v3-32 v3-128 v3-256 v3-512 v3-1024 v3-2048
-                   v2-32 v2-128 v2-256 v2-512 v2-1024 v2-2048)
+                   v2-32 v2-128 v2-256 v2-512 v2-1024 v2-2048
+                   v2-8 v3-8)
            accelerator v3-32 t t)
           (yesno preemptible t t t)))
-      (br2)
-      (submit "create"))))
+      (br)
+      (submit "create"))
+    (prn "Available TPU pod indexes:")
+    (sptab
+      (each (name id) tpu-zones*
+        (whenlet xs (tpu-valid-indexes name 'pod)
+          (row (td name) (td:prn:pretty-ranges xs)))))
+    (br)
+    (prn "Available v2-8 or v3-8 indexes:")
+    (sptab
+      (each (name id) tpu-zones*
+        (whenlet xs (tpu-valid-indexes name nil)
+          (row (td name) (td:prn:pretty-ranges xs)))))))
 
 (defope reimagetpu req
   (let user (get-user req)
@@ -297,7 +359,7 @@
   (editor user))
 
 (def canrecreate-tpu (user id)
-  (and (tpu-editor user) (goodname:string id) (tpu-pod? id)))
+  (and (tpu-editor user) (goodname:string id)))
 
 (def candelete-tpu (user id)
   (and (tpu-editor user) (goodname:string id)))
@@ -431,12 +493,7 @@
 (def escape (x)
   (tostring:write-json x))
 
-(def zip ls
-  (if (no (car ls)) ()
-      (cons (map car ls)
-            (apply zip (map cdr ls)))))
-
-(def tpu-request (metric name (o zone 'europe-west4-a) (o start-time (tpu-moment (- (seconds) (* 24.0 3600.0)))) (o end-time (tpu-moment (seconds))))
+(def tpu-request (metric name (o zone (gcloud-parse-zone-name name)) (o start-time (tpu-moment (- (seconds) (* 24.0 3600.0)))) (o end-time (tpu-moment (seconds))))
   (if (is metric 'net)
       (zip (tpu-request 'sent name zone start-time end-time)
            (tpu-request 'recv name zone start-time end-time))
@@ -478,4 +535,39 @@
              'mem (string (num (/ v 1024.0 1024.0 1024.0) 2 2 t) " GB")
              (sent recv) (string (num (/ v 1024.0 1024.0 1024.0) 2 2 t) " GB " (if (is metric 'recv) 'in 'out))
              (err "Unexpected metric"))))))
-  
+
+(def tpu-request-hours args
+  (map (fn ((ts x)) (list (hours-since ts) x)) (apply tpu-request args)))
+
+(def tpu-request-hours-since (hours . args)
+  (awhen (apply tpu-request-hours args)
+    (and (some [>= (car _) hours] it)
+         (keep [< (car _) hours] it))))
+
+(def tpu-bandwidth-since (name (o suffix 'gb) (o hours 18))
+  (list (aand (tpu-request-hours-since hours 'sent name) (apply + (map cadr it)))
+        (aand (tpu-request-hours-since hours 'recv name) (apply + (map cadr it)))))
+
+(def tpu-unused (name (o cutoff (* 10.0 1024 1024 1024))) ; 10GB
+  (let (sent recv) (tpu-bandwidth-since name)
+    (and sent recv (< (+ sent recv) cutoff))))
+
+(def tpus-unused ((o ps (sorted-tpus)))
+  (keep tpu-unused ps))
+
+(def tpus-unused-noisy ((o ps (sorted-tpus)))
+  (noisy-each 1 p ps
+    (when (tpu-unused p!id)
+      (prn "unused TPU: " p!id)
+      (out p))))
+
+(def bytes-to-human (x (o suffix 'gb))
+  (aand (sym suffix)
+        (if (is it 'kb) (/ x 1024.0)
+            (is it 'mb) (/ x (* 1024.0 1024.0))
+            (is it 'gb) (/ x (* 1024.0 1024.0 1024.0))
+            (is it 'tb) (/ x (* 1024.0 1024.0 1024.0 1024.0))
+            (is it 'pb) (/ x (* 1024.0 1024.0 1024.0 1024.0))
+            (err "Invalid suffix" suffix))))
+
+; (each ps (sorted-tpus) (prn ps!id " " (map [only.bytes-to-human _ 'gb] (tpu-bandwidth-since ps!id))))

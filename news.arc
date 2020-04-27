@@ -3597,18 +3597,24 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
   range nil
   status nil)
 
-(def parse-tpus ()
-  (let tpus (table)
-    (each tpu (map tpu-parse (cdr:lines:shell 'tpu-status))
-      (unless (is tpu!id 'Listed)
-        (= (tpus tpu!id) tpu)))
-    tpus))
+(def tpu-status (zone)
+  (let zone (sym zone)
+    (let result (trim:shell 'gcloud 'compute 'tpus 'list '--zone zone)
+      (unless (is result "Listed 0 items.")
+        (map tpu-parse (cdr:lines result))))))
+
+(def parse-tpus ((o zones tpu-zones*))
+  (mappend tpu-status (map car tpu-zones*)))
 
 (defcache get-tpus 5
   (parse-tpus))
 
 (def tpu-parse (line)
-  (let (name zone type ips network range status) (if (acons line) line (tokens line))
+  (withs (parts (if (acons line) line (tokens line))
+          (name zone type ips network range status) 
+          (if (>= (len parts) 7)
+              parts
+              (join (cut parts 0 -3) (list nil) (cut parts -3))))
     (inst 'tpu
           'id (sym name)
           'zone (sym zone)
@@ -3633,9 +3639,17 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
         v2-32 29
         ))
 
-(def tpus ((o id nil))
-  (aand (get-tpus)
-        (if (no id) it (it id))))
+(def tpus args
+  (if (no args)
+      (get-tpus)
+      (aand (car args)
+            (find [is _!id (sym it)] (get-tpus)))))
+
+(def tpu-sortkey (p)
+  (cat (if (tpu-pod? p) 0 1) '- (tpu-zone p) '- (leftpad (tpu-index p) 4)))
+
+(def sorted-tpus ((o ps (tpus)))
+  (sort (compare < tpu-sortkey) (rem nil ps)))
 
 (def tpu-pod? (x)
   (let kind (if (isa x 'table) x!type ((tpu-parse-info:sym x) 'type))
@@ -3657,15 +3671,6 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
   (let cidr (or cidr (tpu-suffixes* (sym type)))
     (shell 'tpu-recreate-pod idx type cidr delay)))
 
-(def <bool (a b) (if (no a) t nil))
-
-(def tpu-sortkey (p)
-  (cat (if (tpu-pod? p) 0 1) '- p!zone '- (leftpad (tpu-index p) 4)))
-
-(def sorted-tpus ((o ps (tpus)))
-  (aand (map cadr (tablist ps))
-        (sort (compare < tpu-sortkey) it)))
-
 (def tpu-memory (id (o zone 'europe-west4-a))
   (let s (multisubst `(("${TPU_ID}" ,(str id)) ("${TPU_ZONE}" ,zone)) tpu-memory-query-template*)
     (w/instring i (tostring:system s)
@@ -3683,22 +3688,20 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
             (a (list (isotime pt!interval!startTime) pt!value!doubleValue))))))))
 
 (def tpu-v8s ((o ps (tpus)))
-  (listtab (keep (fn ((id p)) (~tpu-pod? p))
-                 (tablist ps))))
+  (keep ~tpu-pod? ps))
 
-(def is-preempted ((id p))
+(def is-preempted (p)
   (is p!status "PREEMPTED"))
 
-(def tpus-preempted ((o ps (tpus)))
-  (keep ~is-preempted (tablist ps)))
+(def tpus-alive ((o ps (tpus)))
+  (keep [is _!status "READY"] ps))
 
-(def tpu-v8s-preempted ((o ps (tpu-v8s)))
-  (keep (fn ((id p))
-          (~is p!status "PREEMPTED"))
-        (tablist ps)))
+(def tpu-v8s-preempted ((o ps (tpus)))
+  (keep ~tpu-pod? (tpus-alive ps)))
 
-(def tpus-recreating ()
-  (sorted-tpus:listtab:map [list _ (tpus:car _)] tpu-recreate*))
+(def tpus-recreating ((o pod? t))
+  (keep (if pod? tpu-pod? ~tpu-pod?)
+        (sorted-tpus (map car tpu-recreate*))))
 
 (newscache tpus-page user 90
   (tpu-ensure-bgthread)
@@ -3706,10 +3709,10 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
     (hspace 10)
     (pr "swarm: " (len:tpu-v8s-preempted) " / " (len:tpu-v8s) " alive")
     (br2)
-    (when tpu-recreate*
+    (whenlet ps (tpus-recreating 'pod)
       (hspace 10)
-      (apply prs "recreating:"
-             (each name (map !id (tpus-recreating))
+      (apply prs "recreating pods:"
+             (each name ps
                (if (candelete-tpu user name)
                    (out:tostring:tpu-delete-link name user name)
                    (out name))))
@@ -3765,7 +3768,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                   recreate (if (canrecreate-tpu user p!id)
                                (tostring:tpu-recreate-link p!id user)
                                "")
-                  persist (if (and (tpu-editor user) (tpu-pod? p))
+                  persist (if (tpu-editor user)
                               (tostring:tpu-persist-link user p!id)
                               "")
                   status (tostring:w/link
@@ -3775,7 +3778,17 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                                            (pr "</code></pre>")))
                            (pr p!status))
                   name p!id)
-            (row delete recreate persist p!type name status cpu memusage net ips p!range)))))))
+            (row delete recreate persist p!type name status cpu memusage net ips p!range)))))
+    (whenlet ps (tpus-recreating nil)
+      (br)
+      (hspace 10)
+      (apply prs "recreating swarm:"
+             (each name ps
+               (if (candelete-tpu user name)
+                   (out:tostring:tpu-delete-link name user name)
+                   (out name))))
+      (br2))
+    ))
 
 (newsop tpus () (tpus-page user))
   
