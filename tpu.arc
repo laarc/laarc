@@ -48,12 +48,25 @@
 (def gcloud-tpu-cidr (accelerator)
   (tpu-cidr* (sym accelerator)))
 
+(def tpu-used-indexes (zone (o pod? t) (o ps (sorted-tpus)))
+  (map tpu-index (keep [and (is pod? (tpu-pod? _))
+                            (is (gcloud-zone-id _!zone)
+                                (gcloud-zone-id zone))]
+                       ps)))
+
+(def tpu-valid-index (index zone (o pod? t) (o ps (sorted-tpus)))
+  (and (>= index 0)
+       (<= index 64)
+       (isnt index 46) ; regular v8 range
+       (~mem index (tpu-used-indexes zone pod? ps))
+       index))
+
 (def tpu-create (index accelerator zone (o preemptible t) (o async t) (o version))
-  (withs (index (gcloud-tpu-index index)
-          zone-id (gcloud-zone-id zone)
+  (withs (zone-id (gcloud-zone-id zone)
           zone-name (gcloud-zone-name zone)
+          index (tpu-valid-index (gcloud-tpu-index index) zone-id)
           cidr (gcloud-tpu-cidr accelerator))
-    (aif (no index) (err "Bad TPU index")
+    (aif (no index) (err "Bad TPU index. (Is it already in use, or outside the valid range?)")
          (no zone-id) (err "Bad zone id")
          (no zone-name) (err "Bad zone name")
          (no cidr) (err "Bad accelerator")
