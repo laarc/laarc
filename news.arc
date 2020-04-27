@@ -3659,8 +3659,12 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
 
 (def <bool (a b) (if (no a) t nil))
 
+(def tpu-sortkey (p)
+  (cat (if (tpu-pod? p) 0 1) '- p!zone '- (leftpad (tpu-index p) 4)))
+
 (def sorted-tpus ((o ps (tpus)))
-  (sort (compare ~<bool tpu-pod?) (sort (compare ~< tpu-index) (map cadr (tablist ps)))))
+  (aand (map cadr (tablist ps))
+        (sort (compare < tpu-sortkey) it)))
 
 (def tpu-memory (id (o zone 'europe-west4-a))
   (let s (multisubst `(("${TPU_ID}" ,(str id)) ("${TPU_ZONE}" ,zone)) tpu-memory-query-template*)
