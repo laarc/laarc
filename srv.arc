@@ -704,8 +704,12 @@ Strict-Transport-Security: max-age=31556900
 
 (or= bgthreads* (table) pending-bgthreads* nil)
 
-(def ensure-bgthreads ()
-  (map [aif (apply new-bgthread _) (list _ it)] pending-bgthreads*))
+(def ensure-bgthreads ids
+  (map [aif (apply new-bgthread _) (list _ it)]
+       (if (no ids)
+           pending-bgthreads*
+           (keep [find (car _) ids]
+                 pending-bgthreads*))))
 
 (def new-bgthread (id f sec)
   (aif (bgthreads* id) (break-thread it))
