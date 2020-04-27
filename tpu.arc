@@ -280,7 +280,7 @@
              (= start x))
            (= prev x))
          (list (list start prev))))))
-      
+
 (def pretty-ranges (ls)
   (aand (map (fn ((a b))
                (if (is a b) a (cat a " to " b)))
@@ -295,10 +295,11 @@
                    tpu-zone (gcloud-zone-name (arg req "zone"))
                    tpu-cidr (gcloud-tpu-cidr (arg req "accelerator"))
                    tpu-accelerator (arg req "accelerator")
-                   tpu-preemptible (readvar 'yesno (arg req "preemptible")))
+                   tpu-preemptible (readvar 'yesno (arg req "preemptible"))
+                   tpu-version (arg req "version"))
              (if (aand tpu-index tpu-zone tpu-cidr tpu-accelerator)
                  (prn "<pre><code>"
-                      (w/tostring:tpu-create tpu-index tpu-accelerator tpu-zone tpu-preemptible)
+                      (w/tostring:tpu-create tpu-index tpu-accelerator tpu-zone tpu-preemptible 'async tpu-version)
                       "</code></pre>")
                  (tpu-create-page user (tostring:prs "Invalid TPU info: "
                                                'tpu-index tpu-index (arg req "index")
@@ -306,6 +307,7 @@
                                                'tpu-cidr tpu-cidr
                                                'tpu-accelerator tpu-accelerator (arg req "accelerator")
                                                'tpu-preemptible tpu-preemptible (arg req "preemptible")
+                                               'tpu-version tpu-version (arg req "version")
                                                ))))
       (tab:showvars
         `((int index nil t t)
@@ -314,7 +316,8 @@
                    v2-32 v2-128 v2-256 v2-512 v2-1024 v2-2048
                    v2-8 v3-8)
            accelerator v3-32 t t)
-          (yesno preemptible t t t)))
+          (yesno preemptible t t t)
+          (string version "1.15" t t)))
       (br)
       (submit "create"))
     (prn "Available TPU pod indexes:")
