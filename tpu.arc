@@ -215,6 +215,7 @@
                                       (tpu-preemptible? name)
                                     preemptible)
                    (pull [caris _ name] tpu-persistent*)
+                   (pull [caris _ name] tpu-recreate*)
                    (unless persist (tpu-persist name preemptible))
                    whence)
           (pr (if persist "un-persist" "persist"))))))
