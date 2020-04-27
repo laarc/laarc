@@ -3708,7 +3708,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
     (when tpu-recreate*
       (hspace 10)
       (apply prs "recreating:"
-             (each name (map car tpu-recreate*)
+             (each name (map !id (tpus-recreating))
                (if (candelete-tpu user name)
                    (out:tostring:tpu-delete-link name user name)
                    (out name))))
