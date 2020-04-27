@@ -3701,6 +3701,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
   (sorted-tpus:listtab:map [list _ (tpus:car _)] tpu-recreate*))
 
 (newscache tpus-page user 90
+  (tpu-ensure-bgthread)
   (longpage user (now) nil "tpus" "TPUs" "tpus"
     (hspace 10)
     (pr "swarm: " (len:tpu-v8s-preempted) " / " (len:tpu-v8s) " alive")
@@ -3777,6 +3778,12 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
             (row delete recreate persist p!type name status cpu memusage net ips p!range)))))))
 
 (newsop tpus () (tpus-page user))
+  
+(def tpu-ensure-bgthread ()
+  (when (aand bgthreads*!tpu-keepalive
+              (dead it))
+    (ensure-bgthreads 'tpu-keepalive)
+    'recreated))
 
 )
 
