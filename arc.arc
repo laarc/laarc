@@ -584,6 +584,9 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 (def keep (test seq) 
   (rem (complement (testify test)) seq))
 
+(def partition (xs . fs)
+  (map [keep _ xs] fs))
+
 ;(def trues (f seq) 
 ;  (rem nil (map f seq)))
 
