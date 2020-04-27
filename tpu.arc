@@ -231,6 +231,12 @@
   (let user (get-user req)
     (tpu-create-page user (arg req "msg"))))
 
+(def call-w/tostring (f)
+  (on-err details (fn () (tostring (f)))))
+
+(mac w/tostring body
+  `(call-w/tostring (fn () ,@body)))
+
 (def tpu-create-page (user (o msg nil))
   (minipage "Create TPU"
     (pagemessage msg)
@@ -241,10 +247,10 @@
                    tpu-accelerator (arg req "accelerator")
                    tpu-preemptible (readvar 'yesno (arg req "preemptible")))
              (if (aand tpu-index tpu-zone tpu-cidr tpu-accelerator)
-                 (do (prn "<pre><code>")
-                     (prn:tpu-create tpu-index tpu-accelerator tpu-zone tpu-preemptible)
-                     (prn "</code></pre>"))
-                 (tpu-create-page user (tostring:prn "Invalid TPU info: "
+                 (prn "<pre><code>"
+                      (w/tostring:tpu-create tpu-index tpu-accelerator tpu-zone tpu-preemptible)
+                      "</code></pre>")
+                 (tpu-create-page user (tostring:prs "Invalid TPU info: "
                                                'tpu-index tpu-index (arg req "index")
                                                'tpu-zone tpu-zone (arg req "zone")
                                                'tpu-cidr tpu-cidr
@@ -275,9 +281,9 @@
            (withs (tpu-id (sym:arg req "id")
                    tpu-version (arg req "version"))
              (if (aand tpu-id tpu-version)
-                 (do (prn "<pre><code>")
-                     (prn:tpu-reimage tpu-id tpu-version)
-                     (prn "</code></pre>"))
+                 (prn "<pre><code>"
+                      (w/tostring:tpu-reimage tpu-id tpu-version)
+                      "</code></pre>")
                  (tpu-reimage-page user (tostring:prn "Invalid TPU info: "
                                                       'tpu-id tpu-id (arg req "id")
                                                       'tpu-version tpu-version (arg req "version")))))
