@@ -3697,6 +3697,9 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
           (~is p!status "PREEMPTED"))
         (tablist ps)))
 
+(def tpus-recreating ()
+  (sorted-tpus:listtab:map [list _ (tpus:car _)] tpu-recreate*))
+
 (newscache tpus-page user 90
   (longpage user (now) nil "tpus" "TPUs" "tpus"
     (hspace 10)

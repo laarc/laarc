@@ -41,6 +41,10 @@
   (let id (if (isa p 'table) p!id p)
     (int:last:tokens (str id) #\-)))
 
+(def tpu-zone (p)
+  (aand (if (isa p 'table) p!zone p)
+        (gcloud-zone-name it)))
+
 (def gcloud-tpu-cidr (accelerator)
   (tpu-cidr* (sym accelerator)))
 
