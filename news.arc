@@ -11,13 +11,14 @@
 (load "algolia.arc")
 
 (= site-name*    "tensorfork"
-   site-abbrev*  "TFK"
-   site-email*   "shawnpresser@@gmail.com"
+   site-abbrev*  "TF"
+   site-home*    "/l/all"
+   site-email*   (+ "shawnpresser" #\@ "gmail.com")
    site-twitter* "theshawwn"
    site-discord* "shawwn#3694"
    discord-url*  "https://discord.gg/x52Xz3y"
-   site-url*     "https://fork.shawwn.com"
-   parent-url*   "https://fork.shawwn.com"
+   site-url*     "https://tensorfork.com"
+   parent-url*   "https://tensorfork.com"
    welcome-url*  "/welcome.html"
    favicon-url*  ""
    site-desc*    "TPU Podcast"     ; for rss feed
@@ -699,14 +700,14 @@ function vote(node) {
               (when (is switch 'full)
                 (tag (td style "line-height:12pt; height:10px;")
                   (spanclass pagetop
-                    (tag b (link site-name* "/l/all"))
+                    (tag b (link site-name* site-home*))
                     (hspace 10)
                     (toprow user label))))
              (if (is switch 'full)
                  (tag (td style "text-align:right;padding-right:4px;")
                    (spanclass pagetop (topright user whence)))
                  (tag (td style "line-height:12pt; height:10px;")
-                   (spanclass pagetop (tag b (link label "/l/all")))))))))
+                   (spanclass pagetop (tag b (link label site-home*)))))))))
   (map [_ user] pagefns*)
   (spacerow 10))
 
