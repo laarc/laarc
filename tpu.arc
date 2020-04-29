@@ -1,6 +1,7 @@
 (= tpu-zones*  '((europe-west4-a euw4a)
                  (us-central1-a usc1a)
-                 (us-central1-f usc1f))
+                 ;(us-central1-f usc1f)
+                 )
    tpu-cidr*    '((v3-2048 23)
                   (v3-1024 24)
                   (v3-512 25)
