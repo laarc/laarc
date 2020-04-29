@@ -601,3 +601,6 @@
 
 (def tpu-ensure-bgthread ()
   (check-bgthreads 'tpu-keepalive 'tpu-unalive))
+
+(defbg tpu-watcher 900
+  (tpu-ensure-bgthread))
