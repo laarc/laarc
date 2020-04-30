@@ -217,7 +217,6 @@
 
 (def tpu-try-recreations ()
   (each (name preemptible (o version)) (tpu-recreations)
-    (srvlog 'shell 'recreate name preemptible version)
     (errsafe:tpu-try-recreate name preemptible version))
   (tpu-recreations))
 
