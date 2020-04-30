@@ -3704,7 +3704,6 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
         (sorted-tpus (map car tpu-recreate*))))
 
 (newscache tpus-page user 90
-  (tpu-ensure-bgthread)
   (longpage user (now) nil "tpus" "TPUs" "tpus"
     (hspace 10)
     (pr "swarm: " (len:tpu-v8s-preempted) " / " (len:tpu-v8s) " alive")
