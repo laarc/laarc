@@ -554,7 +554,7 @@
   (list (aand (tpu-request-hours-since hours 'sent name) (apply + (map cadr it)))
         (aand (tpu-request-hours-since hours 'recv name) (apply + (map cadr it)))))
 
-(def tpu-unused (name (o cutoff (* 10.0 1024 1024 1024))) ; 10GB
+(def tpu-unused (name (o cutoff (* 20.0 1024 1024 1024))) ; 20GB
   (let (sent recv) (tpu-bandwidth-since name)
     (and sent recv (< (+ sent recv) cutoff))))
 
