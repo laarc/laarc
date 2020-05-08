@@ -3706,6 +3706,20 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
   (keep (if pod? tpu-pod? ~tpu-pod?)
         (sorted-tpus (map car tpu-recreate*))))
 
+(def tpu-format-ips (ips)
+  (aand (each ip ips
+          (out:car:splitby ":" ip))
+        (intersperse ", " it)
+        (apply string it)
+        (ellipsize it 50)))
+
+(def prcode (lines (o sep " "))
+  (prn "<p><pre><code>")
+  (each x lines
+    (prn:mapcat sep x))
+  (prn "</code></pre>")
+  lines)
+
 (newscache tpus-page user 90
   (longpage user (now) nil "tpus" "TPUs" "tpus"
     (hspace 10)
@@ -3734,7 +3748,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
           (++ i)
           (withs (ips (tostring:w/link
                         (msgpage user p!ips)
-                        (prn:ellipsize (tostring (ppr p!ips)) 50))
+                        (prn (tpu-format-ips p!ips)))
                   idle (if (mem p!id tpu-unused*) "idle" "")
                   memusage 0.0 ; (+ (num (/ (last:last:tpu-memory p!id) (* 1024 1024 1024))) " GB")
                   memusage (tostring:w/link
