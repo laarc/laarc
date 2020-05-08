@@ -1386,8 +1386,10 @@ For example, {a 1 b 2} => (%braces a 1 b 2) => (obj a 1 b 2)"
 
 (def cache (timef valf)
   (with (cached nil gentime nil)
-    (fn ()
-      (unless (and cached (< (since gentime) (timef)))
+    (fn ((o reset))
+      (when (or reset
+                (no gentime)
+                (>= (since gentime) (timef)))
         (= cached  (valf)
            gentime (seconds)))
       cached)))
