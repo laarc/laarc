@@ -590,8 +590,11 @@
   (tag (form method "get" action "//search.laarc.io/")
     (inputs (q Search 17 nil 'plain))))
 
-(defcache memusage 5
+(defcache memusage2 5
   (repeat 3 (seval!collect-garbage 'major))
+  (memory))
+
+(defcache memusage 1
   (memory))
 
 (def admin-bar (user elapsed whence)
