@@ -3609,6 +3609,9 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
 (defcache get-tpus 5
   (parse-tpus))
 
+(defbg refresh-tpus 1
+  (get-tpus t))
+
 (def tpu-parse (line)
   (withs (parts (if (acons line) line (tokens line))
           (name zone type ips network range status) 
