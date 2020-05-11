@@ -555,8 +555,9 @@
         (aand (tpu-request-hours-since hours 'recv name) (apply + (map cadr it)))))
 
 (def tpu-unused (name (o cutoff (* 20.0 1024 1024 1024))) ; 20GB
-  (let (sent recv) (tpu-bandwidth-since name)
-    (and sent recv (< (+ sent recv) cutoff))))
+  (and (~tpu-perma? name)
+       (let (sent recv) (tpu-bandwidth-since name)
+         (and sent recv (< (+ sent recv) cutoff)))))
 
 (def tpus-unused ((o ps (sorted-tpus)))
   (keep tpu-unused ps))
@@ -603,3 +604,21 @@
 
 (defbg tpu-watcher 900
   (tpu-ensure-bgthread))
+
+(disktable tpu-flags* (+ newsdir* "tpu-flags"))
+
+(def tpu-perma? (id)
+  (mem 'perma (tpu-flags* id)))
+
+(def tpu-perma (id)
+  (atomic
+    (pull 'perma (tpu-flags* id))
+    (togglemem 'perma (tpu-flags* id))
+    (todisk tpu-flags*))
+  id)
+
+(def tpu-unperma (id)
+  (atomic
+    (pull 'perma (tpu-flags* id))
+    (todisk tpu-flags*))
+  id)
