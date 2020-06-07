@@ -3652,7 +3652,8 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
             (find [is _!id (sym it)] (get-tpus)))))
 
 (def tpu-sortkey (p)
-  (cat (if (tpu-pod? p) 0 1) '- (tpu-zone p) '- (leftpad (tpu-index p) 4)))
+  (or (errsafe:cat (if (tpu-pod? p) 0 1) '- (tpu-zone p) '- (leftpad (tpu-index p) 4))
+      ""))
 
 (def sorted-tpus ((o ps (tpus)))
   (sort (compare < tpu-sortkey) (rem nil ps)))
