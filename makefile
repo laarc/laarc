@@ -5,7 +5,7 @@ all:
 	@cd src/bcrypt/build && cmake .. && make
 
 setup:
-	@raco pkg install gregor
+	@raco pkg install gregor-lib
 
 clean:
 	@rm -rf src/bcrypt/build
