@@ -102,8 +102,8 @@
          (no ip-range) (err "Failed to map IP range")
       (let id (sym (or name (+ "tpu-" accelerator "-" zone-id "-" tpu-index)))
         (tpu-ensure id preemptible)
-        (when (tpu-pod? id)
-          (tpu-persist id preemptible))
+        ;(when (tpu-pod? id)
+        ;  (tpu-persist id preemptible))
         (shelllog 'gcloud 'compute 'tpus 'create id
                '--zone zone-name
                '--network (+ "tpu-" zone-id)
