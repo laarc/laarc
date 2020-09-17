@@ -110,7 +110,7 @@
                '--zone zone-name
                '--network (+ "tpu-" zone-id)
                '--range ip-range
-               '--version (or version "1.15")
+               '--version (or version "1.15.3")
                '--accelerator-type accelerator
                (and preemptible '--preemptible)
                (and async '--async))))))
@@ -159,7 +159,7 @@
        (yes (posmatch "preemptible: true" it))
        t))
 
-(def tpu-get-version (name (o unknown "1.15"))
+(def tpu-get-version (name (o unknown "1.15.3"))
   (or (aand (errsafe:tpu-describe name)
             (lines it)
             (find [headmatch "tensorflowVersion:" _] it)
@@ -322,7 +322,7 @@
                    v2-8 v3-8)
            accelerator v3-32 t t)
           (yesno preemptible t t t)
-          (string version "1.15" t t)))
+          (string version "1.15.3" t t)))
       (br)
       (submit "create"))
     (prn "Available TPU pod indexes:")
@@ -359,7 +359,7 @@
                                                       'tpu-version tpu-version (arg req "version")))))
            (tab:showvars
         `((,(tpu-choices) id nil t t)
-          (string1 version "1.15" t t)))
+          (string1 version "1.15.3" t t)))
       (br2)
       (submit "reimage"))))
 
