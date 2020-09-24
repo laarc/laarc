@@ -3715,7 +3715,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
           (out:car:splitby ":" ip))
         (intersperse ", " it)
         (apply string it)
-        (ellipsize it 50)))
+        (ellipsize it 30)))
 
 (def prcode (lines (o sep " "))
   (prn "<p><pre><code>")
@@ -3745,7 +3745,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
         (tpu-recreate-pods-link user))
       (br2))
     (sptab
-      (tr (td "") (td "") (td "") (td "idle") (td "type") (td "name") (td "status") (td "cpu") (td "mem") (td "net") (td "ips") (td "range"))
+      (tr (td "") (td "") (td "") (td "idle") (td "type") (td "name") (td "status") (td "cpu") (td "mxu") (td "mem") (td "net") (td "ips") (td "range"))
       (spacerow 10)
       (let i 0
         (each p (sorted-tpus)
@@ -3772,6 +3772,14 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                                           (prn ts " " v))
                                         (pr "</code></pre>")))
                         (pr "cpu"))
+                  mxu (tostring:w/link
+                        (msgpage user (tostring
+                                        (pr "MXU usage for " p!id ":")
+                                        (pr "<p><pre><code>")
+                                        (each (ts v) (tpu-request-pretty 'mxu p!id p!zone)
+                                          (prn ts " " v))
+                                        (pr "</code></pre>")))
+                        (pr "mxu"))
                   net (tostring:w/link
                         (msgpage user (tostring
                                         (pr "Network usage for " p!id ":")
@@ -3799,7 +3807,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                                            (pr "</code></pre>")))
                            (pr p!status))
                   name p!id)
-            (row delete recreate persist idle p!type name status cpu memusage net ips p!range)))))
+            (row delete recreate persist idle p!type name status cpu mxu memusage net ips p!range)))))
     (whenlet ps (tpus-recreating nil)
       (br)
       (hspace 10)

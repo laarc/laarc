@@ -486,6 +486,7 @@
           )
     (= filters `(("metric.type" ,(case metric
                                    'cpu "tpu.googleapis.com/cpu/utilization"
+                                   'mxu "tpu.googleapis.com/tpu/mxu/utilization"
                                    'mem "tpu.googleapis.com/memory/usage"
                                    'net "tpu.googleapis.com/network/sent_bytes_count"
                                    (err "metric should be 'mem 'cpu or 'net")))
@@ -507,6 +508,7 @@
            (tpu-request 'recv name zone start-time end-time))
     (withs (filters `(("metric.type" ,(case metric
                                         'cpu "tpu.googleapis.com/cpu/utilization"
+                                        'mxu "tpu.googleapis.com/tpu/mxu/utilization"
                                         'mem "tpu.googleapis.com/memory/usage"
                                         'sent "tpu.googleapis.com/network/sent_bytes_count"
                                         'recv "tpu.googleapis.com/network/received_bytes_count"
@@ -540,6 +542,7 @@
       (out (text-age:minutes-since ts)
            (case metric
              'cpu (string (num v 2 2 t) "%")
+             'mxu (string (num v 2 2 t) "%")
              'mem (string (num (/ v 1024.0 1024.0 1024.0) 2 2 t) " GB")
              (sent recv) (string (num (/ v 1024.0 1024.0 1024.0) 2 2 t) " GB " (if (is metric 'recv) 'in 'out))
              (err "Unexpected metric"))))))
