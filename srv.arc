@@ -350,11 +350,15 @@ Strict-Transport-Security: max-age=31556900
                              (begins s "cookie:"))
                          (parsecookies s)))
                   (cdr lines))
-            (or (some (fn (s)
+            (aif (some (fn (s)
                          (and (begins s "CF-Connecting-IP:")
                               (errsafe:cadr (tokens s))))
                        (cdr lines))
-                 ip)))))
+                 it
+                (do (unless (in ip "127.0.0.1" "::1")
+                      (prn "Banning IP that isn't cloudflare and isn't local: " ip)
+                      (set (ignore-ips* ip)))
+                    ip))))))
 
 ; (parseurl "GET /p1?foo=bar&ug etc") -> (get p1 (("foo" "bar") ("ug")))
 
