@@ -3803,7 +3803,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
                   status (tostring:w/link
                            (msgpage user (tostring
                                            (pr "<p><pre><code>")
-                                           (pr:shell 'tpu-describe p!id '--zone p!zone)
+                                           (pr:shell 'gcloud 'compute 'tpus 'describe p!id '--zone p!zone)
                                            (pr "</code></pre>")))
                            (pr p!status))
                   name p!id)

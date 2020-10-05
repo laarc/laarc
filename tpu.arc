@@ -151,7 +151,7 @@
 (def tpu-describe (name (o zone (gcloud-parse-zone-name name)))
   (aand (goodname:string name)
         (gcloud-zone-name zone)
-        (shell 'tpu-describe name '--zone it)
+        (shell 'gcloud 'compute 'tpus 'describe name '--zone it)
         (if (headmatch "ERROR: " it) (err it) it)))
 
 (def tpu-preemptible? (name)
