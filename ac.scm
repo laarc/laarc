@@ -1435,7 +1435,7 @@
         fn
         (lambda (p x)
           (if (pair? p)
-              (unsafe-set-mcar! p x)
+              (unsafe-set-immutable-car! p x)
               (raise-type-error 'set-car! "pair" p))))))
 
 (define x-set-cdr!
@@ -1444,7 +1444,7 @@
         fn
         (lambda (p x)
           (if (pair? p)
-              (unsafe-set-mcdr! p x)
+              (unsafe-set-immutable-cdr! p x)
               (raise-type-error 'set-cdr! "pair" p))))))
 
 ; When and if cdr of a string returned an actual (eq) tail, could
