@@ -1324,7 +1324,9 @@ function vote(node) {
           (spacerow 10)
           (tr (tag (td colspan (if number 2 1)))
               (tag (td class 'title)
-                (morelink "@(- (len items) end) more..."
+                (morelink (aand (- (len items) end)
+                                (num it)
+                                "@it more...")
                           display-items
                           items label title end newend number))))))))
 
@@ -2796,7 +2798,9 @@ function suggestTitle() {
           (row (tab (tr (td (hspace 0))
                         (td (hspace votewid*))
                         (tag (td class 'title)
-                          (morelink "@(- (len comments) end) more..."
+                          (morelink (aand (- (len comments) end)
+                                          (num it)
+                                          "@it more...")
                                     display-threads
                                     comments label title end newend))))))))))
 
