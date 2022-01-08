@@ -3344,7 +3344,8 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
     (sptab
       (row (underlink "count" "/l") (underlink "tag" "/l?sort"))
       (each (name count) (count-tags (arg "sort"))
-        (tr (td count) (td (pr (link name))))))))
+        (tr (tdr (pr:num count))
+            (td  (pr:link name)))))))
 
 ; Abuse Analysis
 
