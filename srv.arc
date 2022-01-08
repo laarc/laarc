@@ -311,11 +311,15 @@ Strict-Transport-Security: max-age=31556900"
     (prn)
     (apply pr msg args)))
 
+; this function allows e.g. "/l/c++" to be a valid path.
+(def pathdecode (x)
+  (urldecode:multisubst '(("+" "%2b")) x))
+
 (def parseop (op args)
   (let xs (tokens op #\/)
     (if (< (len xs) 2)
         (list op args)
-        (list (sym (car xs)) (join (list (list "path" (concat (map urldecode (cdr xs)) #\/))) args)))))
+        (list (sym (car xs)) (join (list (list "path" (concat (map pathdecode (cdr xs)) #\/))) args)))))
 
 (or= the-header* (make-param nil)
      the-req* (make-param nil))
