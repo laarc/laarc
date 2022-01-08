@@ -730,7 +730,7 @@ function vote(node) {
     (when user
       (toplink "threads" (threads-url user) label))
     (toplink "comments" "/newcomments" label)
-    (toplink "discord"  discord-url* label)
+    ; (toplink "discord"  discord-url* label)
     (hook 'toprow user label)
     (link "tags" "/l")
     (toplink "ask" "/l/ask" (if (is label "/l/ask") "ask" label))
