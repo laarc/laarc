@@ -413,9 +413,9 @@
                    (latest-items metastory)))))
 
 (def subs (i)
-  (if (mem '/l/private i!keys)
-      i!keys
-      (cons '/l/all i!keys)))
+  (aand i!keys
+        (keep [headmatch "/" (string _)] it)
+        (if (mem '/l/private it) it (cons '/l/all it))))
 
 (defmemo match-subs (x)
   (let x (or x "all")
