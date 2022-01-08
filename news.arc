@@ -2391,7 +2391,14 @@ function suggestTitle() {
 ; By default the ability to comment on an item is turned off after
 ; 45 days, but this can be overriden with commentable key.
 
-(= commentable-threshold* (* 60 24 45))
+; (= commentable-threshold* (* 60 24 45))
+
+; jan 8 2022: I turned this off (or more specifically, to one century)
+; for laarc.io to encourage discussion, even if the conversations are
+; old.
+
+(= commentable-threshold* (* 60 24 365 100))
+
 
 (def comments-active (i)
   (and (live&commentable i)
