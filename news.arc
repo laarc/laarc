@@ -575,7 +575,7 @@
       (link "Feature Requests" "/item?id=230")
       (link "Source" "https://github.com/laarc/laarc")
       (link "API" "https://github.com/laarc/API")
-      (link "Contact" "mailto:@site-email*")
+      (link "Contact" "mailto:shawnpresser@@gmail.com")
       (link "Twitter" "https://twitter.com/@site-twitter*")
       (link "Lists" "/lists"))
     (br2)
