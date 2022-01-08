@@ -3535,7 +3535,6 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
       (each u (sort (compare > !created) (map profile (users)))
         (withs (rank "@(++ i). "
                 age (text-age (user-age u!id))
-                age (multisubst '(("hour" "hr") ("minute" "m") (" ago" "") (" " "")) age)
                 nvotes (len:votes u!id))
           (row rank age (userlink user u!id)
                (unless (blank u!email) (pr:link u!email "mailto:@u!email"))
