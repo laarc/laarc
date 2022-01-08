@@ -430,13 +430,15 @@
           (unless (empty fns)
             (out (apply andf fns))))))))
 
+(def substories ((o sub) (o n))
+  (latest-items (andf metastory (match-subs sub)) nil n))
+
 (def topstories (user n (o sub) (o threshold front-threshold*))
-  (let sub (match-subs sub)
-    (retrieve n
-              [and (>= (realscore _) threshold)
-                   (cansee user _)
-                   (sub _)]
-              ranked-stories*)))
+  (retrieve n
+            [and (>= (realscore _) threshold)
+                 (cansee user _)]
+            (aand (substories sub n)
+                  (sort (compare > (memo frontpage-rank)) it))))
 
 (= max-delay* 10)
 
