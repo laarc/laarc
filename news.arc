@@ -2776,7 +2776,7 @@ function suggestTitle() {
               here  (threads-url subject))
         (longpage user (now) nil label title here
           (awhen (keep [and (cansee user _) (~subcomment _)]
-                       (submissions subject maxend*))
+                       (comments subject maxend*))
             (display-threads user it label title here))))
       (prn "No such user.")))
 
