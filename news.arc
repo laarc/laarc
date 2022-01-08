@@ -726,7 +726,7 @@ function vote(node) {
 
 (def toprow (user label)
   (w/bars
-    (link "tags" "/l")
+    (toplink "tags" "/l" label)
     (toplink "new" "/newest" label)
     (when user
       (toplink "threads" (threads-url user) label))
@@ -1065,7 +1065,7 @@ function vote(node) {
 
 (newsop l (path)
   (if (empty path)
-      (tags-page)
+      (tags-page user)
     ((or (lncache* path)
          (= (lncache* path)
             (newsfn user lncache-time* ()
@@ -3340,8 +3340,8 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
         (push (list k (cs k)) r))
       (sort (fn (a b) (> a.1 b.1)) r))))
 
-(def tags-page ()
-  (minipage "Tags"
+(newscache tags-page user 90
+  (longpage user (now) nil "tags" "Tags" "/l"
     (sptab
       (row (underlink "tag" "/l?sort") (underlink "count" "/l"))
       (let tags (lambdas)
