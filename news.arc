@@ -2296,7 +2296,7 @@ function suggestTitle() {
            dead    (tnil i!dead)
            type    (string i!type)
            kids    i!kids
-           keys    i!keys
+           keys    (map string i!keys)
            by      i!by
            time    i!time
            title   i!title
