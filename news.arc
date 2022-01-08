@@ -1751,11 +1751,15 @@ function vote(node) {
 (def logvote (ip user story)
   (newslog ip user 'vote (story 'id) (list (story 'title))))
 
+(def text-time (t1)
+   (strftime "%b %e, %Y" t1))
+
 (def text-age (a (o day t) (o hrs t))
   (tostring
-    (if (and day (>= a 1440)) (pr (plural (trunc (/ a 1440)) "day")    " ago")
+    (if (>= a (* 60 24 365))  (pr (string "on " (text-time (- (seconds) (* a 60)))))
+        (and day (>= a 1440)) (pr (plural (trunc (/ a 1440)) "day")    " ago")
         (and hrs (>= a   60)) (pr (plural (trunc (/ a 60))   "hour")   " ago")
-                    (pr (plural (trunc a)          "minute") " ago"))))
+                              (pr (plural (trunc a)          "minute") " ago"))))
 
 
 ; Voting
