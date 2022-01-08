@@ -719,7 +719,7 @@ function vote(node) {
       (tag (img src logo-url* width 18 height 18
                 style "border:1px #@(hexrep border-color*) solid;")))))
 
-(= toplabels* '(nil "welcome" "new" "threads" "comments" "discord"
+(= toplabels* '(nil "welcome" "tags" "new" "threads" "comments" ; "discord"
                     "/l/show" "show" "/l/ask" "ask" "/l/place" "place" "*"))
 
 ; redefined later
