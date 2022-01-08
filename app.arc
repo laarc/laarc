@@ -690,7 +690,11 @@
 
 (= months* '("January" "February" "March" "April" "May" "June" "July"
              "August" "September" "October" "November" "December")
-   days* '("Sunday" "Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday"))
+   months-abbrev* '("Jan" "Feb" "March" "April" "May" "June" "July"
+                    "Aug" "Sept" "Oct" "Nov" "Dec")
+   days*        '("Sunday" "Monday" "Tuesday" "Wednesday" "Thursday"
+                  "Friday" "Saturday")
+   days-abbrev* '("Sun" "Mon" "Tues" "Wed" "Thurs" "Fri" "Sat"))
 
 (def english-date ((y m d))
   (string d " " (months* (- m 1)) " " y))
@@ -798,12 +802,10 @@
   (seval!date-week-day:seval!seconds->date:date-seconds ymd))
 
 (defmemo date-weekday-name (ymd (o short t))
-  (let s (days* (date-weekday ymd))
-    (if short (cut s 0 3) s)))
+  ((if short days-abbrev* days*) (date-weekday ymd)))
 
 (defmemo month-name (m (o short t))
-  (let s (months* (- m 1))
-    (if short (cut s 0 3) s)))
+  ((if short months-abbrev* months*) (- m 1)))
 
 (defmemo strftime (fmt (o ts (seconds)))
   ; TODO:
