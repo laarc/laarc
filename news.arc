@@ -1322,14 +1322,15 @@ function vote(node) {
           (spacerow 10)
           (tr (tag (td colspan (if number 2 1)))
               (tag (td class 'title)
-                (morelink display-items
+                (morelink "@(- (len items) end) more..."
+                          display-items
                           items label title end newend number))))))))
 
 ; This code is inevitably complex because the More fn needs to know
 ; its own fnid in order to supply a correct whence arg to stuff on
 ; the page it generates, like logout and delete links.
 
-(def morelink (f items label title . args)
+(def morelink (msg f items label title . args)
   (tag (a href
           (url-for
             (afnid (fn (req)
@@ -1340,7 +1341,7 @@ function vote(node) {
                        (longpage user (now) nil label title url
                          (apply f user items label title url args))))))
           rel 'nofollow)
-    (pr "More")))
+    (pr msg)))
 
 (def display-story (i s user whence)
   (when (or (cansee user s) (s 'kids))
@@ -2793,7 +2794,8 @@ function suggestTitle() {
           (row (tab (tr (td (hspace 0))
                         (td (hspace votewid*))
                         (tag (td class 'title)
-                          (morelink display-threads
+                          (morelink "@(- (len comments) end) more..."
+                                    display-threads
                                     comments label title end newend))))))))))
 
 (def submissions (user (o limit))
