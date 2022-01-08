@@ -3342,9 +3342,9 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
 (newscache tags-page user 90
   (longpage user (now) nil "tags" "Tags" "/l"
     (sptab
-      (row (underlink "tag" "/l?sort") (underlink "count" "/l"))
-        (each (name count) (count-tags (arg "sort"))
-          (tr (td (pr (link name))) (td count))))))
+      (row (underlink "count" "/l") (underlink "tag" "/l?sort"))
+      (each (name count) (count-tags (arg "sort"))
+        (tr (td count) (td (pr (link name))))))))
 
 ; Abuse Analysis
 
