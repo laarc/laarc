@@ -1334,7 +1334,7 @@ function vote(node) {
 
 (def voted-items (user subject (o comments))
   (let afilter (if comments acomment astory)
-    (keep [and (afilter _) (cansee user _) (~author user _)]
+    (keep [and (afilter _) (cansee user _) (~author subject _)]
           (map item (keys:votes subject)))))
 
 
