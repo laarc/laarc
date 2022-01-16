@@ -1279,6 +1279,15 @@
   (+ xs (rem (fn (y) (some [f _ y] xs))
              ys)))
 
+(def intersect (f xs ys)
+  (keep (fn (y) (some [f _ y] xs)) ys))
+
+(def difference (f xs ys)
+  (let zs (intersect f xs ys)
+    (union f
+           (rem [mem _ zs] xs)
+           (rem [mem _ zs] ys))))
+
 (or= templates* (table))
 
 (mac deftem (tem . fields)

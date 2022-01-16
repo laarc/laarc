@@ -337,9 +337,10 @@
 
 (defop whoami req
   (aif (get-user req)
-       (if (admin it)
-           (prs it 'at req!ip (tostring:write:the-req*))
-           (prs it 'at req!ip))
+       (do (if (admin it)
+               (prs it 'at req!ip (tostring:write:the-req*))
+               (prs it 'at req!ip))
+           (hook 'whoami it req))
        (do (pr "You are not logged in. ")
            (w/link (login-page 'both) (pr "Log in"))
            (pr "."))))

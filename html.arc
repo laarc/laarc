@@ -154,6 +154,7 @@
 (attribute td         class          opstring)
 (attribute td         id             opsym)
 (attribute tr         bgcolor        opcolor)
+(attribute tr         class          opstring)
 (attribute hr         color          opcolor)
 (attribute span       class          opstring)
 (attribute span       align          opstring)
@@ -299,13 +300,17 @@
 
 ;(def spacerow (h) (tr (td (vspace h))))
 
-(def spacerow (h (o units "px")) (pr "<tr style=\"height:" h units "\"></tr>"))
-(def spacecol (w (o units "px")) (pr "<td style=\"width:" w units "\"></td>"))
+(def spacerow (h (o class) (o units "px")) (pr:string "<tr " (if class (+ " class=\"" class "\"")) " style=\"height:" h units "\"></tr>"))
+(def spacecol (w (o class) (o units "px")) (pr:string "<td " (if class (+ " class=\"" class "\"")) " style=\"width:" w units "\"></td>"))
 
 ; For use as nested table.
 
 (mac zerotable body
   `(tag (table border 0 cellpadding 1 cellspacing 0)
+     ,@body))
+
+(mac itemtable body
+  `(tag (table border 0 cellpadding 1 cellspacing 0 class 'itemlist)
      ,@body))
 
 ; was `(tag (table border 0 cellpadding 0 cellspacing 7) ,@body)

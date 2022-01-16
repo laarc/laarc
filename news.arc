@@ -275,7 +275,7 @@
 (def arg->item (req key)
   (safe-item:saferead (arg req key)))
 
-(def live (i) (nor i!dead i!deleted (flagged i)))
+(def live (i) (nor i!dead i!deleted (flagged i) (private i)))
 
 (def save-item (i) (save-table i (+ storydir* i!id)) (hook 'save-item i))
 
@@ -415,10 +415,10 @@
 (def subs (i)
   (aand i!keys
         (keep [headmatch "/" (string _)] it)
-        (if (mem '/l/private it) it (cons '/l/all it))))
+        (if (mem '/l/private it) it (adjoin '/l/all it))))
 
 (defmemo match-subs (x)
-  (let x (or x "all")
+  (let x (or x "all|private")
     (apply orf
       (each x (tokens (str x) #\|)
         (let fns (each x (tokens x #\&)
@@ -966,8 +966,8 @@ function vote(node) {
     `(string  password    ,(resetpw-link s)                       ,u  nil "")
     `(string  submissions ,(submissions-link s)                    t  nil "")
     `(string  comments    ,(comments-link s)                       t  nil "")
-    `(string  upvoted     ,(+ (upvoted-link s)   " (private)")    ,u  nil "")
-    `(string  favorites   ,(+ (favorites-link s) (if u " (shared)" "")) t  nil "")
+    `(string  upvoted     ,(upvoted-link s)                       ,u  nil "")
+    `(string  favorites   ,(favorites-link s)                      t  nil "")
     )))
 
 (def verify-link (u (o label "verify email"))
@@ -983,10 +983,21 @@ function vote(node) {
   (tostring (underlink label (threads-url u))))
 
 (def upvoted-link (u (o label "upvoted"))
-  (tostring (underlink label (upvoted-url u))))
+  (tostring
+    (underlink "@label submissions" (upvoted-url u))
+    (pr " / ")
+    (underlink "comments" (upvoted-url u t))
+    (pr " (private)")))
 
-(def favorites-link (u (o label "favorites"))
-  (tostring (underlink label (favorites-url u))))
+(def favorites-link (u (o label "favorite"))
+  (withs (user (get-user) a (admin user) w (is u user))
+    (tostring
+      (if (or a w)
+          (do (underlink "@label submissions" (favorites-url u))
+              (pr " / ")
+              (underlink "comments" (favorites-url u t))
+              (pr " (shared)"))
+          (do (underlink "favorites" (favorites-url u)))))))
 
 (newsop welcome ()
   (pr "Welcome to " site-name* ", " user "!"))
@@ -1063,13 +1074,29 @@ function vote(node) {
 (= lncache* (table))
 (= lncache-time* 90)
 
+(def pathtoks (path)
+  (map sym (tokens path #\/)))
+
+(def pathsub (path)
+  (car:pathtoks path))
+
+(def pathop (path)
+  (cadr:pathtoks path))
+
+(def pathstories (user n path)
+  (let (name (o op 'hot)) (pathtoks path)
+    (case op
+      hot (topstories user maxend* name)
+      top (
+
+
 (newsop l (path)
   (if (empty path)
       (tags-page user)
     ((or (lncache* path)
          (= (lncache* path)
             (newsfn user lncache-time* ()
-              (let sub (+ "/l/" path)
+              (let sub (string "/l/" (car:tokens path #\/))
                 (listpage user (now)
                           (topstories user maxend*
                                       path)
@@ -1079,11 +1106,10 @@ function vote(node) {
 (newscache newspage user 90
   (listpage user (now) (topstories user maxend*) nil nil "/l/all"))
 
-(def listpage (user t1 items label title (o url label) (o number t))
+(def listpage (user t1 items label title (o url label) (o number t) (o header))
   (hook 'listpage user)
   (longpage user t1 nil label title url
-    (display-items user items label title url 0 perpage* number)))
-
+    (display-items user items label title url 0 perpage* number header)))
 
 (newsop newest () (newestpage user))
 
@@ -1091,10 +1117,11 @@ function vote(node) {
 ; cached page.  If this were a prob, could make deletion clear caches.
 
 (newscache newestpage user 40
-  (listpage user (now) (newstories user maxend*) "new" "New Links" "newest"))
+  (withs (sub (arg "in") of (and sub " in /l/@sub"))
+    (listpage user (now) (newstories user maxend*) "new@of" "New Links@of" "newest")))
 
-(def newstories (user n)
-  (retrieve n [cansee user _] stories*))
+(def newstories (user n (o sub (arg "in")))
+  (retrieve n [cansee user _] (substories sub)))
 
 (defhook create-story (s)
   (let ids (map !id (newstories nil 500))
@@ -1103,12 +1130,13 @@ function vote(node) {
 (newsop best () (bestpage user))
 
 (newscache bestpage user 1000
-  (listpage user (now) (beststories user maxend*) "best" "Top Links"))
+  (let of (aand (arg "in") " in /l/@it")
+    (listpage user (now) (beststories user maxend*) "best@of" "Top Links@of")))
 
 ; As no of stories gets huge, could test visibility in fn sent to best.
 
-(def beststories (user n)
-  (bestn n (compare > realscore) (visible user stories*)))
+(def beststories (user (o n) (o sub (arg "in")))
+  (bestn n (compare > realscore) (visible user (substories sub))))
 
 (def sitestories (user url (o n maxend*))
   (retrieve n [cansee user _] (fromsite url)))
@@ -1287,33 +1315,39 @@ function vote(node) {
       (hook 'listspage user))))
 
 
-(def upvoted-url (user) (+ "/upvoted?id=" user))
+(def upvoted-url (user (o comments)) (+ "/upvoted?id=" user (if comments "&comments=t")))
 
 (newsop upvoted (id)
   (if (only.profile id)
-      (upvotedpage user id)
+      (upvotedpage user id (~blank (arg "comments")))
       (pr "No such user.")))
 
-(def upvotedpage (user subject)
+(def upvotedpage (user subject (o comments))
   (if (or (is user subject) (admin user))
       (listpage user (now)
-                (sort (compare < item-age) (voted-items user subject))
+                (sort (compare < item-age) (voted-items user subject comments))
                 "upvoted"
-                "Upvoted items"
+                "Upvoted @(if comments 'comments 'submissions)"
                 (upvoted-url subject)
                 nil)
       (pr "Can't display that.")))
 
-(def voted-items (user subject)
-  (keep [and (or (astory _) (acomment _)) (cansee user _)]
-        (map item (keys:votes subject))))
+(def voted-items (user subject (o comments))
+  (let afilter (if comments acomment astory)
+    (keep [and (afilter _) (cansee user _) (~author user _)]
+          (map item (keys:votes subject)))))
 
 
 ; Story Display
 
 (def display-items (user items label title whence
-                    (o start 0) (o end perpage*) (o number))
-  (zerotable
+                    (o start 0) (o end perpage*) (o number) (o header))
+  (itemtable
+    (when header
+      (spacerow 6)
+      (tr (tag (td colspan (if number 2 1)))
+          (td header))
+      (spacerow 12))
     (let n start
       (each i (cut items start end)
         (display-item (and number (++ n)) i user whence t)
@@ -1328,7 +1362,7 @@ function vote(node) {
                                 (num it)
                                 "@it more...")
                           display-items
-                          items label title end newend number))))))))
+                          items label title end newend number header))))))))
 
 ; This code is inevitably complex because the More fn needs to know
 ; its own fnid in order to supply a correct whence arg to stuff on
@@ -1420,7 +1454,7 @@ function vote(node) {
        (+ "http://www.scribd.com/vacuum?url=" url)))
 
 (def pseudo-text (i)
-  (if i!deleted "[deleted]" (flagged i) "[flagged]" "[dead]"))
+  (if i!deleted "[deleted]" (flagged i) "[flagged]" (private i) "[private]" "[dead]"))
 
 (def deadmark (i user)
   (when (mem 'dupe i!keys)
@@ -1523,7 +1557,7 @@ function vote(node) {
     (when (news-type i) (itemscore i user))
     (byline i user)))
 
-(= show-score-threshold* 1)
+(= show-score-threshold* 0)
 
 (def itemscore (i (o user))
   (tag (span id (+ "score_" i!id))
@@ -1658,12 +1692,12 @@ function vote(node) {
                      whence)
           (pr (if (mem 'nokill i!keys) "un-notice" "noted")))))))
 
-(def favlink (i user whence)
+(def favlink (i user whence (o comment))
   (when (and user (cansee user i))
     (pr bar*)
     (w/rlink (do (togglemem i!id (uvar user favorites))
                  (save-prof user)
-                 (favorites-url user))
+                 (favorites-url user comment))
       (pr "@(if (mem i!id (uvar user favorites)) 'un-)favorite"))))
 
 (def killlink (i user whence)
@@ -1890,6 +1924,14 @@ function suggestTitle() {
 }
 ")
 
+(defhook whoami (user req)
+  (when (admin user)
+    (br)
+    (minipage "whoami"
+      (pagemessage user)
+      (pagemessage (subs-from-text (arg req "l")))
+      )))
+
 (def submit-page (user (o sub) (o url) (o title) (o showtext) (o text "") (o msg))
   (minipage "Submit"
     (pagemessage msg)
@@ -2039,6 +2081,34 @@ function suggestTitle() {
                    ; "sampasite"  "multiply" "wetpaint" ; all spam, just ban
                    "eurekster" "blogsome" "edogo" "blog" "com"
                    "ycombinator"))
+
+(def subkeys (x)
+  (aand (if (isa x 'table) x!keys x)
+        (keep [begins (string _) "/"] it)))
+
+(def subnames (x)
+  (aand (subkeys x)
+        (map string it)
+        (map [sym:last:tokens _ #\/] it)))
+    
+
+(def subs-from-text (sub)
+  (aand (listify sub)
+        (concat it " ")
+        (tokens it [or (whitec _) (in _ #\,)])
+        (map clean-sub it)
+        (dedup it)))
+
+(def text-from-subs (sub)
+  (aand (listify sub)
+        (concat it " ")
+        (subs-from-text it)
+        (map string it)
+        (each s it
+          (aand (begins s "/l/")
+                (cut s (len "/l/"))
+                (out it)))
+        (concat it " ")))
 
 (def create-story (sub url title text user ip)
   (newslog ip user 'create sub url (list title))
@@ -2412,10 +2482,11 @@ function suggestTitle() {
 
 
 (def comments-active (i)
-  (and (live&commentable i)
-       (live (superparent i))
-       (or (< (item-age i) commentable-threshold*)
-           (mem 'commentable i!keys))))
+  (or (private i)
+      (and (live&commentable i)
+           (live (superparent i))
+           (or (< (item-age i) commentable-threshold*)
+               (mem 'commentable i!keys)))))
 
 
 (or= displayfn* (table))
@@ -2470,7 +2541,8 @@ function suggestTitle() {
 (= (fieldfn* 'story)
    (fn (user s)
      (with (a (admin user)  e (editor user)  x (canedit user s))
-       `((string1 title     ,s!title        t ,x)
+       `((string1 to        ,(concat (subnames s) " ")  ,t ,x)
+         (string1 title     ,s!title        t ,x)
          (url     url       ,s!url          t ,e)
          (mdtext  text      ,s!text         t ,x)
          ,@(standard-item-fields s a e x)))))
@@ -2506,6 +2578,20 @@ function suggestTitle() {
          (sexpr   keys      ,i!keys        ,a ,a)
          (string  ip        ,i!ip          ,e  nil)))
 
+(def copy-item (i . props)
+  (awhen (listtab:tablist i)
+    (each (k v) (pair props)
+      (= (it k) v))
+    it))
+
+(def edit-merge (i)
+  (atlet to (subs-from-text i!to)
+    (when to
+      (wipe i!to)
+      (= i!keys (+ (difference is i!keys (subkeys i))
+                   to)))
+    i))
+
 ; Should check valid-url etc here too.  In fact make a fn that
 ; does everything that has to happen after submitting a story,
 ; and call it both there and here.
@@ -2524,7 +2610,7 @@ function suggestTitle() {
                        (log-kill i user))
                      (= (i name) val)))
                  (fn () ;(if (admin user) (pushnew 'locked i!keys))
-                        (save-item i)
+                        (save-item:edit-merge i)
                         (metastory&adjust-rank i)
                         (wipe (comment-cache* i!id))
                         (edit-page user i)))
@@ -2632,7 +2718,8 @@ function suggestTitle() {
     (display-subcomments c user whence (+ indent 1))))
 
 (def display-1comment (c user whence indent showpar)
-  (row (tab (display-comment nil c user whence t indent showpar showpar))))
+  (tag (tr class "athing comtr" id c!id) 
+    (td:tab (display-comment nil c user whence t indent showpar showpar))))
 
 (def display-subcomments (c user whence (o indent 0))
   (each k (sort (compare > frontpage-rank:item) c!kids)
@@ -2694,7 +2781,7 @@ function suggestTitle() {
                (* (+ (trunc (/ age 86400)) 1) 86400)))))
 
 (def gen-comment-body (c user whence astree indent showpar showon)
-  (tag (td id c!id class 'default)
+  (tag (td class 'default)
     (let parent (and (or (no astree) showpar) (c 'parent))
       (tag (div style "margin-top:2px; margin-bottom:-10px; ")
         (spanclass comhead
@@ -2709,9 +2796,9 @@ function suggestTitle() {
           ; a hack to check whence but otherwise need an arg just for this
           (unless (or astree (is whence "newcomments"))
             (flaglink c user whence))
-          (favlink c user whence)
+          (favlink c user whence t)
           (deadmark c user)
-          (when showon
+          (when (and showon (cansee user (superparent c)))
             (pr " | on: ")
             (let s (superparent c)
               (link (ellipsize s!title 50) (item-url s!id))))))
@@ -2722,7 +2809,7 @@ function suggestTitle() {
             (nor (live c) (author user c)) (spanclass dead (pr c!text))
                                            (fontcolor (comment-color c)
                                              (pr c!text))))
-      (when (and astree (cansee user c) (live c))
+      (when (and astree (cansee user c) (or (live c) (private c)))
         (para)
         (tag (font size 1)
           (if (and (~mem 'neutered c!keys)
@@ -2739,9 +2826,12 @@ function suggestTitle() {
 
 (= reply-decay* 1.8)   ; delays: (0 0 1 3 7 12 18 25 33 42 52 63)
 
+;(def replyable (c indent)
+;  (or (< indent 2)
+;      (> (item-age c) (expt (- indent 1) reply-decay*))))
+
 (def replyable (c indent)
-  (or (< indent 2)
-      (> (item-age c) (expt (- indent 1) reply-decay*))))
+  t)
 
 (def replylink (i whence (o title 'reply))
   (link title (+ "/reply?id=" i!id "&whence=" (urlencode whence))))
@@ -2790,15 +2880,15 @@ function suggestTitle() {
                       (o start 0) (o end threads-perpage*))
   (tab
     (each c (cut comments start end)
-      (row
-        (if (acomment c)
-            (display-comment-tree c user whence 0 t)
-            (tab (display-item nil c user whence t))))
-      (spacerow (if (acomment c) 15 5)))
+      (if (acomment c)
+          (display-comment-tree c user whence 0 t)
+          (row (tab (display-item nil c user whence t))))
+      ;(spacerow (if (acomment c) 15 5))
+      )
     (when end
       (let newend (+ end threads-perpage*)
         (when (and (<= newend maxend*) (< end (len comments)))
-          (spacerow 10)
+          (spacerow 10 'morespace)
           (row (tab (tr (td (hspace 0))
                         (td (hspace votewid*))
                         (tag (td class 'title)
@@ -2811,8 +2901,9 @@ function suggestTitle() {
 (def submissions (user (o limit))
   (map item (firstn limit (uvar user submitted))))
 
-(def favorites (user (o limit))
-  (map item (firstn limit (uvar user favorites))))
+(def favorites (user (o limit) (o comments))
+  (let afilter (if comments acomment astory)
+    (map item (retrieve limit afilter:item (uvar user favorites)))))
 
 (def comments (user (o limit))
   (map item (retrieve limit acomment:item (uvar user submitted))))
@@ -2827,22 +2918,33 @@ function suggestTitle() {
 (def siblings (i)
   (map item (aand (item i!parent) (rem i!id it!kids))))
 
-(def favorites-url (user) (+ "/favorites?id=" user))
+(def favorites-url (user (o comments)) (+ "/favorites?id=" user (if comments "&comments=t")))
 
 (newsop favorites (id)
   (if id
-      (favorites-page user id)
+      (favorites-page user id (~blank (arg "comments")))
       (pr "No user specified.")))
 
-(def favorites-page (user subject)
+(def favorites-page (user subject (o comments))
   (if (profile subject)
       (withs (title (+ subject "'s favorites")
               label (if (is user subject) "favorites" title)
-              here  (favorites-url subject))
-        (longpage user (now) nil label title here
-          (awhen (keep [cansee user _]
-                       (favorites subject maxend*))
-            (display-threads user it label title here))))
+              here  (favorites-url subject comments)
+              tems  (keep [cansee user _]
+                          (favorites subject nil comments)))
+        (listpage user (now)
+                  tems
+                  label
+                  title
+                  here
+                  (no comments)
+                  (tostring
+                    (w/bars
+                      (link "submissions" (favorites-url subject))
+                      (link "comments" (favorites-url subject t)))
+                    (unless tems
+                      (para "@subject hasn't added any favorite @(if comments 'comments 'submissions) yet.")
+                      (para "To add one to your own favorites, click on its timestamp to go to its page, then click 'favorite' at the top.")))))
       (prn "No such user.")))
 
 ; Submitted
@@ -3331,7 +3433,7 @@ Which brings us to the most important principle on @(do site-abbrev*): civility.
 (newsop welcome.html ()
   (msgpage user welcome-page* "Welcome" (pages-url "welcome")))
 
-(def count-tags ((o namesort) (o stories stories*))
+(def count-tags ((o namesort) (o stories (newstories (get-user) nil)))
   (aand (map subs stories)
         (counts:flat it)
         (sort (if namesort
