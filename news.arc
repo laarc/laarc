@@ -1351,7 +1351,7 @@ function vote(node) {
     (let n start
       (each i (cut items start end)
         (display-item (and number (++ n)) i user whence t)
-        (spacerow (if (acomment i) 15 5))))
+        (spacerow (if (acomment i) 15 5) 'spacer)))
     (when end
       (let newend (+ end perpage*)
         (when (and (<= newend maxend*) (< end (len items)))
@@ -1383,9 +1383,10 @@ function vote(node) {
 
 (def display-story (i s user whence)
   (when (or (cansee user s) (s 'kids))
-    (tr (display-item-number i)
-        (td (votelinks s user whence))
-        (titleline s s!url user whence))
+    (tag (tr class 'athing id s!id) 
+      (display-item-number i)
+      (td (votelinks s user whence))
+      (titleline s s!url user whence))
     (tr (tag (td colspan (if i 2 1)))
         (tag (td class 'subtext)
           (hook 'itemline s user)
@@ -2485,6 +2486,7 @@ function suggestTitle() {
   (or (private i)
       (and (live&commentable i)
            (live (superparent i))
+           (~mem 'noreply i!keys)
            (or (< (item-age i) commentable-threshold*)
                (mem 'commentable i!keys)))))
 
@@ -2727,10 +2729,11 @@ function suggestTitle() {
 
 (def display-comment (n c user whence (o astree) (o indent 0)
                                       (o showpar) (o showon))
-  (tr (display-item-number n)
-      (when astree (td (hspace (* indent 40))))
-      (tag (td valign 'top) (votelinks c user whence t))
-      (display-comment-body c user whence astree indent showpar showon)))
+  (tag (tr class (unless astree 'athing) id (unless astree c!id))
+    (display-item-number n)
+    (when astree (td (hspace (* indent 40))))
+    (tag (td valign 'top) (votelinks c user whence t))
+    (display-comment-body c user whence astree indent showpar showon)))
 
 ; Comment caching doesn't make generation of comments significantly
 ; faster, but may speed up everything else by generating less garbage.
